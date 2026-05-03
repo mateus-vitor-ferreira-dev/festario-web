@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { AuthProvider } from "../../contexts/AuthContext";
 import ReservationIntent from "../../pages/ReservationIntent";
 import { server } from "../mocks/server";
 
@@ -33,16 +34,18 @@ const mockVenue = {
 
 function renderPage() {
     return render(
-        <MemoryRouter initialEntries={["/reservation-intent/venue-1"]}>
-            <Routes>
-                <Route
-                    path="/reservation-intent/:venueId"
-                    element={<ReservationIntent />}
-                />
-                <Route path="/checkout/:id" element={<div>Checkout</div>} />
-            </Routes>
-            <ToastContainer />
-        </MemoryRouter>
+        <AuthProvider>
+            <MemoryRouter initialEntries={["/reservation-intent/venue-1"]}>
+                <Routes>
+                    <Route
+                        path="/reservation-intent/:venueId"
+                        element={<ReservationIntent />}
+                    />
+                    <Route path="/checkout/:id" element={<div>Checkout</div>} />
+                </Routes>
+                <ToastContainer />
+            </MemoryRouter>
+        </AuthProvider>
     );
 }
 

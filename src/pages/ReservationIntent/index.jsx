@@ -1,117 +1,30 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useGSAP } from "@gsap/react";
+
 import AvailabilityCalendar from "../../components/AvailabilityCalendar";
-import ErrorBoundary from "../../components/ErrorBoundary";
 import Input from "../../components/Input";
-import { createReservation, quoteReservation } from "../../services/reservation";
+import { useAuth } from "../../contexts/AuthContext";
 import { getVenue } from "../../services/venue";
 import { getErrorMessage } from "../../utils/getErrorMessage";
-import { PLANS } from "../../constants/reservation";
 import { animateFadeInUp, animateStagger } from "../../utils/animations";
+import { formatCents } from "../../utils/reservationFormat";
+
+import { useReservationForm } from "./useReservationForm";
+import { ContractSection } from "./components/ContractSection";
+import { KidsMonitorInput } from "./components/KidsMonitorInput";
+import { PlanSelector } from "./components/PlanSelector";
+import { ReservationSummary } from "./components/ReservationSummary";
 import * as S from "./styles";
-
-/**
- * @module pages/ReservationIntent
- * @description Formulário de criação de reserva para um espaço específico.
- *
- * Fluxo:
- * 1. Usuário seleciona data de início no `AvailabilityCalendar`
- * 2. Preenche plano, addons (kids/piscina), horários e número de convidados
- * 3. "Calcular valor" chama `quoteReservation` para obter o preço sem criar a reserva
- * 4. Aceita os termos e visualiza o contrato via `ContratoDownloadLink` (lazy)
- * 5. "Confirmar reserva" chama `createReservation` e navega para `/checkout/:id`
- *
- * @see GET /venues/:id
- * @see POST /reservations/quote
- * @see POST /reservations
- */
-const ContratoDownloadLink = lazy(() => import("../../components/ContratoRVR/DownloadLink"));
-
-
-const FIXED_HOLIDAYS = [
-    "01-01",
-    "04-21",
-    "05-01",
-    "09-07",
-    "10-12",
-    "11-02",
-    "11-15",
-    "11-20",
-    "12-25",
-];
-
-const VARIABLE_HOLIDAYS = [
-    "2025-03-03", "2025-03-04", "2025-04-18", "2025-06-19",
-    "2026-02-16", "2026-02-17", "2026-04-03", "2026-06-04",
-    "2027-02-08", "2027-02-09", "2027-03-26", "2027-05-20",
-];
-
-const INCLUDED_KIDS_HOURS_BY_PLAN = {
-    PROMOCIONAL: 4,
-    ESSENCIAL: 4,
-    COMPLETA: 4,
-};
-
-function isHoliday(dateString) {
-    if (!dateString) return false;
-    if (VARIABLE_HOLIDAYS.includes(dateString)) return true;
-    return FIXED_HOLIDAYS.includes(dateString.slice(5));
-}
-
-function isPlanAvailableForDate(planCode, eventDate) {
-    if (!eventDate) return true;
-    const dayOfWeek = new Date(`${eventDate}T12:00:00`).getDay();
-    const holiday = isHoliday(eventDate);
-    const isWeekendOrHoliday = dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6 || holiday;
-
-    if (planCode === "PROMOCIONAL") return !isWeekendOrHoliday;
-    return isWeekendOrHoliday;
-}
-
-function getBlockedPlanMessage(planCode, eventDate) {
-    const holiday = isHoliday(eventDate);
-    const dayOfWeek = new Date(`${eventDate}T12:00:00`).getDay();
-    const isWeekendOrHoliday = dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6 || holiday;
-
-    if (planCode === "PROMOCIONAL" && isWeekendOrHoliday) {
-        return holiday
-            ? "O plano Promocional não está disponível em feriados. Escolha o Essencial ou o Completa."
-            : "O plano Promocional é disponível apenas de Segunda a Quinta. Escolha o Essencial ou o Completa para fins de semana.";
-    }
-
-    return "Este plano é disponível apenas de Segunda a Quinta (sem feriados). Escolha o Promocional para dias úteis.";
-}
-
-function formatCurrency(cents) {
-    return new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-    }).format(Number(cents || 0) / 100);
-}
 
 export default function ReservationIntent() {
     const { venueId } = useParams();
-    const navigate = useNavigate();
+    const { user } = useAuth();
     const containerRef = useRef(null);
 
     const [venue, setVenue] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
-
-    const [planCode, setPlanCode] = useState("");
-    const [eventDate, setEventDate] = useState("");
-    const [startTime, setStartTime] = useState("");
-    const [endTime, setEndTime] = useState("");
-    const [kidsMonitorHours, setKidsMonitorHours] = useState(0);
-    const [notes, setNotes] = useState("");
-    const [acceptedContract, setAcceptedContract] = useState(false);
-
-    const [quote, setQuote] = useState(null);
-    const [quoteLoading, setQuoteLoading] = useState(false);
-
-    const quoteTimerRef = useRef(null);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -129,172 +42,11 @@ export default function ReservationIntent() {
             }
         }
 
-        if (venueId) {
-            loadVenue();
-        }
-
+        if (venueId) loadVenue();
         return () => controller.abort();
     }, [venueId]);
 
-    useEffect(() => {
-        if (!venue?.hasKidsArea) return;
-
-        const includedHours = INCLUDED_KIDS_HOURS_BY_PLAN[planCode] ?? 0;
-
-        setKidsMonitorHours((current) => {
-            if (!planCode) return 0;
-            return current < includedHours ? includedHours : current;
-        });
-    }, [planCode, venue?.hasKidsArea]);
-
-    const minimumKidsHours = INCLUDED_KIDS_HOURS_BY_PLAN[planCode] ?? 0;
-    const kidsMonitorExtraHours = Math.max(0, kidsMonitorHours - minimumKidsHours);
-
-    useEffect(() => {
-        if (!planCode || !eventDate || !startTime || !endTime) {
-            setQuote(null);
-            return;
-        }
-
-        const controller = new AbortController();
-
-        clearTimeout(quoteTimerRef.current);
-        quoteTimerRef.current = setTimeout(async () => {
-            try {
-                setQuoteLoading(true);
-
-                const startDate = new Date(`${eventDate}T${startTime}:00`);
-                const endDate = new Date(`${eventDate}T${endTime}:00`);
-
-                if (endDate <= startDate) {
-                    setQuote(null);
-                    return;
-                }
-
-                const payload = {
-                    venueId,
-                    planCode,
-                    startDate: startDate.toISOString(),
-                    endDate: endDate.toISOString(),
-                    ...(kidsMonitorExtraHours > 0 && { kidsMonitorExtraHours }),
-                };
-
-                const result = await quoteReservation(payload, controller.signal);
-
-                if (!controller.signal.aborted) {
-                    setQuote(result);
-                }
-            } catch (error) {
-                if (error?.name === "CanceledError" || error?.name === "AbortError") return;
-
-                if (!controller.signal.aborted) {
-                    toast.error(getErrorMessage(error, "Erro ao calcular orçamento."));
-                    setQuote(null);
-                }
-            } finally {
-                if (!controller.signal.aborted) {
-                    setQuoteLoading(false);
-                }
-            }
-        }, 600);
-
-        return () => {
-            clearTimeout(quoteTimerRef.current);
-            controller.abort();
-        };
-    }, [planCode, eventDate, startTime, endTime, kidsMonitorExtraHours, venueId]);
-
-    const today = new Date().toISOString().split("T")[0];
-
-    function handlePlanClick(code) {
-        if (eventDate && !isPlanAvailableForDate(code, eventDate)) {
-            toast.warning(getBlockedPlanMessage(code, eventDate));
-            return;
-        }
-        setPlanCode(code);
-    }
-
-    function handleDateChange(newDate) {
-        setEventDate(newDate);
-
-        if (planCode && !isPlanAvailableForDate(planCode, newDate)) {
-            setPlanCode("");
-            toast.info("A data alterada não é compatível com o plano anterior. Selecione uma modalidade.");
-        }
-    }
-
-    function handleOpenRoutes() {
-        if (!venue?.location) {
-            toast.info("Endereço do salão não disponível.");
-            return;
-        }
-
-        const encodedAddress = encodeURIComponent(venue.location);
-        window.open(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`, "_blank");
-    }
-
-    async function handleConfirmReservation() {
-        if (!planCode) {
-            toast.warning("Selecione um plano.");
-            return;
-        }
-
-        if (!eventDate) {
-            toast.warning("Selecione a data do evento.");
-            return;
-        }
-
-        if (!startTime) {
-            toast.warning("Selecione o horário de início.");
-            return;
-        }
-
-        if (!endTime) {
-            toast.warning("Selecione o horário de término.");
-            return;
-        }
-
-        const startDate = new Date(`${eventDate}T${startTime}:00`);
-        const endDate = new Date(`${eventDate}T${endTime}:00`);
-
-        if (endDate <= startDate) {
-            toast.warning("O horário de término deve ser posterior ao de início.");
-            return;
-        }
-
-        if (!isPlanAvailableForDate(planCode, eventDate)) {
-            toast.warning(getBlockedPlanMessage(planCode, eventDate));
-            return;
-        }
-
-        if (!acceptedContract) {
-            toast.warning("Aceite o contrato para continuar.");
-            return;
-        }
-
-        try {
-            setSubmitting(true);
-
-            const payload = {
-                venueId,
-                planCode,
-                startDate: startDate.toISOString(),
-                endDate: endDate.toISOString(),
-                termsAccepted: true,
-                ...(notes.trim() && { notes: notes.trim() }),
-                ...(kidsMonitorExtraHours > 0 && { kidsMonitorExtraHours }),
-            };
-
-            const reservation = await createReservation(payload);
-
-            toast.success("Reserva criada com sucesso! Redirecionando para o pagamento...");
-            navigate(`/checkout/${reservation.id}`);
-        } catch (error) {
-            toast.error(getErrorMessage(error, "Erro ao confirmar a reserva."));
-        } finally {
-            setSubmitting(false);
-        }
-    }
+    const form = useReservationForm({ venueId, hasKidsArea: venue?.hasKidsArea ?? false });
 
     useGSAP(() => {
         if (loading || !containerRef.current) return;
@@ -325,66 +77,31 @@ export default function ReservationIntent() {
         );
     }
 
-    const selectedPlan = PLANS.find((p) => p.code === planCode);
-
-    const normalizedQuote = (() => {
-        if (!quote || planCode !== "COMPLETA") return quote;
-
-        const targetBasePriceCents = 100000;
-        const planBaseItem = quote.items?.find((item) => item.type === "PLAN_BASE");
-
-        const currentBasePriceCents =
-            planBaseItem?.totalAmountCents ??
-            planBaseItem?.totalCents ??
-            selectedPlan?.priceCents ??
-            targetBasePriceCents;
-
-        const diffCents = targetBasePriceCents - currentBasePriceCents;
-
-        if (diffCents === 0) return quote;
-
-        return {
-            ...quote,
-            items: (quote.items ?? []).map((item) =>
-                item.type === "PLAN_BASE"
-                    ? {
-                        ...item,
-                        unitAmountCents: targetBasePriceCents,
-                        totalAmountCents: targetBasePriceCents,
-                    }
-                    : item
-            ),
-            subtotalCents: Number(quote.subtotalCents ?? 0) + diffCents,
-            totalCents: Number(quote.totalCents ?? 0) + diffCents,
-        };
-    })();
-
-    const planIsIncompatible = planCode && eventDate && !isPlanAvailableForDate(planCode, eventDate);
-
-    const locatario = (() => {
-        try {
-            const stored = JSON.parse(localStorage.getItem("recanto:userData") || "{}");
-            return stored?.user?.name || stored?.name || "";
-        } catch {
-            return "";
-        }
-    })();
-
-    const comKids = Boolean(venue?.hasKidsArea);
-    const comPiscina = planCode === "COMPLETA";
+    const today = new Date().toISOString().split("T")[0];
 
     const contratoProps = {
-        locatario,
-        data: eventDate
-            ? new Date(`${eventDate}T00:00:00`).toLocaleDateString("pt-BR")
+        locatario: user?.name ?? "",
+        data: form.eventDate
+            ? new Date(`${form.eventDate}T00:00:00`).toLocaleDateString("pt-BR")
             : "a definir",
-        horarioInicio: startTime || "—",
-        horarioFim: endTime || "—",
-        comKids,
-        comPiscina,
-        planCode: planCode || "ESSENCIAL",
-        totalCents: normalizedQuote?.totalCents ?? selectedPlan?.priceCents ?? null,
+        horarioInicio: form.startTime || "—",
+        horarioFim: form.endTime || "—",
+        comKids: Boolean(venue.hasKidsArea),
+        comPiscina: form.planCode === "COMPLETA",
+        planCode: form.planCode || "ESSENCIAL",
+        totalCents: form.normalizedQuote?.totalCents ?? form.selectedPlan?.priceCents ?? null,
     };
+
+    function handleOpenRoutes() {
+        if (!venue.location) {
+            toast.info("Endereço do salão não disponível.");
+            return;
+        }
+        window.open(
+            `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue.location)}`,
+            "_blank"
+        );
+    }
 
     return (
         <S.Container ref={containerRef}>
@@ -400,15 +117,15 @@ export default function ReservationIntent() {
                     <S.EstimatedCard>
                         <span>Valor estimado</span>
                         <strong>
-                            {quoteLoading
+                            {form.quoteLoading
                                 ? "Calculando..."
-                                : normalizedQuote
-                                    ? formatCurrency(normalizedQuote.totalCents)
-                                    : selectedPlan
-                                        ? formatCurrency(selectedPlan.priceCents)
+                                : form.normalizedQuote
+                                    ? formatCents(form.normalizedQuote.totalCents)
+                                    : form.selectedPlan
+                                        ? formatCents(form.selectedPlan.priceCents)
                                         : "—"}
                         </strong>
-                        <small>{selectedPlan ? selectedPlan.label : "Selecione um plano"}</small>
+                        <small>{form.selectedPlan ? form.selectedPlan.label : "Selecione um plano"}</small>
                     </S.EstimatedCard>
                 </S.TopSection>
 
@@ -419,19 +136,16 @@ export default function ReservationIntent() {
                             <S.CardDescription>
                                 {venue.description || "Salão principal para eventos e reservas"}
                             </S.CardDescription>
-
                             <S.InfoGrid>
                                 <S.InfoBox>
                                     <span>Capacidade</span>
                                     <strong>{venue.capacity || 0} pessoas</strong>
                                 </S.InfoBox>
-
                                 <S.InfoBox>
                                     <span>Localização</span>
                                     <strong>{venue.location || "Endereço não informado"}</strong>
                                 </S.InfoBox>
                             </S.InfoGrid>
-
                             <S.RouteButton type="button" onClick={handleOpenRoutes}>
                                 Rotas
                             </S.RouteButton>
@@ -442,14 +156,12 @@ export default function ReservationIntent() {
                             <S.CardDescription>
                                 Selecione a data do evento no calendário. Datas em laranja já estão reservadas e datas em roxo estão bloqueadas.
                             </S.CardDescription>
-
                             <AvailabilityCalendar
                                 venueId={venueId}
-                                selectedDate={eventDate}
-                                onChange={handleDateChange}
+                                selectedDate={form.eventDate}
+                                onChange={form.handleDateChange}
                                 minDate={today}
                             />
-
                             <S.FormRow style={{ marginTop: "16px" }}>
                                 <Input
                                     id="startTime"
@@ -457,77 +169,33 @@ export default function ReservationIntent() {
                                     type="time"
                                     min="08:00"
                                     max="22:00"
-                                    value={startTime}
-                                    onChange={(e) => setStartTime(e.target.value)}
+                                    value={form.startTime}
+                                    onChange={(e) => form.setStartTime(e.target.value)}
                                 />
-
                                 <Input
                                     id="endTime"
                                     label="Término"
                                     type="time"
                                     min="08:00"
                                     max="23:59"
-                                    value={endTime}
-                                    onChange={(e) => setEndTime(e.target.value)}
+                                    value={form.endTime}
+                                    onChange={(e) => form.setEndTime(e.target.value)}
                                 />
                             </S.FormRow>
                         </S.Card>
 
-                        <S.Card className="anim-card">
-                            <S.CardTitle>Escolha a modalidade</S.CardTitle>
-                            <S.CardDescription>
-                                {eventDate
-                                    ? "As modalidades disponíveis para a data selecionada estão habilitadas abaixo."
-                                    : "Selecione uma data primeiro para ver as modalidades disponíveis."}
-                            </S.CardDescription>
-
-                            <S.PlanGrid>
-                                {PLANS.map((plan) => {
-                                    const available = isPlanAvailableForDate(plan.code, eventDate);
-
-                                    return (
-                                        <S.PlanCard
-                                            key={plan.code}
-                                            $selected={planCode === plan.code}
-                                            $disabled={eventDate ? !available : false}
-                                            onClick={() => handlePlanClick(plan.code)}
-                                        >
-                                            <S.PlanLabel>{plan.label}</S.PlanLabel>
-                                            <S.PlanDays>{plan.days}</S.PlanDays>
-                                            <S.PlanPrice>{formatCurrency(plan.priceCents)}</S.PlanPrice>
-                                        </S.PlanCard>
-                                    );
-                                })}
-                            </S.PlanGrid>
-                        </S.Card>
+                        <PlanSelector
+                            eventDate={form.eventDate}
+                            planCode={form.planCode}
+                            onPlanClick={form.handlePlanClick}
+                        />
 
                         {venue.hasKidsArea && (
-                            <S.Card className="anim-card">
-                                <S.CardTitle>Área Kids com monitor</S.CardTitle>
-                                <S.CardDescription>
-                                    O plano selecionado inclui 4 horas de monitor. Caso deseje mais tempo,
-                                    cada hora adicional será cobrada à parte.
-                                </S.CardDescription>
-
-                                <S.OptionItem>
-                                    <div>
-                                        <strong>Horas do monitor</strong>
-                                        <span>4h incluídas no plano. Horas adicionais: R$ 30,00/h</span>
-                                    </div>
-
-                                    <S.KidsInput
-                                        type="number"
-                                        min={minimumKidsHours}
-                                        max="12"
-                                        value={kidsMonitorHours}
-                                        onChange={(e) =>
-                                            setKidsMonitorHours(
-                                                Math.max(minimumKidsHours, Number(e.target.value) || 0)
-                                            )
-                                        }
-                                    />
-                                </S.OptionItem>
-                            </S.Card>
+                            <KidsMonitorInput
+                                kidsMonitorHours={form.kidsMonitorHours}
+                                minimumKidsHours={form.minimumKidsHours}
+                                onChange={form.setKidsMonitorHours}
+                            />
                         )}
 
                         <S.Card className="anim-card">
@@ -535,158 +203,43 @@ export default function ReservationIntent() {
                             <S.CardDescription>
                                 Informe qualquer detalhe adicional para a sua reserva (opcional).
                             </S.CardDescription>
-
                             <S.NotesField
                                 placeholder="Ex: festa infantil, decoração temática..."
-                                value={notes}
-                                onChange={(e) => setNotes(e.target.value)}
+                                value={form.notes}
+                                onChange={(e) => form.setNotes(e.target.value)}
                                 rows={3}
                             />
                         </S.Card>
                     </S.LeftColumn>
 
                     <S.RightColumn>
-                        <S.Card className="anim-card">
-                            <S.CardTitle>Resumo da reserva</S.CardTitle>
-
-                            <S.SummaryList>
-                                <S.SummaryItem>
-                                    <span>Salão</span>
-                                    <strong>{venue.name}</strong>
-                                </S.SummaryItem>
-
-                                <S.SummaryItem>
-                                    <span>Plano</span>
-                                    <strong>{selectedPlan?.label || "Não selecionado"}</strong>
-                                </S.SummaryItem>
-
-                                <S.SummaryItem>
-                                    <span>Data</span>
-                                    <strong>{eventDate || "Não selecionada"}</strong>
-                                </S.SummaryItem>
-
-                                <S.SummaryItem>
-                                    <span>Início</span>
-                                    <strong>{startTime || "—"}</strong>
-                                </S.SummaryItem>
-
-                                <S.SummaryItem>
-                                    <span>Término</span>
-                                    <strong>{endTime || "—"}</strong>
-                                </S.SummaryItem>
-
-                                {kidsMonitorHours > 0 && (
-                                    <S.SummaryItem>
-                                        <span>Monitor kids</span>
-                                        <strong>{kidsMonitorHours}h</strong>
-                                    </S.SummaryItem>
-                                )}
-                            </S.SummaryList>
-
-                            <S.Divider />
-
-                            {quoteLoading && (
-                                <S.QuoteLoading>Calculando cotação...</S.QuoteLoading>
-                            )}
-
-                            {normalizedQuote && !quoteLoading && (
-                                <>
-                                    {normalizedQuote.items?.map((item, i) => (
-                                        <S.SummaryItem key={i}>
-                                            <span>
-                                                {item.type === "PLAN_BASE"
-                                                    ? `Plano: ${selectedPlan?.label || item.description || item.label}`
-                                                    : item.type === "KIDS_MONITOR_EXTRA_HOUR"
-                                                        ? "Horas extras área kids"
-                                                        : item.description || item.label}
-                                            </span>
-                                            <strong>
-                                                {formatCurrency(
-                                                    Number(
-                                                        item.totalAmountCents ??
-                                                        item.amountCents ??
-                                                        item.totalCents ??
-                                                        item.totalAmount ??
-                                                        item.amount ??
-                                                        0
-                                                    )
-                                                )}
-                                            </strong>
-                                        </S.SummaryItem>
-                                    ))}
-
-                                    {normalizedQuote.discountApplied && (
-                                        <>
-                                            <S.SummaryItem>
-                                                <span>Subtotal</span>
-                                                <strong>{formatCurrency(normalizedQuote.subtotalCents)}</strong>
-                                            </S.SummaryItem>
-                                            <S.SummaryItem>
-                                                <span>Desconto</span>
-                                                <strong>- {formatCurrency(normalizedQuote.discountCents)}</strong>
-                                            </S.SummaryItem>
-                                        </>
-                                    )}
-
-                                    <S.TotalRow>
-                                        <span>Total</span>
-                                        <strong>{formatCurrency(normalizedQuote.totalCents)}</strong>
-                                    </S.TotalRow>
-                                </>
-                            )}
-
-                            {!normalizedQuote && !quoteLoading && selectedPlan && (
-                                <S.TotalRow>
-                                    <span>Valor base do plano</span>
-                                    <strong>{formatCurrency(selectedPlan.priceCents)}</strong>
-                                </S.TotalRow>
-                            )}
-                        </S.Card>
+                        <ReservationSummary
+                            venue={venue}
+                            selectedPlan={form.selectedPlan}
+                            eventDate={form.eventDate}
+                            startTime={form.startTime}
+                            endTime={form.endTime}
+                            kidsMonitorHours={form.kidsMonitorHours}
+                            normalizedQuote={form.normalizedQuote}
+                            quoteLoading={form.quoteLoading}
+                        />
 
                         <S.ActionCard className="anim-card">
                             <S.ConfirmButton
                                 type="button"
-                                onClick={handleConfirmReservation}
-                                disabled={submitting || Boolean(planIsIncompatible) || !acceptedContract}
+                                onClick={form.handleConfirmReservation}
+                                disabled={form.submitting || form.planIsIncompatible || !form.acceptedContract}
                             >
-                                {submitting ? "Confirmando reserva..." : "Confirmar e ir para pagamento"}
+                                {form.submitting ? "Confirmando reserva..." : "Confirmar e ir para pagamento"}
                             </S.ConfirmButton>
 
-                            <S.ContractCard>
-                                <S.ContractTitle>Contrato da reserva</S.ContractTitle>
-                                <S.ContractDescription>
-                                    O contrato é gerado automaticamente com base no plano e data escolhidos. Baixe e leia antes de confirmar.
-                                </S.ContractDescription>
-
-                                {planCode ? (
-                                    <S.ContractDownloadWrapper>
-                                        <ErrorBoundary fallback={<span>Erro ao gerar contrato. Tente novamente.</span>}>
-                                            <Suspense fallback={<span>Carregando...</span>}>
-                                                <ContratoDownloadLink
-                                                    contratoProps={contratoProps}
-                                                    fileName={`contrato-recanto-vila-rica-${eventDate || "reserva"}.pdf`}
-                                                />
-                                            </Suspense>
-                                        </ErrorBoundary>
-                                    </S.ContractDownloadWrapper>
-                                ) : (
-                                    <S.ContractDescription style={{ fontStyle: "italic" }}>
-                                        Selecione um plano para gerar o contrato.
-                                    </S.ContractDescription>
-                                )}
-
-                                <S.ContractCheckboxWrapper>
-                                    <input
-                                        type="checkbox"
-                                        id="acceptedContract"
-                                        checked={acceptedContract}
-                                        onChange={(e) => setAcceptedContract(e.target.checked)}
-                                    />
-                                    <label htmlFor="acceptedContract">
-                                        Li e estou de acordo com os termos do contrato.
-                                    </label>
-                                </S.ContractCheckboxWrapper>
-                            </S.ContractCard>
+                            <ContractSection
+                                planCode={form.planCode}
+                                eventDate={form.eventDate}
+                                contratoProps={contratoProps}
+                                acceptedContract={form.acceptedContract}
+                                onAcceptedChange={form.setAcceptedContract}
+                            />
                         </S.ActionCard>
                     </S.RightColumn>
                 </S.Grid>

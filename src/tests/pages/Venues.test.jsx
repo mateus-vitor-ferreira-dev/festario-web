@@ -41,7 +41,7 @@ describe("Venues page", () => {
         );
         renderPage();
         await waitFor(() =>
-            expect(screen.getByText(/erro ao carregar os espaços/i)).toBeInTheDocument()
+            expect(screen.getByText(/erro interno do servidor/i)).toBeInTheDocument()
         );
     });
 
