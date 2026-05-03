@@ -17,10 +17,18 @@ const ThemeContext = createContext();
  * @param {object} props
  * @param {React.ReactNode} props.children
  */
+function getInitialTheme() {
+  const stored = localStorage.getItem("recanto:theme");
+  if (stored === "light" || stored === "dark") return stored;
+  try {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  } catch {
+    return "light";
+  }
+}
+
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(
-    () => localStorage.getItem("recanto:theme") || "light"
-  );
+  const [theme, setTheme] = useState(getInitialTheme);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);

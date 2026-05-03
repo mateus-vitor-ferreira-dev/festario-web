@@ -1,18 +1,31 @@
 import { useState } from "react";
 import { TABS } from "./tabs/constants";
-import { DashboardTab } from "./tabs/DashboardTab";
-import { ReservationsTab } from "./tabs/ReservationsTab";
-import { NegotiationsTab } from "./tabs/NegotiationsTab";
-import { UsersTab } from "./tabs/UsersTab";
-import { CampaignsTab } from "./tabs/CampaignsTab";
-import { HolidaysTab } from "./tabs/HolidaysTab";
 import { BlockedDatesTab } from "./tabs/BlockedDatesTab";
+import { CampaignsTab } from "./tabs/CampaignsTab";
+import { DashboardTab } from "./tabs/DashboardTab";
+import { HolidaysTab } from "./tabs/HolidaysTab";
+import { NegotiationsTab } from "./tabs/NegotiationsTab";
 import { PlansTab } from "./tabs/PlansTab";
+import { ReservationsTab } from "./tabs/ReservationsTab";
+import { UsersTab } from "./tabs/UsersTab";
 import { VenueTab } from "./tabs/VenueTab";
 import * as S from "./styles";
 
+const TAB_COMPONENTS = {
+    dashboard:    DashboardTab,
+    reservations: ReservationsTab,
+    negotiations: NegotiationsTab,
+    users:        UsersTab,
+    campaigns:    CampaignsTab,
+    holidays:     HolidaysTab,
+    blockedDates: BlockedDatesTab,
+    plans:        PlansTab,
+    venues:       VenueTab,
+};
+
 export default function Admin() {
     const [activeTab, setActiveTab] = useState("dashboard");
+    const ActiveTab = TAB_COMPONENTS[activeTab] ?? DashboardTab;
 
     return (
         <S.Container>
@@ -34,15 +47,7 @@ export default function Admin() {
             </S.TabBar>
 
             <S.TabPanel $active>
-                {activeTab === "dashboard" && <DashboardTab />}
-                {activeTab === "reservations" && <ReservationsTab />}
-                {activeTab === "negotiations" && <NegotiationsTab />}
-                {activeTab === "users" && <UsersTab />}
-                {activeTab === "campaigns" && <CampaignsTab />}
-                {activeTab === "holidays" && <HolidaysTab />}
-                {activeTab === "blockedDates" && <BlockedDatesTab />}
-                {activeTab === "plans" && <PlansTab />}
-                {activeTab === "venues" && <VenueTab />}
+                <ActiveTab />
             </S.TabPanel>
         </S.Container>
     );

@@ -114,7 +114,7 @@ describe("Negotiations page", () => {
         );
         renderPage();
         await waitFor(() =>
-            expect(screen.getByText(/erro ao carregar negociações/i)).toBeInTheDocument()
+            expect(screen.getByText(/erro interno do servidor/i)).toBeInTheDocument()
         );
     });
 

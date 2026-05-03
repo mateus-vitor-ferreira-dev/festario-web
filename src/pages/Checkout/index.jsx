@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { useGSAP } from "@gsap/react";
 
 import { getReservation } from "../../services/reservation";
-import { createCheckoutSession, createPixCharge, getPaymentStatus } from "../../services/payment";
+import { createCheckoutSession, getPaymentStatus } from "../../services/payment";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { PLAN_LABELS, formatDateFull, formatTime, formatCurrency, calcDuration } from "../../utils/reservationFormat";
 import { animateFadeInUp, animateStagger } from "../../utils/animations";
@@ -32,7 +32,6 @@ export default function Checkout() {
     const [reservation, setReservation] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isRedirecting, setIsRedirecting] = useState(false);
-    const [_paymentMethod, setPaymentMethod] = useState("stripe");
     const [pixData, setPixData] = useState(null);
     const [pixStep, setPixStep] = useState("select");
     const [isCopied, setIsCopied] = useState(false);
@@ -79,23 +78,37 @@ export default function Checkout() {
                 copyPaste: p.pixCopyPaste,
                 expiresAt: p.pixExpiresAt,
             });
-            setPaymentMethod("pix");
             setPixStep("qr");
         }
     }, [reservation]);
 
-    // Polling de status quando QR Code está sendo exibido
+    // Polling de status quando QR Code está sendo exibido.
+    // Para automaticamente na expiração do PIX, após 5 erros consecutivos,
+    // ou quando o status muda para PAID/EXPIRED/CANCELLED.
     useEffect(() => {
         if (pixStep !== "qr" || !pixData) return;
 
         const controller = new AbortController();
+        let consecutiveErrors = 0;
+        const MAX_ERRORS = 5;
+        const expiresAt = pixData.expiresAt ? new Date(pixData.expiresAt).getTime() : Infinity;
 
         const interval = setInterval(async () => {
+            if (Date.now() >= expiresAt) {
+                clearInterval(interval);
+                toast.info("O código PIX expirou. Volte para suas reservas e tente novamente.");
+                navigate("/reservations");
+                return;
+            }
+
             try {
                 const result = await getPaymentStatus(reservationId, controller.signal);
+                consecutiveErrors = 0;
+
                 if (result?.payment?.status === "PAID") {
                     clearInterval(interval);
                     navigate("/payment/success");
+                    return;
                 }
                 if (["EXPIRED", "CANCELLED"].includes(result?.reservationStatus)) {
                     clearInterval(interval);
@@ -103,6 +116,11 @@ export default function Checkout() {
                 }
             } catch (err) {
                 if (err?.name === "CanceledError" || err?.name === "AbortError") return;
+                consecutiveErrors += 1;
+                if (consecutiveErrors >= MAX_ERRORS) {
+                    clearInterval(interval);
+                    toast.error("Não foi possível verificar o status do pagamento. Acesse 'Minhas reservas' para confirmar.");
+                }
             }
         }, 7000);
 
@@ -132,18 +150,6 @@ export default function Checkout() {
                 toast.error(getErrorMessage(error, "Erro ao iniciar o pagamento."));
             }
 
-            setIsRedirecting(false);
-        }
-    }
-
-    async function _handlePixPayment() {
-        try {
-            setIsRedirecting(true);
-            const data = await createPixCharge(reservationId);
-            setPixData(data);
-            setPixStep("qr");
-        } catch (error) {
-            toast.error(getErrorMessage(error, "Erro ao gerar QR Code PIX."));
             setIsRedirecting(false);
         }
     }

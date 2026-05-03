@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 import * as S from "./styles";
 
 const INITIAL_MESSAGE = {
@@ -17,6 +18,7 @@ const INITIAL_MESSAGE = {
  * @component
  */
 export default function ChatWidget() {
+    const { token } = useAuth();
     const [open, setOpen] = useState(false);
     const [messages, setMessages] = useState([INITIAL_MESSAGE]);
     const [input, setInput] = useState("");
@@ -44,9 +46,6 @@ export default function ChatWidget() {
         setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
         try {
-            const userData = JSON.parse(localStorage.getItem("recanto:userData") || "{}");
-            const token = userData?.token;
-
             const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
             const response = await fetch(`${baseUrl}/chat`, {
                 method: "POST",

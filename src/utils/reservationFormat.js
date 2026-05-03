@@ -61,6 +61,15 @@ export function formatCurrency(value) {
 }
 
 /**
+ * Formata um valor em centavos como moeda brasileira: ex. `"R$ 650,00"`.
+ * @param {number | string} cents - Valor em centavos
+ * @returns {string}
+ */
+export function formatCents(cents) {
+    return formatCurrency(Number(cents || 0) / 100);
+}
+
+/**
  * Calcula a duração em horas entre duas datas.
  * @param {string | Date} startDate
  * @param {string | Date} endDate

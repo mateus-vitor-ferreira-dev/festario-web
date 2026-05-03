@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, describe, expect, it } from "vitest";
+import { AuthProvider } from "../../contexts/AuthContext";
 import { AdminRoute } from "../../routes/AdminRoute";
 
 function renderWithRoute(userData) {
@@ -11,14 +12,16 @@ function renderWithRoute(userData) {
     }
 
     return render(
-        <MemoryRouter initialEntries={["/admin"]}>
-            <Routes>
-                <Route path="/home" element={<div>Home Page</div>} />
-                <Route element={<AdminRoute />}>
-                    <Route path="/admin" element={<div>Admin Page</div>} />
-                </Route>
-            </Routes>
-        </MemoryRouter>
+        <AuthProvider>
+            <MemoryRouter initialEntries={["/admin"]}>
+                <Routes>
+                    <Route path="/home" element={<div>Home Page</div>} />
+                    <Route element={<AdminRoute />}>
+                        <Route path="/admin" element={<div>Admin Page</div>} />
+                    </Route>
+                </Routes>
+            </MemoryRouter>
+        </AuthProvider>
     );
 }
 

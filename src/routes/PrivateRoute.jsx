@@ -1,20 +1,21 @@
 /**
  * @module routes/PrivateRoute
  * @description Guard de rota que exige autenticação.
- * Redireciona para `/login` se não houver dados de sessão no `localStorage`.
+ * Redireciona para `/login` se o usuário não estiver autenticado.
  */
 import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 /**
  * Rota protegida — exige que o usuário esteja autenticado.
- * Verifica a presença de `recanto:userData` no `localStorage`.
+ * Usa AuthContext como fonte de verdade, evitando acesso direto ao localStorage.
  *
  * @component
  */
 export function PrivateRoute() {
-    const userData = localStorage.getItem("recanto:userData");
+    const { isAuthenticated } = useAuth();
 
-    if (!userData) {
+    if (!isAuthenticated) {
         return <Navigate to="/login" replace />;
     }
 

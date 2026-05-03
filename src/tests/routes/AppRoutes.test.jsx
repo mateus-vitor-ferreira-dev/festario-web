@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AuthProvider } from "../../contexts/AuthContext";
 import { ThemeProvider } from "../../contexts/ThemeContext";
 import { AppRoutes } from "../../routes";
@@ -18,26 +18,31 @@ function renderRoutes(initialPath = "/") {
 }
 
 describe("AppRoutes", () => {
+    beforeEach(() => localStorage.clear());
     afterEach(() => localStorage.clear());
+
+    // Timeout maior que o padrão (1000ms) porque lazy loading pode ser lento
+    // quando muitos testes rodam em paralelo no CI ou em máquinas lentas.
+    const LAZY_TIMEOUT = { timeout: 8000 };
 
     it("redirects '/' to '/cadastro'", async () => {
         renderRoutes("/");
-        expect(await screen.findByRole("button", { name: /criar conta/i })).toBeInTheDocument();
+        expect(await screen.findByRole("button", { name: /criar conta/i }, LAZY_TIMEOUT)).toBeInTheDocument();
     });
 
     it("renders SignUp at /cadastro", async () => {
         renderRoutes("/cadastro");
-        expect(await screen.findByRole("button", { name: /criar conta/i })).toBeInTheDocument();
+        expect(await screen.findByRole("button", { name: /criar conta/i }, LAZY_TIMEOUT)).toBeInTheDocument();
     });
 
     it("renders Login at /login", async () => {
         renderRoutes("/login");
-        expect(await screen.findByRole("button", { name: /^entrar$/i })).toBeInTheDocument();
+        expect(await screen.findByRole("button", { name: /^entrar$/i }, LAZY_TIMEOUT)).toBeInTheDocument();
     });
 
     it("redirects unauthenticated user to /login from /home", async () => {
         renderRoutes("/home");
-        expect(await screen.findByRole("button", { name: /^entrar$/i })).toBeInTheDocument();
+        expect(await screen.findByRole("button", { name: /^entrar$/i }, LAZY_TIMEOUT)).toBeInTheDocument();
     });
 
     it("renders Home for authenticated user at /home", async () => {

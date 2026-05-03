@@ -1,10 +1,15 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { AuthProvider } from "../../contexts/AuthContext";
 import ChatWidget from "../../components/ChatWidget";
 
 function renderWidget() {
-    return render(<ChatWidget />);
+    return render(
+        <AuthProvider>
+            <ChatWidget />
+        </AuthProvider>
+    );
 }
 
 function makeFetchMock(chunks = ['data: {"text":"Olá!"}\n', "data: [DONE]\n"]) {
@@ -131,7 +136,9 @@ describe("ChatWidget", () => {
     });
 
     it("includes Authorization header when token is in localStorage", async () => {
-        localStorage.setItem("recanto:userData", JSON.stringify({ token: "my-token" }));
+        // AuthProvider inicializa do localStorage — setar antes de render garante que o token
+        // esteja disponível via useAuth() quando o ChatWidget fizer a requisição.
+        localStorage.setItem("recanto:userData", JSON.stringify({ token: "my-token", user: { role: "USER" } }));
         const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(makeFetchMock());
         const user = userEvent.setup();
         renderWidget();
