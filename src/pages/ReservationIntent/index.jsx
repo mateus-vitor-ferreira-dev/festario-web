@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useGSAP } from "@gsap/react";
 
@@ -20,7 +20,6 @@ import * as S from "./styles";
 
 export default function ReservationIntent() {
     const { venueId } = useParams();
-    const navigate = useNavigate();
     const { user } = useAuth();
     const containerRef = useRef(null);
 
