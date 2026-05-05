@@ -1,0 +1,215 @@
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import {
+    createCampaign,
+    drawRaffleWinner,
+    listCampaigns,
+    updateCampaign,
+} from "../../../services/admin";
+import { DatePickerInput } from "../../../components";
+import { getErrorMessage } from "../../../utils/getErrorMessage";
+import type { Campaign, RaffleWinnerResult } from "../../../types";
+import {
+    buildWinnerMessage,
+    CAMPAIGN_STATUS_LABELS,
+    CAMPAIGN_TYPE_OPTIONS,
+    CAMPAIGN_TYPE_LABELS,
+    getCampaignDateDisplay,
+    getCampaignStatus,
+} from "./constants";
+import * as S from "../styles";
+
+export function CampaignsTab() {
+    const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [togglingId, setTogglingId] = useState<string | null>(null);
+    const [drawingId, setDrawingId] = useState<string | null>(null);
+    const [winnerResult, setWinnerResult] = useState<RaffleWinnerResult | null>(null);
+    const [copied, setCopied] = useState(false);
+    const [form, setForm] = useState({ code: "", type: "REFERRAL_NEXT_BOOKING", name: "", startsAt: "", endsAt: "" });
+    const [isSaving, setIsSaving] = useState(false);
+
+    async function load() {
+        try {
+            setIsLoading(true);
+            const data = await listCampaigns();
+            setCampaigns(data ?? []);
+        } catch (error) {
+            toast.error(getErrorMessage(error, "Erro ao carregar campanhas."));
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    useEffect(() => { load(); }, []);
+
+    async function handleToggle(campaign: Campaign) {
+        try {
+            setTogglingId(campaign.id);
+            await updateCampaign(campaign.id, { isActive: !campaign.isActive });
+            toast.success(`Campanha ${!campaign.isActive ? "ativada" : "desativada"} com sucesso.`);
+            load();
+        } catch (error) {
+            toast.error(getErrorMessage(error, "Erro ao atualizar campanha."));
+        } finally {
+            setTogglingId(null);
+        }
+    }
+
+    async function handleDrawWinner(campaign: Campaign) {
+        try {
+            setDrawingId(campaign.id);
+            const result = await drawRaffleWinner(campaign.id);
+            setWinnerResult(result);
+        } catch (error) {
+            toast.error(getErrorMessage(error, "Erro ao realizar sorteio."));
+        } finally {
+            setDrawingId(null);
+        }
+    }
+
+    async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+        try {
+            setIsSaving(true);
+            await createCampaign({
+                ...form,
+                startsAt: new Date(form.startsAt).toISOString(),
+                endsAt: new Date(form.endsAt + "T23:59:59").toISOString(),
+            } as Campaign);
+            toast.success("Campanha criada com sucesso.");
+            setShowCreateModal(false);
+            setForm({ code: "", type: "REFERRAL_NEXT_BOOKING", name: "", startsAt: "", endsAt: "" });
+            load();
+        } catch (error) {
+            toast.error(getErrorMessage(error, "Erro ao criar campanha."));
+        } finally {
+            setIsSaving(false);
+        }
+    }
+
+    function handleCopyMessage(message: string) {
+        navigator.clipboard.writeText(message).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        });
+    }
+
+    return (
+        <S.Section>
+            <S.SectionHeader>
+                <S.SectionTitle>Campanhas promocionais</S.SectionTitle>
+                <S.PrimaryButton onClick={() => setShowCreateModal(true)}>+ Nova campanha</S.PrimaryButton>
+            </S.SectionHeader>
+
+            {isLoading ? (
+                <S.LoadingSpinner />
+            ) : campaigns.length === 0 ? (
+                <S.EmptyState>
+                    <h3>Nenhuma campanha cadastrada</h3>
+                    <p>Crie a primeira campanha clicando no botão acima.</p>
+                </S.EmptyState>
+            ) : (
+                <S.CardList>
+                    {campaigns.map((c) => {
+                        const status = getCampaignStatus(c);
+                        return (
+                            <S.CampaignCard key={c.id}>
+                                <S.CampaignInfo>
+                                    <strong>{c.name}</strong>
+                                    <span>{CAMPAIGN_TYPE_LABELS[c.type] ?? c.type} · Código: <strong>{c.code}</strong></span>
+                                    <span>{getCampaignDateDisplay(c)}</span>
+                                </S.CampaignInfo>
+                                <S.CampaignActions>
+                                    <S.CampaignStatusBadge $status={status}>
+                                        {CAMPAIGN_STATUS_LABELS[status]}
+                                    </S.CampaignStatusBadge>
+                                    {c.type === "RAFFLE_VIP" && status === "active" && (
+                                        <S.RaffleButton onClick={() => handleDrawWinner(c)} disabled={drawingId === c.id}>
+                                            {drawingId === c.id ? "Sorteando..." : "Realizar Sorteio"}
+                                        </S.RaffleButton>
+                                    )}
+                                    <S.SecondaryButton onClick={() => handleToggle(c)} disabled={togglingId === c.id}>
+                                        {togglingId === c.id ? "Salvando..." : c.isActive ? "Desativar" : "Ativar"}
+                                    </S.SecondaryButton>
+                                </S.CampaignActions>
+                            </S.CampaignCard>
+                        );
+                    })}
+                </S.CardList>
+            )}
+
+            {showCreateModal && (
+                <S.ModalOverlay onClick={() => setShowCreateModal(false)}>
+                    <S.ModalBox onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                        <S.ModalTitle>Nova campanha</S.ModalTitle>
+                        <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                            <S.FormGroup>
+                                <label>Nome</label>
+                                <S.TextInput required value={form.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Ex: Indique um amigo" />
+                            </S.FormGroup>
+                            <S.FormGroup>
+                                <label>Código</label>
+                                <S.TextInput required value={form.code} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder="Ex: REFERRAL_2026" />
+                            </S.FormGroup>
+                            <S.FormGroup>
+                                <label>Tipo</label>
+                                <S.Select value={form.type} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setForm((f) => ({ ...f, type: e.target.value }))} style={{ height: 42 }}>
+                                    {CAMPAIGN_TYPE_OPTIONS.map((o) => (
+                                        <option key={o.value} value={o.value}>{o.label}</option>
+                                    ))}
+                                </S.Select>
+                            </S.FormGroup>
+                            <S.FormGroup>
+                                <label>Início</label>
+                                <DatePickerInput
+                                    value={form.startsAt}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, startsAt: e.target.value }))}
+                                />
+                            </S.FormGroup>
+                            <S.FormGroup>
+                                <label>Encerramento</label>
+                                <DatePickerInput
+                                    value={form.endsAt}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, endsAt: e.target.value }))}
+                                    minDate={form.startsAt}
+                                />
+                            </S.FormGroup>
+                            <S.ModalActions>
+                                <S.SecondaryButton type="button" onClick={() => setShowCreateModal(false)} disabled={isSaving}>Cancelar</S.SecondaryButton>
+                                <S.PrimaryButton type="submit" disabled={isSaving}>{isSaving ? "Criando..." : "Criar campanha"}</S.PrimaryButton>
+                            </S.ModalActions>
+                        </form>
+                    </S.ModalBox>
+                </S.ModalOverlay>
+            )}
+
+            {winnerResult && (
+                <S.ModalOverlay onClick={() => { setWinnerResult(null); setCopied(false); }}>
+                    <S.ModalBox onClick={(e: React.MouseEvent) => e.stopPropagation()} style={{ maxWidth: 520 }}>
+                        <S.ModalTitle>Ganhador do Sorteio</S.ModalTitle>
+                        <S.WinnerCard>
+                            <strong>{winnerResult.winner.name}</strong>
+                            <span>{winnerResult.winner.email}</span>
+                            {winnerResult.winner.phone && <span>{winnerResult.winner.phone}</span>}
+                            <span style={{ marginTop: 4, fontSize: 12, color: "var(--text-muted)" }}>
+                                Sorteado entre {winnerResult.totalEntries} {winnerResult.totalEntries === 1 ? "participante" : "participantes"}
+                            </span>
+                        </S.WinnerCard>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)" }}>Mensagem para enviar ao ganhador:</span>
+                            <S.MessagePreview>{buildWinnerMessage(winnerResult.winner, winnerResult.campaignName)}</S.MessagePreview>
+                            <S.CopyButton onClick={() => handleCopyMessage(buildWinnerMessage(winnerResult.winner, winnerResult.campaignName))}>
+                                {copied ? "Copiado!" : "Copiar mensagem"}
+                            </S.CopyButton>
+                        </div>
+                        <S.ModalActions>
+                            <S.PrimaryButton onClick={() => { setWinnerResult(null); setCopied(false); }}>Fechar</S.PrimaryButton>
+                        </S.ModalActions>
+                    </S.ModalBox>
+                </S.ModalOverlay>
+            )}
+        </S.Section>
+    );
+}
