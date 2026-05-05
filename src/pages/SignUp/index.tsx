@@ -110,6 +110,8 @@ export default function SignUp({ introFinished = true }) {
                         value={form.firstName}
                         onChange={handleChange}
                         error={errors.firstName ?? undefined}
+                        maxLength={100}
+                        autoComplete="given-name"
                     />
                     <Input
                         label="Sobrenome"
@@ -118,6 +120,8 @@ export default function SignUp({ introFinished = true }) {
                         value={form.lastName}
                         onChange={handleChange}
                         error={errors.lastName ?? undefined}
+                        maxLength={100}
+                        autoComplete="family-name"
                     />
                 </S.NameRow>
 
@@ -129,6 +133,8 @@ export default function SignUp({ introFinished = true }) {
                     value={form.email}
                     onChange={handleChange}
                     error={errors.email ?? undefined}
+                    maxLength={254}
+                    autoComplete="email"
                 />
 
                 <PhoneInput
@@ -149,6 +155,8 @@ export default function SignUp({ introFinished = true }) {
                     onChange={handleChange}
                     showPasswordToggle
                     error={errors.password ?? undefined}
+                    maxLength={128}
+                    autoComplete="new-password"
                 />
 
                 <DatePickerInput

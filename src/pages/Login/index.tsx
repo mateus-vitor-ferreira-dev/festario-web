@@ -71,6 +71,8 @@ export default function Login({ introFinished = true }) {
                     placeholder="Digite seu e-mail"
                     value={form.email}
                     onChange={handleChange}
+                    maxLength={254}
+                    autoComplete="email"
                 />
 
                 <Input
@@ -79,6 +81,8 @@ export default function Login({ introFinished = true }) {
                     placeholder="Digite sua senha"
                     value={form.password}
                     onChange={handleChange}
+                    maxLength={128}
+                    autoComplete="current-password"
                     showPasswordToggle
                 />
 

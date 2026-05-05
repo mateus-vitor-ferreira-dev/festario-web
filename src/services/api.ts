@@ -128,7 +128,9 @@ api.interceptors.response.use(
             config._retryCount = (config._retryCount || 0) + 1;
 
             if (config._retryCount <= MAX_RETRIES) {
-                const delay = 1000 * config._retryCount;
+                // Jitter previne thundering herd quando o backend volta de uma outage
+                const jitter = Math.random() * 500;
+                const delay = 1000 * config._retryCount + jitter;
                 await new Promise((resolve) => setTimeout(resolve, delay));
                 return api(config);
             }

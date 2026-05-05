@@ -18,6 +18,18 @@ export function initSentry() {
     beforeSend(event, hint) {
       const status = getHttpStatus(hint?.originalException);
       if (status !== undefined && status < 500) return null;
+
+      // Remover dados que podem conter PII ou tokens de autenticação
+      if (event.request?.headers) {
+        delete event.request.headers["Authorization"];
+        delete event.request.headers["authorization"];
+        delete event.request.headers["Cookie"];
+        delete event.request.headers["cookie"];
+      }
+      if (event.request) {
+        delete event.request.data; // body pode conter senhas/tokens
+      }
+
       return event;
     },
   });
@@ -26,7 +38,8 @@ export function initSentry() {
 export function setUserContext(user: User | null): void {
   if (!dsn) return;
   if (user) {
-    Sentry.setUser({ id: user.id, email: user.email });
+    // Nunca enviar PII (email, nome) ao Sentry — apenas o ID anônimo
+    Sentry.setUser({ id: user.id });
   } else {
     Sentry.setUser(null);
   }
