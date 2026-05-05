@@ -47,7 +47,7 @@ export interface UseReservationFormReturn {
     minimumKidsHours: number;
     kidsMonitorExtraHours: number;
     planIsIncompatible: boolean;
-    handlePlanClick: (code: string) => void;
+    handlePlanClick: (code: PlanCode) => void;
     handleDateChange: (newDate: string) => void;
     handleConfirmReservation: () => Promise<void>;
 }
@@ -160,12 +160,12 @@ export function useReservationForm({ venueId, hasKidsArea }: { venueId: string |
 
     const planIsIncompatible = Boolean(planCode && eventDate && !isPlanAvailableForDate(planCode, eventDate));
 
-    function handlePlanClick(code: string) {
+    function handlePlanClick(code: PlanCode) {
         if (eventDate && !isPlanAvailableForDate(code, eventDate)) {
             toast.warning(getBlockedPlanMessage(code, eventDate));
             return;
         }
-        setPlanCode(code as PlanCode);
+        setPlanCode(code);
     }
 
     function handleDateChange(newDate: string) {

@@ -21,6 +21,22 @@ import type {
     PixChargeResult,
 } from "../types";
 
+export interface SendProposalPayload {
+    venueId: string;
+    startDate: string;
+    endDate: string;
+    customPriceCents: number;
+    notes: string | null;
+}
+
+export interface CreateCustomReservationPayload {
+    venueId: string;
+    startDate: string;
+    endDate: string;
+    customPriceCents: number;
+    notes?: string | null;
+}
+
 /** Retorno do endpoint POST /negotiations/:id/proposal/respond */
 export interface RespondToProposalResult {
     action: "ACCEPTED" | "DECLINED";
@@ -88,7 +104,7 @@ export async function updateNegotiationStatus(id: string, status: NegotiationSta
  *
  * @see POST /negotiations/:id/reservation
  */
-export async function createCustomReservation(id: string, payload: Record<string, unknown>): Promise<Reservation> {
+export async function createCustomReservation(id: string, payload: CreateCustomReservationPayload): Promise<Reservation> {
     const response = await api.post(`/negotiations/${id}/reservation`, payload);
     return response.data.data;
 }
@@ -99,7 +115,7 @@ export async function createCustomReservation(id: string, payload: Record<string
  *
  * @see POST /negotiations/:id/proposal
  */
-export async function sendProposal(id: string, payload: Record<string, unknown>): Promise<Negotiation> {
+export async function sendProposal(id: string, payload: SendProposalPayload): Promise<Negotiation> {
     const response = await api.post(`/negotiations/${id}/proposal`, payload);
     return response.data.data;
 }

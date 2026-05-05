@@ -1,11 +1,12 @@
 import { PLANS, isPlanAvailableForDate } from "../../../constants/reservation";
 import { formatCents } from "../../../utils/reservationFormat";
+import type { PlanCode } from "../../../types";
 import * as S from "../styles";
 
 interface PlanSelectorProps {
     eventDate: string;
     planCode: string;
-    onPlanClick: (code: string) => void;
+    onPlanClick: (code: PlanCode) => void;
 }
 
 /**
