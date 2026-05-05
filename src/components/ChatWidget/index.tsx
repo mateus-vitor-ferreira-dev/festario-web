@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { env } from "../../config/env";
 import { useAuth } from "../../contexts/AuthContext";
 import * as S from "./styles";
 
@@ -46,7 +47,7 @@ export default function ChatWidget() {
         setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
         try {
-            const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+            const baseUrl = env.apiUrl;
             const response = await fetch(`${baseUrl}/chat`, {
                 method: "POST",
                 headers: {

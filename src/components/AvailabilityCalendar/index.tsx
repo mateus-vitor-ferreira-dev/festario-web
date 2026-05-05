@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { getBlockedDates, getOccupiedDates } from "../../services/availability";
 import { getErrorMessage } from "../../utils/getErrorMessage";
+import { isAbortError } from "../../utils/errors";
 import type { BlockedDate, OccupiedDate } from "../../types";
 import * as S from "./styles";
 
@@ -70,7 +71,7 @@ export default function AvailabilityCalendar({ venueId, selectedDate, onChange, 
                     setOccupiedRanges(occupied);
                 }
             } catch (err) {
-                if ((err as {name?: string})?.name === "CanceledError" || (err as {name?: string})?.name === "AbortError") return;
+                if (isAbortError(err)) return;
                 toast.error(getErrorMessage(err, "Erro ao carregar disponibilidade."));
             } finally {
                 if (!controller.signal.aborted) setLoading(false);

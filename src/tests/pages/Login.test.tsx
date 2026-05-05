@@ -76,7 +76,10 @@ describe("Login page", () => {
     it("shows error toast on failed login", async () => {
         server.use(
             http.post("http://localhost:3000/auth/login", () =>
-                HttpResponse.json({ success: false }, { status: 401 })
+                HttpResponse.json(
+                    { success: false, message: "Email ou senha incorretos." },
+                    { status: 401 }
+                )
             )
         );
         const user = userEvent.setup();
@@ -85,7 +88,7 @@ describe("Login page", () => {
         await user.type(screen.getByPlaceholderText(/digite sua senha/i), "wrongpass");
         await user.click(screen.getByRole("button", { name: /^entrar$/i }));
         await waitFor(() =>
-            expect(screen.getByText(/erro ao fazer login/i)).toBeInTheDocument()
+            expect(screen.getByText(/email ou senha incorretos/i)).toBeInTheDocument()
         );
     });
 });

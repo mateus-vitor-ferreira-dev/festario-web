@@ -1,5 +1,7 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { formatPhone } from "../../utils/formatPhone";
+import { COUNTRIES, DEFAULT_COUNTRY } from "../../constants/countries";
+import type { Country } from "../../constants/countries";
 import * as S from "./styles";
 
 interface PhoneInputProps {
@@ -11,34 +13,8 @@ interface PhoneInputProps {
     error?: string;
 }
 
-const COUNTRIES = [
-    { code: "BR", flag: "🇧🇷", dialCode: "+55", name: "Brasil" },
-    { code: "DE", flag: "🇩🇪", dialCode: "+49", name: "Alemanha" },
-    { code: "AO", flag: "🇦🇴", dialCode: "+244", name: "Angola" },
-    { code: "AR", flag: "🇦🇷", dialCode: "+54", name: "Argentina" },
-    { code: "BO", flag: "🇧🇴", dialCode: "+591", name: "Bolívia" },
-    { code: "CA", flag: "🇨🇦", dialCode: "+1", name: "Canadá" },
-    { code: "CL", flag: "🇨🇱", dialCode: "+56", name: "Chile" },
-    { code: "CO", flag: "🇨🇴", dialCode: "+57", name: "Colômbia" },
-    { code: "ES", flag: "🇪🇸", dialCode: "+34", name: "Espanha" },
-    { code: "US", flag: "🇺🇸", dialCode: "+1", name: "Estados Unidos" },
-    { code: "FR", flag: "🇫🇷", dialCode: "+33", name: "França" },
-    { code: "IT", flag: "🇮🇹", dialCode: "+39", name: "Itália" },
-    { code: "JP", flag: "🇯🇵", dialCode: "+81", name: "Japão" },
-    { code: "MX", flag: "🇲🇽", dialCode: "+52", name: "México" },
-    { code: "MZ", flag: "🇲🇿", dialCode: "+258", name: "Moçambique" },
-    { code: "PY", flag: "🇵🇾", dialCode: "+595", name: "Paraguai" },
-    { code: "PE", flag: "🇵🇪", dialCode: "+51", name: "Peru" },
-    { code: "PT", flag: "🇵🇹", dialCode: "+351", name: "Portugal" },
-    { code: "GB", flag: "🇬🇧", dialCode: "+44", name: "Reino Unido" },
-    { code: "UY", flag: "🇺🇾", dialCode: "+598", name: "Uruguai" },
-    { code: "VE", flag: "🇻🇪", dialCode: "+58", name: "Venezuela" },
-];
-
-const DEFAULT_COUNTRY = COUNTRIES[0]; // Brasil
-
 export default function PhoneInput({ label, name, value, onChange, onDialCodeChange, error }: PhoneInputProps) {
-    const [country, setCountry] = useState(DEFAULT_COUNTRY);
+    const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState("");
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -62,7 +38,7 @@ export default function PhoneInput({ label, name, value, onChange, onDialCodeCha
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [isOpen]);
 
-    function handleSelectCountry(selected: typeof DEFAULT_COUNTRY) {
+    function handleSelectCountry(selected: Country) {
         setCountry(selected);
         setIsOpen(false);
         setSearch("");

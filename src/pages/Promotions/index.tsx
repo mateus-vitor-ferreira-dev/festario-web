@@ -5,6 +5,7 @@ import { useGSAP } from "@gsap/react";
 import { listPromotionStatus, listMyGrants } from "../../services/promotion";
 import { createReferral, listReferrals } from "../../services/referral";
 import { getErrorMessage } from "../../utils/getErrorMessage";
+import { isAbortError } from "../../utils/errors";
 import { animateFadeInUp, animateStagger } from "../../utils/animations";
 import type { PromotionGrant, PromotionStatusItem, Referral } from "../../types";
 import * as S from "./styles";
@@ -85,7 +86,7 @@ export default function Promotions() {
                 if (grantsData.status === "fulfilled") setGrants(grantsData.value ?? []);
                 if (referralsData.status === "fulfilled") setReferrals(referralsData.value ?? []);
             } catch (error) {
-                if ((error as { name?: string })?.name === "CanceledError" || (error as { name?: string })?.name === "AbortError") return;
+                if (isAbortError(error)) return;
                 toast.error("Erro ao carregar promoções.");
             } finally {
                 if (!signal.aborted) setIsLoading(false);

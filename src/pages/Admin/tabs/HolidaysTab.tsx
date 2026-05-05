@@ -8,6 +8,7 @@ import {
     syncMunicipalHolidays,
 } from "../../../services/admin";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
+import { isAbortError } from "../../../utils/errors";
 import { DatePickerInput } from "../../../components";
 import { formatDate, getMunicipalHolidaysSeed, HOLIDAY_TYPE_OPTIONS } from "./constants";
 import type { Holiday } from "../../../types";
@@ -25,19 +26,26 @@ export function HolidaysTab() {
     const [form, setForm] = useState({ date: "", name: "", type: "national" });
     const [isSaving, setIsSaving] = useState(false);
 
-    async function load() {
+    async function load(signal?: AbortSignal) {
         try {
             setIsLoading(true);
-            const data = await listHolidays(year);
+            const data = await listHolidays(year, signal);
+            if (signal?.aborted) return;
             setHolidays(data ?? []);
         } catch (error) {
+            if (isAbortError(error)) return;
             toast.error(getErrorMessage(error, "Erro ao carregar feriados."));
         } finally {
-            setIsLoading(false);
+            if (!signal?.aborted) setIsLoading(false);
         }
     }
 
-    useEffect(() => { load(); }, [year]);
+    useEffect(() => {
+        const controller = new AbortController();
+        load(controller.signal);
+        return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [year]);
 
     async function handleSync() {
         try {

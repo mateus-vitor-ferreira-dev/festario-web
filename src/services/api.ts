@@ -13,15 +13,16 @@
  * - **Rate limit (429)**: rejeitado imediatamente sem retry.
  */
 import axios from "axios";
+import { env } from "../config/env";
+import { readSession, clearSession, updateSessionTokens } from "../config/authStorage";
+import { isAbortError } from "../utils/errors";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-const STORAGE_KEY = "recanto:userData";
+const BASE_URL = env.apiUrl;
 
 const api = axios.create({ baseURL: BASE_URL });
 
 api.interceptors.request.use((config) => {
-    const userData = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-    const token = userData?.token;
+    const token = readSession()?.token;
 
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -31,9 +32,7 @@ api.interceptors.request.use((config) => {
 });
 
 const MAX_RETRIES = 3;
-const isTestEnv =
-    import.meta.env.MODE === "test" ||
-    Boolean(import.meta.env.VITEST);
+const isTestEnv = env.isTest;
 
 interface PendingRequest {
     resolve: (value: unknown) => void;
@@ -56,8 +55,8 @@ function drainQueue(newToken: string | null) {
     pendingQueue = [];
 }
 
-function clearSession() {
-    localStorage.removeItem(STORAGE_KEY);
+function invalidateSession() {
+    clearSession();
     window.location.href = "/login";
 }
 
@@ -72,8 +71,7 @@ api.interceptors.response.use(
         }
 
         const isAuthEndpoint = config.url?.startsWith("/auth/");
-        const isAbortError =
-            error?.name === "CanceledError" || error?.name === "AbortError";
+        const isAbort = isAbortError(error);
 
         if (status === 401 && !isAuthEndpoint && !config._isRefreshRetry) {
             if (isRefreshing) {
@@ -82,11 +80,10 @@ api.interceptors.response.use(
                 });
             }
 
-            const userData = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-            const refreshToken = userData?.refreshToken;
+            const refreshToken = readSession()?.refreshToken;
 
             if (!refreshToken) {
-                clearSession();
+                invalidateSession();
                 return Promise.reject(error);
             }
 
@@ -103,10 +100,7 @@ api.interceptors.response.use(
 
                 const { data } = await res.json();
 
-                const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-                stored.token = data.accessToken;
-                stored.refreshToken = data.refreshToken;
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+                updateSessionTokens(data.accessToken, data.refreshToken ?? null);
 
                 drainQueue(data.accessToken);
 
@@ -115,7 +109,7 @@ api.interceptors.response.use(
                 return api(config);
             } catch {
                 drainQueue(null);
-                clearSession();
+                invalidateSession();
                 return Promise.reject(error);
             } finally {
                 isRefreshing = false;
@@ -126,7 +120,7 @@ api.interceptors.response.use(
 
         if (
             !isTestEnv &&
-            !isAbortError &&
+            !isAbort &&
             !isAuthEndpoint &&
             isGetRequest &&
             status >= 500

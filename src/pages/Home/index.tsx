@@ -8,6 +8,7 @@ import { listMyGrants } from "../../services/promotion";
 import { listReservations } from "../../services/reservation";
 import { listVenues } from "../../services/venue";
 import { STATUS_MAP } from "../../constants/reservation";
+import { isAbortError } from "../../utils/errors";
 import { animateFadeInUp, animateStagger } from "../../utils/animations";
 import type { Venue, Reservation, PromotionGrant, User } from "../../types";
 import * as S from "./styles";
@@ -84,9 +85,7 @@ export default function Home() {
                 if (signal.aborted) return;
 
                 const anyFailed = [userResult, venuesResult, reservationsResult].some(
-                    (r) => r.status === "rejected" &&
-                        r.reason?.name !== "CanceledError" &&
-                        r.reason?.name !== "AbortError"
+                    (r) => r.status === "rejected" && !isAbortError(r.reason)
                 );
                 if (anyFailed) {
                     toast.error("Erro ao carregar os dados da Home.");
@@ -99,7 +98,7 @@ export default function Home() {
                     grants: grantsResult.status === "fulfilled" ? grantsResult.value || [] : [],
                 });
             } catch (error) {
-                if ((error as Error)?.name !== "CanceledError" && (error as Error)?.name !== "AbortError") {
+                if (!isAbortError(error)) {
                     toast.error("Erro ao carregar os dados da Home.");
                 }
             } finally {

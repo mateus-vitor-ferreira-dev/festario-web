@@ -8,6 +8,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import api from "../../services/api";
 import { resendVerification, verifyCurrentPassword } from "../../services/auth";
 import { getErrorMessage } from "../../utils/getErrorMessage";
+import { isAbortError, getHttpStatus } from "../../utils/errors";
 import { formatPhone } from "../../utils/formatPhone";
 import { validatePassword } from "../../utils/validatePassword";
 import { animateFadeInUp, animateStagger } from "../../utils/animations";
@@ -87,8 +88,8 @@ export default function Profile() {
                     birthDate: u.birthDate ? u.birthDate.split("T")[0] : "",
                 });
             } catch (error) {
-                if ((error as {name?: string})?.name === "CanceledError" || (error as {name?: string})?.name === "AbortError") return;
-                const status = (error as {response?: {status?: number}})?.response?.status;
+                if (isAbortError(error)) return;
+                const status = getHttpStatus(error);
                 if (status === 401 || status === 403) return navigate("/home");
                 if (status === 429) {
                     toast.error("Muitas requisições em pouco tempo. Aguarde alguns instantes e tente novamente.");

@@ -1,16 +1,6 @@
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
-import { ReactNode } from "react";
 
-interface ParaProps {
-    label: string;
-    children: ReactNode;
-}
-
-interface BulletProps {
-    children: ReactNode;
-}
-
-interface ContratoRVRProps {
+export interface ContratoRVRProps {
     locatario: string;
     data: string;
     horarioInicio: string;
@@ -21,366 +11,316 @@ interface ContratoRVRProps {
     totalCents?: number;
 }
 
-const PLAN_INFO = {
-    PROMOCIONAL: {
-        label: "Promocional",
-        days: "Segunda a Quinta-feira",
-        priceCents: 65000,
-        inclusions: ["Salão de festas, cozinha, banheiros e quadra esportiva", "Área kids com monitor infantil por 4 horas", "Faxinas"],
-    },
-    ESSENCIAL: {
-        label: "Essencial",
-        days: "Sexta-feira, Sábado, Domingo e Feriados",
-        priceCents: 85000,
-        inclusions: ["Salão de festas, cozinha, banheiros e quadra esportiva", "Área kids com monitor infantil por 4 horas", "Faxinas"],
-    },
-    COMPLETA: {
-        label: "Completa",
-        days: "Sexta-feira, Sábado, Domingo e Feriados",
-        priceCents: 99900,
-        inclusions: ["Salão de festas, cozinha, banheiros e quadra esportiva", "Área kids com monitor infantil por 4 horas", "Área da piscina (período integral)", "Faxinas"],
-    },
-};
-
 function formatCurrency(cents: number): string {
-    return (Number(cents) / 100).toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-    });
+    return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-const styles = StyleSheet.create({
+const ACCENT = "#7c3aed";
+const ACCENT_LIGHT = "#f5f3ff";
+const TEXT = "#111";
+const MUTED = "#555";
+
+const s = StyleSheet.create({
     page: {
         fontFamily: "Helvetica",
-        fontSize: 10,
-        paddingTop: 50,
-        paddingBottom: 60,
-        paddingHorizontal: 55,
-        color: "#111",
-        lineHeight: 1.6,
+        fontSize: 9.5,
+        paddingTop: 44,
+        paddingBottom: 56,
+        paddingHorizontal: 52,
+        color: TEXT,
+        lineHeight: 1.55,
     },
+
+    // ── Cabeçalho ────────────────────────────────────────────────────────
     header: {
         textAlign: "center",
-        marginBottom: 24,
+        marginBottom: 20,
         borderBottomWidth: 2,
-        borderBottomColor: "#7c3aed",
-        paddingBottom: 12,
+        borderBottomColor: ACCENT,
+        paddingBottom: 10,
     },
     headerTitle: {
-        fontSize: 14,
+        fontSize: 13,
         fontFamily: "Helvetica-Bold",
         textTransform: "uppercase",
-        color: "#7c3aed",
-        marginBottom: 4,
+        color: ACCENT,
+        marginBottom: 3,
     },
-    headerSubtitle: {
-        fontSize: 10,
-        color: "#555",
-    },
-    partiesSection: {
-        marginBottom: 16,
-    },
-    sectionLabel: {
-        fontSize: 8,
-        fontFamily: "Helvetica-Bold",
-        textTransform: "uppercase",
-        color: "#7c3aed",
-        letterSpacing: 0.8,
-        marginBottom: 6,
-    },
-    partiesRow: {
+    headerSub: { fontSize: 9, color: MUTED },
+
+    // ── Partes ────────────────────────────────────────────────────────────
+    partiesGrid: {
         flexDirection: "row",
-        gap: 12,
+        gap: 10,
+        marginBottom: 16,
     },
     partyBox: {
         flex: 1,
-        backgroundColor: "#f5f3ff",
+        backgroundColor: ACCENT_LIGHT,
         borderRadius: 4,
         padding: 8,
     },
     partyRole: {
-        fontSize: 8,
+        fontSize: 7.5,
         fontFamily: "Helvetica-Bold",
         textTransform: "uppercase",
-        color: "#7c3aed",
+        color: ACCENT,
         marginBottom: 3,
+        letterSpacing: 0.5,
     },
-    partyName: {
+    partyName: { fontSize: 9.5, fontFamily: "Helvetica-Bold", marginBottom: 2 },
+    partyDetail: { fontSize: 8.5, color: "#444" },
+
+    // ── Seção numerada ────────────────────────────────────────────────────
+    sectionTitle: {
         fontSize: 10,
         fontFamily: "Helvetica-Bold",
-        marginBottom: 2,
-    },
-    partyDetail: {
-        fontSize: 9,
-        color: "#444",
-    },
-    planBox: {
-        backgroundColor: "#f5f3ff",
-        borderLeftWidth: 3,
-        borderLeftColor: "#7c3aed",
-        borderRadius: 4,
-        padding: 10,
-        marginBottom: 20,
-    },
-    planRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
+        textTransform: "uppercase",
+        color: ACCENT,
         marginBottom: 6,
+        marginTop: 14,
+        borderBottomWidth: 0.5,
+        borderBottomColor: "#d8b4fe",
+        paddingBottom: 3,
     },
-    planName: {
-        fontSize: 12,
-        fontFamily: "Helvetica-Bold",
-        color: "#7c3aed",
-    },
-    planPrice: {
-        fontSize: 12,
-        fontFamily: "Helvetica-Bold",
-    },
-    planMeta: {
-        fontSize: 9,
-        color: "#555",
-        marginBottom: 6,
-    },
-    planInclusionsList: {
-        marginTop: 4,
-    },
-    planInclusionItem: {
-        fontSize: 9,
-        color: "#333",
-        marginBottom: 2,
-    },
-    clauseTitle: {
-        fontSize: 11,
+
+    // ── Tabela de modalidades ─────────────────────────────────────────────
+    table: { marginBottom: 10, borderWidth: 0.5, borderColor: "#ccc", borderRadius: 3 },
+    tableHeader: { flexDirection: "row", backgroundColor: ACCENT },
+    tableHeaderCell: {
+        flex: 1,
+        padding: "5 6",
+        color: "#fff",
+        fontSize: 8,
         fontFamily: "Helvetica-Bold",
         textTransform: "uppercase",
-        textAlign: "center",
-        marginBottom: 10,
-        marginTop: 4,
     },
-    paragraph: {
-        marginBottom: 8,
-        textAlign: "justify",
-    },
-    paragraphLabel: {
-        fontFamily: "Helvetica-Bold",
-    },
-    bulletItem: {
-        marginLeft: 16,
-        marginBottom: 6,
-        textAlign: "justify",
-    },
-    bulletDot: {
-        fontFamily: "Helvetica-Bold",
-    },
+    tableRow: { flexDirection: "row", borderTopWidth: 0.5, borderTopColor: "#ddd" },
+    tableRowSelected: { flexDirection: "row", borderTopWidth: 0.5, borderTopColor: "#ddd", backgroundColor: ACCENT_LIGHT },
+    tableCell: { flex: 1, padding: "5 6", fontSize: 8.5, color: TEXT },
+    tableCellBold: { flex: 1, padding: "5 6", fontSize: 8.5, fontFamily: "Helvetica-Bold", color: ACCENT },
+
+    // ── Texto genérico ────────────────────────────────────────────────────
+    row: { flexDirection: "row", marginBottom: 4 },
+    label: { fontFamily: "Helvetica-Bold", minWidth: 110 },
+    value: { flex: 1 },
+    paragraph: { marginBottom: 7, textAlign: "justify" },
+    bold: { fontFamily: "Helvetica-Bold" },
+    bullet: { marginLeft: 14, marginBottom: 5, textAlign: "justify" },
+    note: { fontSize: 8, color: MUTED, marginBottom: 4, fontStyle: "italic" },
+
+    // ── Assinaturas ───────────────────────────────────────────────────────
+    sigSection: { marginTop: 20 },
+    sigDate: { marginBottom: 14, fontSize: 9 },
+    sigRow: { flexDirection: "row", gap: 24, marginTop: 10 },
+    sigBox: { flex: 1 },
+    sigLine: { borderBottomWidth: 1, borderBottomColor: "#999", marginBottom: 4 },
+    sigLabel: { fontSize: 8, color: MUTED, textAlign: "center" },
+
+    // ── Rodapé ────────────────────────────────────────────────────────────
     footer: {
         position: "absolute",
-        bottom: 30,
-        left: 55,
-        right: 55,
-        borderTopWidth: 1,
+        bottom: 26,
+        left: 52,
+        right: 52,
+        borderTopWidth: 0.5,
         borderTopColor: "#ddd",
-        paddingTop: 8,
+        paddingTop: 6,
         flexDirection: "row",
         justifyContent: "space-between",
     },
-    footerText: {
-        fontSize: 8,
-        color: "#999",
-    },
-    pageNumber: {
-        fontSize: 8,
-        color: "#999",
-    },
+    footerText: { fontSize: 7.5, color: "#aaa" },
 });
 
-function Para({ label, children }: ParaProps) {
-    return (
-        <View style={styles.paragraph}>
-            <Text>
-                <Text style={styles.paragraphLabel}>{label} – </Text>
-                {children}
-            </Text>
-        </View>
-    );
-}
+const PLANS = {
+    PROMOCIONAL: {
+        modalidade: "1 – Promocional",
+        validade: "2ª a 5ª feira (não feriados)",
+        tempo: "5h de festa",
+        inclui: "Espaço geral; área kids c/ 4h de monitoria",
+        valor: "R$ 650,00",
+    },
+    ESSENCIAL: {
+        modalidade: "2 – Essencial",
+        validade: "Sexta, sábado, domingo e feriados",
+        tempo: "4h de festa",
+        inclui: "Espaço geral; área kids c/ 4h de monitoria",
+        valor: "R$ 850,00",
+    },
+    COMPLETA: {
+        modalidade: "3 – Completa",
+        validade: "Sexta, sábado, domingo e feriados",
+        tempo: "Das 9h às 23h",
+        inclui: "Espaço geral; área kids c/ 4h de monitoria; área da piscina",
+        valor: "R$ 990,00",
+    },
+} as const satisfies Record<"PROMOCIONAL" | "ESSENCIAL" | "COMPLETA", {
+    modalidade: string; validade: string; tempo: string; inclui: string; valor: string;
+}>;
 
-function Bullet({ children }: BulletProps) {
-    return (
-        <View style={styles.bulletItem}>
-            <Text>
-                <Text style={styles.bulletDot}>• </Text>
-                {children}
-            </Text>
-        </View>
-    );
-}
+type PlanKey = keyof typeof PLANS;
 
 /**
- * Documento PDF do contrato de locação do Recanto Vila Rica, gerado via `@react-pdf/renderer`.
- *
- * O texto das cláusulas 3ª–5ª varia automaticamente conforme a combinação de espaços opcionais
- * (`comKids` / `comPiscina`). Use `ContratoDownloadLink` para disponibilizar o download.
- *
- * @component
+ * Contrato de locação do Recanto Vila Rica — formato amigável (Abril/2026).
+ * Use `ContratoDownloadLink` para disponibilizar o download do PDF.
  */
-export function ContratoRVR({ locatario, data, horarioInicio, horarioFim, comKids, comPiscina, planCode, totalCents }: ContratoRVRProps) {
-    const plan = PLAN_INFO[planCode] ?? PLAN_INFO.ESSENCIAL;
-    const preco = formatCurrency(totalCents ?? plan.priceCents);
-    const periodo = `${data}, das ${horarioInicio} às ${horarioFim}`;
-
-    // §3 varia por combinação
-    const par3 = (() => {
-        if (comKids && comPiscina) {
-            return "O espaço, objeto desta locação, compreende: salão de festas; cozinha; 2 banheiros - masculino e feminino e quadra esportiva (Espaços Usuais); estão inclusas, ainda, a área kids (Espaço Opcional 1) e a área da piscina (Espaço Opcional 2), por opção do locatário.";
-        }
-        if (comKids && !comPiscina) {
-            return "O espaço, objeto desta locação, compreende: salão de festas; cozinha; 2 banheiros - masculino e feminino e quadra esportiva (Espaços Usuais), e também, a área kids (Espaço Opcional 1). A área da piscina (Espaço Opcional 2) não está inclusa nesta locação, por opção do locatário.";
-        }
-        if (!comKids && comPiscina) {
-            return "O espaço, objeto desta locação, compreende: salão de festas; cozinha; 2 banheiros - masculino e feminino e quadra esportiva (Espaços Usuais) e, também, a área da piscina (Espaço Opcional 2). A área kids (Espaço Opcional 1) não está inclusa nesta locação, por opção do locatário.";
-        }
-        return "O espaço, objeto desta locação, compreende: salão de festas; cozinha; 2 banheiros - masculino e feminino e quadra esportiva (Espaços Usuais). Não estão inclusos os Espaços Opcionais 1 e 2, por opção do locatário.";
-    })();
-
-    // §7 — CT não menciona limpeza; as demais sim
-    const par7Limpeza = !(comKids && comPiscina)
-        ? " A limpeza final é por conta do locador."
-        : "";
+export function ContratoRVR({ locatario, data, horarioInicio, horarioFim, planCode, totalCents }: ContratoRVRProps) {
+    const total = totalCents ? formatCurrency(totalCents) : "a confirmar";
+    const ano = new Date().getFullYear();
 
     return (
         <Document>
-            <Page size="A4" style={styles.page}>
+            <Page size="A4" style={s.page}>
+
                 {/* Cabeçalho */}
-                <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Contrato de Locação de Espaço para Eventos</Text>
-                    <Text style={styles.headerSubtitle}>Recanto Vila Rica – Festas e Eventos</Text>
-                    <Text style={styles.headerSubtitle}>Rua Bernardino Antônio Tomáz, 21 – Jardim Vila Rica, Lavras/MG</Text>
+                <View style={s.header}>
+                    <Text style={s.headerTitle}>Contrato de Locação de Espaço para Eventos</Text>
+                    <Text style={s.headerSub}>Recanto Vila Rica – Festas e Eventos</Text>
+                    <Text style={s.headerSub}>Rua Bernardino Antônio Tomaz, 21 – B. Jardim Vila Rica – Lavras/MG – CEP 37.203-775</Text>
                 </View>
 
                 {/* Partes */}
-                <View style={styles.partiesSection}>
-                    <Text style={styles.sectionLabel}>Partes contratantes</Text>
-                    <View style={styles.partiesRow}>
-                        <View style={styles.partyBox}>
-                            <Text style={styles.partyRole}>Locador</Text>
-                            <Text style={styles.partyName}>Recanto Vila Rica</Text>
-                            <Text style={styles.partyDetail}>Rua Bernardino Antônio Tomáz, 21</Text>
-                            <Text style={styles.partyDetail}>Jardim Vila Rica, Lavras/MG</Text>
-                        </View>
-                        <View style={styles.partyBox}>
-                            <Text style={styles.partyRole}>Locatário</Text>
-                            <Text style={styles.partyName}>{locatario || "—"}</Text>
-                        </View>
+                <View style={s.partiesGrid}>
+                    <View style={s.partyBox}>
+                        <Text style={s.partyRole}>Locador</Text>
+                        <Text style={s.partyName}>Cleide Mirian Pereira</Text>
+                        <Text style={s.partyDetail}>CPF: 554.624.486-00</Text>
+                        <Text style={s.partyDetail}>Recanto Vila Rica – Festas e Eventos</Text>
+                    </View>
+                    <View style={s.partyBox}>
+                        <Text style={s.partyRole}>Locatário</Text>
+                        <Text style={s.partyName}>{locatario || "—"}</Text>
+                        <Text style={s.partyDetail}>CPF: _________________________</Text>
+                        <Text style={s.partyDetail}>Endereço: ____________________</Text>
                     </View>
                 </View>
 
-                {/* Plano contratado */}
-                <Text style={styles.sectionLabel}>Modalidade contratada</Text>
-                <View style={styles.planBox}>
-                    <View style={styles.planRow}>
-                        <Text style={styles.planName}>Plano {plan.label}</Text>
-                        <Text style={styles.planPrice}>{preco}</Text>
-                    </View>
-                    <Text style={styles.planMeta}>Válido: {plan.days}</Text>
-                    <Text style={styles.planMeta}>Data e horário: {periodo}</Text>
-                    <View style={styles.planInclusionsList}>
-                        {plan.inclusions.map((item, i) => (
-                            <Text key={i} style={styles.planInclusionItem}>•  {item}</Text>
-                        ))}
-                    </View>
+                {/* 1. OBJETO */}
+                <Text style={s.sectionTitle}>1. Objeto</Text>
+                <Text style={s.paragraph}>Locação do espaço para evento.</Text>
+
+                <View style={[s.row, { marginBottom: 10 }]}>
+                    <Text style={s.label}>Data:</Text>
+                    <Text style={s.value}>{data}</Text>
+                    <Text style={s.label}>Início:</Text>
+                    <Text style={s.value}>{horarioInicio}h</Text>
+                    <Text style={s.label}>Término:</Text>
+                    <Text style={s.value}>{horarioFim}h</Text>
                 </View>
 
-                {/* Cláusula 1ª */}
-                <Text style={styles.clauseTitle}>Cláusula Primeira – Do Objeto do Contrato</Text>
+                <Text style={[s.paragraph, { marginBottom: 6 }]}>
+                    <Text style={s.bold}>Espaços oferecidos:{"  "}</Text>
+                    <Text>a) Espaço geral: salão de festas, cozinha, banheiros e quadra esportiva{"  "}</Text>
+                    <Text>b) Espaço Opcional 1: área kids{"  "}</Text>
+                    <Text>c) Espaço Opcional 2: área da piscina</Text>
+                </Text>
 
-                <Para label="Parágrafo 1º">
-                    O primeiro nomeado, aqui chamado "locador", sendo proprietário do imóvel Recanto Vila Rica – Festas e Eventos, localizado à Rua Bernardino Antônio Tomáz, 21 – Jardim Vila Rica, Lavras/MG, loca-o ao segundo contratante, aqui chamado "locatário", mediante as condições descritas a seguir, neste instrumento.
-                </Para>
+                {/* Tabela de modalidades */}
+                <View style={s.table}>
+                    <View style={s.tableHeader}>
+                        <Text style={[s.tableHeaderCell, { flex: 1.4 }]}>Modalidade</Text>
+                        <Text style={[s.tableHeaderCell, { flex: 1.8 }]}>Validade</Text>
+                        <Text style={[s.tableHeaderCell, { flex: 0.9 }]}>Tempo</Text>
+                        <Text style={[s.tableHeaderCell, { flex: 2.2 }]}>Inclui</Text>
+                        <Text style={[s.tableHeaderCell, { flex: 0.8 }]}>Valor</Text>
+                    </View>
+                    {(Object.entries(PLANS) as [PlanKey, typeof PLANS[PlanKey]][]).map(([key, plan]) => {
+                        const isSelected = key === planCode;
+                        const row = isSelected ? s.tableRowSelected : s.tableRow;
+                        const cell = isSelected ? s.tableCellBold : s.tableCell;
+                        return (
+                            <View key={key} style={row}>
+                                <Text style={[cell, { flex: 1.4 }]}>
+                                    {isSelected ? "✓ " : ""}{plan.modalidade}
+                                </Text>
+                                <Text style={[cell, { flex: 1.8 }]}>{plan.validade}</Text>
+                                <Text style={[cell, { flex: 0.9 }]}>{plan.tempo}</Text>
+                                <Text style={[cell, { flex: 2.2 }]}>{plan.inclui}</Text>
+                                <Text style={[cell, { flex: 0.8 }]}>{plan.valor}</Text>
+                            </View>
+                        );
+                    })}
+                </View>
 
-                <Para label="Parágrafo 2º">
-                    A locação se efetuará no dia {data}, das {horarioInicio} às {horarioFim}h, sob a modalidade {plan.label} ({preco}), para exercer sua atividade.
-                </Para>
+                <Text style={s.note}>* Modalidades 1 e 2: entrega das chaves 5h antes do início.  * Hora extra de monitoria: R$ 30,00/h.</Text>
 
-                <Para label="Parágrafo 3º">{par3}</Para>
+                {/* 2. PAGAMENTO */}
+                <Text style={s.sectionTitle}>2. Pagamento</Text>
+                <Text style={s.paragraph}>Pagamento via pix, dinheiro ou cartão de crédito.</Text>
+                <View style={s.row}>
+                    <Text style={s.label}>Valor do aluguel:</Text>
+                    <Text style={s.value}>{total}</Text>
+                </View>
+                <View style={s.row}>
+                    <Text style={s.label}>Sinal pago:</Text>
+                    <Text style={s.value}>R$ __________ via ____________ em ___/___/___</Text>
+                </View>
+                <View style={[s.row, { marginBottom: 8 }]}>
+                    <Text style={s.label}>Restante:</Text>
+                    <Text style={s.value}>R$ __________ até o dia do evento</Text>
+                </View>
 
-                {/* §4 — área kids */}
-                {comKids ? (
-                    <>
-                        <Para label="Parágrafo 4º">
-                            O espaço kids ficará disponível pelo período de 4 horas (horário a definir), sob a supervisão de um monitor infantil; antes e após esse período o espaço {comPiscina ? "fica FECHADO" : "PERMANECE FECHADO"}. O locatário poderá optar pela permanência do monitor infantil, com pagamento extra por sua conta no valor de R$ 25,00 por hora-extra (combinados previamente).
-                        </Para>
-                        <Bullet>
-                            Em caso de constatação de invasão na área kids (Espaço Opcional 1), fora do horário estipulado, será cobrada multa no valor de R$ 400,00 + reparação dos possíveis danos, com pagamento e ressarcimento em até 7 dias.
-                        </Bullet>
-                    </>
-                ) : (
-                    <>
-                        <Para label="Parágrafo 4º">
-                            {comPiscina
-                                ? "O espaço kids (Espaço Opcional 1) não ficará disponível por todo o período da locação."
-                                : "A área kids (Espaço Opcional 1) não ficará disponível pelo período todo da locação."}
-                        </Para>
-                        <Bullet>
-                            Em caso de constatação de invasão nesta área será cobrada multa no valor de R$ 400,00 + reparação dos possíveis danos, com pagamento e ressarcimento em até 7 dias.
-                        </Bullet>
-                    </>
-                )}
+                {/* 3. REGRAS DOS ESPAÇOS */}
+                <Text style={s.sectionTitle}>3. Regras dos Espaços</Text>
 
-                {/* §5 — piscina */}
-                {comPiscina ? (
-                    comKids ? (
-                        <Para label="Parágrafo 5º">
-                            A área da piscina ficará disponível nesta locação, por todo o período locado.
-                        </Para>
-                    ) : (
-                        <Para label="Parágrafo 5º">
-                            A área da piscina (Espaço Opcional 2) ficará disponível nesta locação, por todo o período da locação.
-                        </Para>
-                    )
-                ) : (
-                    <Para label="Parágrafo 5º">
-                        {comKids
-                            ? "A área da piscina não ficará disponível nesta locação, por opção do locatário. Em caso de constatação de invasão nesta área será cobrada multa no valor de R$ 300,00 + reparação dos possíveis danos, com pagamento e ressarcimento em até 7 dias."
-                            : "A área da piscina (Espaço Opcional 2) não ficará disponível pelo período todo da locação."}
-                        {!comKids && (
-                            <Text> Em caso de constatação de invasão nesta área será cobrada multa no valor de R$ 300,00 + reparação dos possíveis danos, com pagamento e ressarcimento em até 7 dias.</Text>
-                        )}
-                    </Para>
-                )}
+                <Text style={[s.bold, { marginBottom: 3 }]}>Área kids:</Text>
+                <Text style={s.bullet}>• Monitor obrigatório. Hora extra: R$ 30,00/h.</Text>
+                <Text style={s.bullet}>• Multa por uso indevido: R$ 200,00 + danos.</Text>
 
-                {/* §6 */}
-                <Para label="Parágrafo 6º">
-                    Não estão inclusas nesta locação as áreas privativas do locador: área de despejo, horta e armário embutido na cozinha.
-                </Para>
-                <Bullet>
-                    Em caso de constatação de invasão nestas áreas será cobrada multa no valor de R$ 200,00 + reparação dos possíveis danos, em cada uma delas, com pagamento e ressarcimento em até 7 dias.
-                </Bullet>
+                <Text style={[s.bold, { marginBottom: 3, marginTop: 6 }]}>Piscina:</Text>
+                <Text style={s.bullet}>• Proibido alimentos, bebidas e materiais de vidro na área da piscina.</Text>
+                <Text style={s.bullet}>• Multa por uso indevido: R$ 200,00 + danos.</Text>
 
-                {/* §7 */}
-                <Para label="Parágrafo 7º">
-                    O locatário compromete-se à devolução do salão e das respectivas chaves ao locatário (ou a alguém autorizado por ele) no mesmo dia, ao final da festa ou, no máximo até às 10h do dia seguinte, com o imóvel desocupado dos seus pertences e daqueles relativos aos prestadores de serviço, além do lixo acondicionado em sacos plásticos.{par7Limpeza}
-                </Para>
+                <Text style={[s.bold, { marginBottom: 3, marginTop: 6 }]}>Áreas privativas:</Text>
+                <Text style={s.bullet}>• Área de despejo, horta e armário embutido na cozinha. Proibido acesso.</Text>
+                <Text style={s.bullet}>• Multa por uso indevido: R$ 200,00 por área + danos.</Text>
 
-                {/* §8 */}
-                <Para label="Parágrafo 8º">
-                    Fica vedado o empréstimo do imóvel, total ou parcial, para terceiros alheios à locação, ou para uso não contratado; assim como a entrega das suas cópias da chave a terceiros para qualquer fim.
-                </Para>
+                {/* 4. OBRIGAÇÕES */}
+                <Text style={s.sectionTitle}>4. Obrigações</Text>
+                <Text style={s.paragraph}>Respeitar leis municipais (som até 23h), estaduais e federais, vizinhos e regras do espaço.</Text>
+                <Text style={s.paragraph}>Proibido cobrar entrada ou repassar o espaço. O locatário é responsável por qualquer ocorrência durante o evento.</Text>
 
-                {/* §9 */}
-                <Para label="Parágrafo 9º">
-                    Fica vedada a organização de eventos com fins lucrativos e, portanto, a cobrança de qualquer tipo de ingresso ou acesso, total ou parcial, de terceiros para qualquer fim.
-                </Para>
+                {/* 5. DEVOLUÇÃO */}
+                <Text style={s.sectionTitle}>5. Devolução</Text>
+                <Text style={s.paragraph}>Devolver no mesmo dia, ao final do evento, ou até às 9h do dia seguinte. Retirar pertences até 9h do dia seguinte, ensacar lixo e não empilhar móveis.</Text>
 
-                {/* §10 */}
-                <Para label="Parágrafo 10º">
-                    A confirmação da concordância e anuência das cláusulas contratuais, pelo locatário, poderá se dar com seu aceite por meio digital, sem a necessidade de assinatura em papel.
-                </Para>
+                {/* 6. CUIDADOS */}
+                <Text style={s.sectionTitle}>6. Cuidados</Text>
+                <Text style={s.paragraph}>Não danificar paredes ou estruturas. Danos deverão ser ressarcidos em até 7 dias. Vistorias podem ocorrer a qualquer momento durante o evento.</Text>
+
+                {/* 7. ATRASO */}
+                <Text style={s.sectionTitle}>7. Atraso</Text>
+                <Text style={s.paragraph}>Atraso na saída ou na entrega das chaves gerará cobrança adicional.</Text>
+
+                {/* 8. CANCELAMENTO */}
+                <Text style={s.sectionTitle}>8. Cancelamento</Text>
+                <Text style={s.bullet}>• Até 60 dias antes do evento: sem reembolso.</Text>
+                <Text style={s.bullet}>• De 61 a 120 dias antes: devolução de 40%.</Text>
+                <Text style={s.bullet}>• De 121 a 180 dias antes: devolução de 70%.</Text>
+
+                {/* 9. GERAL */}
+                <Text style={s.sectionTitle}>9. Geral</Text>
+                <Text style={s.paragraph}>O local possui câmeras de segurança. Este contrato pode ser aceito digitalmente, sem necessidade de assinatura em papel.</Text>
+
+                {/* Assinaturas */}
+                <View style={s.sigSection}>
+                    <Text style={s.sigDate}>Lavras, _____ de __________________ de {ano}.</Text>
+                    <View style={s.sigRow}>
+                        <View style={s.sigBox}>
+                            <View style={s.sigLine} />
+                            <Text style={s.sigLabel}>Locador – Cleide Mirian Pereira</Text>
+                        </View>
+                        <View style={s.sigBox}>
+                            <View style={s.sigLine} />
+                            <Text style={s.sigLabel}>Locatário – {locatario || "____________________"}</Text>
+                        </View>
+                    </View>
+                </View>
 
                 {/* Rodapé */}
-                <View style={styles.footer} fixed>
-                    <Text style={styles.footerText}>Recanto Vila Rica – Festas e Eventos · Lavras/MG</Text>
-                    <Text style={styles.pageNumber} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
+                <View style={s.footer} fixed>
+                    <Text style={s.footerText}>Recanto Vila Rica – Festas e Eventos · Lavras/MG</Text>
+                    <Text style={s.footerText} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
                 </View>
             </Page>
         </Document>

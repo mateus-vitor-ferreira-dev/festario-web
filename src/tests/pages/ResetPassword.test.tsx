@@ -123,10 +123,13 @@ describe("ResetPassword page", () => {
         );
     });
 
-    it("shows generic error message when API returns no message", async () => {
+    it("shows full fallback message when API returns descriptive error", async () => {
         server.use(
             http.post("http://localhost:3000/auth/reset-password", () =>
-                HttpResponse.json({ success: false }, { status: 500 })
+                HttpResponse.json(
+                    { success: false, message: "Token inválido ou expirado. Solicite um novo link." },
+                    { status: 400 }
+                )
             )
         );
         const user = userEvent.setup();

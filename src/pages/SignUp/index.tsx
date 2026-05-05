@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { AuthLayout, Button, DatePickerInput, GoogleButton, Input, PhoneInput } from "../../components";
 
 import api from "../../services/api";
+import { getErrorMessage } from "../../utils/getErrorMessage";
 import { validatePassword } from "../../utils/validatePassword";
 import * as S from "./styles";
 
@@ -88,13 +89,7 @@ export default function SignUp({ introFinished = true }) {
             toast.success("Cadastro realizado com sucesso.");
             navigate("/login");
         } catch (error) {
-            const e = error as { response?: { data?: { message?: string; error?: { message?: string } } } };
-            const message =
-                e.response?.data?.message ||
-                e.response?.data?.error?.message ||
-                "Erro ao cadastrar usuário.";
-
-            toast.error(message);
+            toast.error(getErrorMessage(error, "Erro ao cadastrar usuário."));
         } finally {
             setIsLoading(false);
         }

@@ -7,6 +7,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { resendVerification } from "../../services/auth";
 import { animateFadeInUp } from "../../utils/animations";
+import { getHttpStatus } from "../../utils/errors";
 import * as S from "./styles";
 
 function getInitials(name: string): string {
@@ -73,8 +74,7 @@ export default function Header() {
             await resendVerification();
             toast.success("E-mail de verificação reenviado. Verifique sua caixa de entrada.");
         } catch (err) {
-            const msg = (err as {response?: {data?: {message?: string}}})?.response?.data?.message;
-            if (msg === "Email is already verified") {
+            if (getHttpStatus(err) === 400) {
                 toast.info("Seu e-mail já está verificado.");
             } else {
                 toast.error("Erro ao reenviar. Tente novamente.");

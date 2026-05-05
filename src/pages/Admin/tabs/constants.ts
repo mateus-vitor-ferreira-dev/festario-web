@@ -1,4 +1,4 @@
-import type { Campaign, RaffleWinnerResult } from "../../../types";
+import type { Campaign, NegotiationStatus, RaffleWinnerResult } from "../../../types";
 // Constantes e helpers compartilhados entre as abas do painel admin
 export { REFUND_TIERS, getRefundPercentage } from "../../../constants/reservation";
 
@@ -30,16 +30,18 @@ export const STATUS_LABELS = {
     EXPIRED: "Expirado",
 };
 
-export const NEG_STATUS_OPTIONS = [
+export const NEG_STATUS_OPTIONS: Array<{ value: NegotiationStatus | ""; label: string }> = [
     { value: "", label: "Todos os status" },
     { value: "OPEN", label: "Aberta" },
+    { value: "PENDING_APPROVAL", label: "Proposta enviada" },
     { value: "ACCEPTED", label: "Aceita" },
     { value: "REJECTED", label: "Recusada" },
     { value: "CLOSED", label: "Encerrada" },
 ];
 
-export const NEG_STATUS_LABELS = {
+export const NEG_STATUS_LABELS: Record<NegotiationStatus, string> = {
     OPEN: "Aberta",
+    PENDING_APPROVAL: "Proposta enviada",
     ACCEPTED: "Aceita",
     REJECTED: "Recusada",
     CLOSED: "Encerrada",

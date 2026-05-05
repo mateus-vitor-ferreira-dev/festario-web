@@ -57,7 +57,7 @@ const proposalMessage = {
 function setLocalStorage(role = "USER") {
     localStorage.setItem(
         "recanto:userData",
-        JSON.stringify({ user: { id: "user-1", name: "Mateus", role } })
+        JSON.stringify({ token: "fake-token", user: { id: "user-1", name: "Mateus", role } })
     );
 }
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { cancelAdminReservation, listAdminReservations } from "../../../services/admin";
+import { isAbortError } from "../../../utils/errors";
 import { DatePickerInput } from "../../../components";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
 import type { Reservation } from "../../../types";
@@ -35,27 +36,32 @@ export function ReservationsTab() {
     const [cancelModal, setCancelModal] = useState<CancelModal | null>(null);
     const limit = 15;
 
-    async function load(currentPage = 1) {
+    async function load(currentPage = 1, signal?: AbortSignal) {
         try {
             setIsLoading(true);
             const filters: Record<string, unknown> = { page: currentPage, limit };
             if (status) filters.status = status;
             if (startDate) filters.startDate = new Date(startDate).toISOString();
             if (endDate) filters.endDate = new Date(endDate + "T23:59:59").toISOString();
-            const result = await listAdminReservations(filters);
+            const result = await listAdminReservations(filters, signal);
+            if (signal?.aborted) return;
             const list = result ?? [];
             setReservations(list);
             setHasMore(list.length === limit);
         } catch (error) {
+            if (isAbortError(error)) return;
             toast.error(getErrorMessage(error, "Erro ao carregar reservas."));
         } finally {
-            setIsLoading(false);
+            if (!signal?.aborted) setIsLoading(false);
         }
     }
 
     useEffect(() => {
+        const controller = new AbortController();
         setPage(1);
-        load(1);
+        load(1, controller.signal);
+        return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [status, startDate, endDate]);
 
     function handlePageChange(next: number) {

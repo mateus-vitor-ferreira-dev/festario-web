@@ -140,12 +140,23 @@ export interface NegotiationMessageAuthor {
   role: UserRole;
 }
 
+export interface ProposalMetadata {
+  type: "PROPOSAL";
+  venueName?: string;
+  startDate: string;
+  endDate: string;
+  customPriceCents: number;
+  notes?: string;
+}
+
+export type NegotiationMessageMetadata = ProposalMetadata | null;
+
 export interface NegotiationMessage {
   id: string;
   content: string;
   isSystem: boolean;
   author: NegotiationMessageAuthor;
-  metadata?: Record<string, unknown> | null;
+  metadata?: NegotiationMessageMetadata;
   createdAt: string;
 }
 

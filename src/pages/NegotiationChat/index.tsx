@@ -25,11 +25,13 @@ import {
 } from "../../services/negotiation";
 import { listVenues } from "../../services/venue";
 import { getErrorMessage } from "../../utils/getErrorMessage";
+import { isAbortError } from "../../utils/errors";
+import { readSession } from "../../config/authStorage";
 import AvailabilityCalendar from "../../components/AvailabilityCalendar";
-import type { Negotiation, NegotiationMessage, Venue, NegotiationStatus } from "../../types";
+import type { Negotiation, NegotiationMessage, Venue, NegotiationStatus, ProposalMetadata } from "../../types";
 import * as S from "./styles";
 
-const STATUS_LABELS: Record<string, string> = {
+const STATUS_LABELS: Record<NegotiationStatus, string> = {
     OPEN: "Aberta",
     PENDING_APPROVAL: "Proposta enviada",
     ACCEPTED: "Aceita",
@@ -78,15 +80,6 @@ function SendIcon() {
 function extractPixCode(content: string): string | null {
     const match = content.match(/PIX copia e cola:\n(.+)/s);
     return match ? match[1].trim() : null;
-}
-
-interface ProposalMetadata {
-    type: string;
-    venueName?: string;
-    startDate: string;
-    endDate: string;
-    customPriceCents: number;
-    notes?: string;
 }
 
 interface ProposalMessageProps {
@@ -171,16 +164,9 @@ export default function NegotiationChat() {
     const [isSendingProposal, setIsSendingProposal] = useState(false);
     const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
-    let userData: Record<string, Record<string, string>> = {};
-    try {
-        userData = JSON.parse(localStorage.getItem("recanto:userData") || "{}");
-    } catch {
-        userData = {};
-    }
-
-    const currentUserId = userData?.user?.id || userData?.id;
-    const currentUserRole = userData?.user?.role || userData?.role;
-    const isAdmin = currentUserRole === "ADMIN";
+    const session = readSession();
+    const currentUserId = session?.user?.id ?? null;
+    const isAdmin = session?.user?.role === "ADMIN";
 
     useEffect(() => {
         if (!id) return;
@@ -196,7 +182,7 @@ export default function NegotiationChat() {
                 setNegotiation(neg);
                 if (isAdmin) setVenues(venueList ?? []);
             } catch (error) {
-                if ((error as { name?: string })?.name === "CanceledError" || (error as { name?: string })?.name === "AbortError") return;
+                if (isAbortError(error)) return;
                 toast.error(getErrorMessage(error, "Erro ao carregar negociação."));
             } finally {
                 if (!controller.signal.aborted) setIsLoading(false);
@@ -207,20 +193,27 @@ export default function NegotiationChat() {
         return () => controller.abort();
     }, [id, isAdmin]);
 
-    // Poll for new messages every 5 s while the negotiation is active
+    // Poll for new messages while the negotiation is active.
+    // Starts at 5 s; backs off exponentially on consecutive errors (max 60 s).
     const negotiationRef = useRef<Negotiation | null>(null);
     negotiationRef.current = negotiation;
 
     useEffect(() => {
         if (!id) return;
-        const CLOSED_STATUSES = ["CLOSED", "REJECTED", "ACCEPTED"];
+        const negotiationId = id;
+        const CLOSED_STATUSES = new Set<NegotiationStatus>(["CLOSED", "REJECTED", "ACCEPTED"]);
+        const BASE_INTERVAL = 5_000;
+        const MAX_INTERVAL = 60_000;
+        let consecutiveErrors = 0;
+        let timeoutId: ReturnType<typeof setTimeout>;
 
-        const interval = setInterval(async () => {
+        async function poll() {
             const current = negotiationRef.current;
-            if (!current || CLOSED_STATUSES.includes(current.status)) return;
+            if (!current || CLOSED_STATUSES.has(current.status)) return;
 
             try {
-                const fresh = await getNegotiation(id);
+                const fresh = await getNegotiation(negotiationId);
+                consecutiveErrors = 0;
                 setNegotiation((prev) => {
                     if (!prev) return fresh;
                     const prevIds = new Set(prev.messages.map((m) => m.id));
@@ -229,11 +222,15 @@ export default function NegotiationChat() {
                     return hasNew || statusChanged ? fresh : prev;
                 });
             } catch {
-                // silent — preserves existing data on network error
+                consecutiveErrors += 1;
             }
-        }, 5000);
 
-        return () => clearInterval(interval);
+            const delay = Math.min(BASE_INTERVAL * 2 ** consecutiveErrors, MAX_INTERVAL);
+            timeoutId = setTimeout(poll, delay);
+        }
+
+        timeoutId = setTimeout(poll, BASE_INTERVAL);
+        return () => clearTimeout(timeoutId);
     }, [id]);
 
     useEffect(() => {
@@ -399,7 +396,7 @@ export default function NegotiationChat() {
 
     const lastProposalIndex = negotiation?.messages
         ? [...negotiation.messages].map((m, i) => ({ m, i }))
-            .filter(({ m }) => (m.metadata as ProposalMetadata | null | undefined)?.type === "PROPOSAL")
+            .filter(({ m }) => m.metadata?.type === "PROPOSAL")
             .at(-1)?.i ?? -1
         : -1;
 
@@ -431,7 +428,7 @@ export default function NegotiationChat() {
                 <S.MessagesArea>
                     {negotiation.messages.map((msg, idx) => {
                         const isOwn = !msg.isSystem && msg.author.id === currentUserId;
-                        const meta = msg.metadata as ProposalMetadata | null | undefined;
+                        const meta = msg.metadata;
                         const isProposal = meta?.type === "PROPOSAL";
                         const pixCode = msg.isSystem && !isProposal ? extractPixCode(msg.content) : null;
                         const displayContent = pixCode

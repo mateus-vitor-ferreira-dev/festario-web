@@ -9,6 +9,7 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { getErrorMessage } from "../utils/getErrorMessage";
+import { isAbortError } from "../utils/errors";
 
 interface ApiError {
     name?: string;
@@ -54,7 +55,7 @@ export function useApiData<T>(
                 if (!signal.aborted) setData(result ?? initialData ?? null);
             } catch (err) {
                 const e = err as ApiError;
-                if (e?.name === "CanceledError" || e?.name === "AbortError") return;
+                if (isAbortError(e)) return;
                 toast.error(resolveErrorMessage(e, errorMessage));
             } finally {
                 if (!signal.aborted) setIsLoading(false);

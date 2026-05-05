@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { createPlan, deletePlan, listPlans, updatePlan } from "../../../services/admin";
 import { listVenues } from "../../../services/venue";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
+import { isAbortError } from "../../../utils/errors";
 import type { ReservationPlan, Venue } from "../../../types";
 import { EMPTY_PLAN_FORM, formatCurrency, PLAN_CODES } from "./constants";
 import * as S from "../styles";
@@ -31,20 +32,30 @@ export function PlansTab() {
     const [isSaving, setIsSaving] = useState(false);
     const [form, setForm] = useState<PlanForm>(EMPTY_PLAN_FORM as PlanForm);
 
-    async function load() {
+    async function loadAll(signal?: AbortSignal) {
         try {
             setIsLoading(true);
-            const [plansData, venuesData] = await Promise.all([listPlans(), listVenues()]);
+            const [plansData, venuesData] = await Promise.all([
+                listPlans({}, signal),
+                listVenues(signal),
+            ]);
+            if (signal?.aborted) return;
             setPlans(plansData ?? []);
             setVenues(venuesData ?? []);
         } catch (error) {
+            if (isAbortError(error)) return;
             toast.error(getErrorMessage(error, "Erro ao carregar planos."));
         } finally {
-            setIsLoading(false);
+            if (!signal?.aborted) setIsLoading(false);
         }
     }
 
-    useEffect(() => { load(); }, []);
+    useEffect(() => {
+        const controller = new AbortController();
+        loadAll(controller.signal);
+        return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     function openCreate() {
         setEditingPlan(null);
@@ -104,7 +115,7 @@ export function PlansTab() {
                 toast.success("Plano criado.");
             }
             setShowModal(false);
-            load();
+            await loadAll();
         } catch (error) {
             toast.error(getErrorMessage(error, "Erro ao salvar plano."));
         } finally {

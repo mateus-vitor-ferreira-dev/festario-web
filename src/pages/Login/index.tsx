@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { AuthLayout, Button, GoogleButton, Input } from "../../components";
 
 import { useAuth } from "../../contexts/AuthContext";
+import { getErrorMessage } from "../../utils/getErrorMessage";
 import api from "../../services/api";
 import * as S from "./styles";
 
@@ -50,13 +51,7 @@ export default function Login({ introFinished = true }) {
             toast.success(data.message || "Login realizado com sucesso.");
             navigate("/home");
         } catch (error) {
-            const e = error as { response?: { data?: { message?: string; error?: { message?: string } } } };
-            const message =
-                e.response?.data?.message ||
-                e.response?.data?.error?.message ||
-                "Erro ao fazer login.";
-
-            toast.error(message);
+            toast.error(getErrorMessage(error, "Erro ao fazer login."));
         } finally {
             setIsLoading(false);
         }

@@ -1,41 +1,22 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 import { listNegotiations } from "../../../services/negotiation";
-import { getErrorMessage } from "../../../utils/getErrorMessage";
+import { useApiData } from "../../../hooks/useApiData";
 import { formatDate, NEG_STATUS_LABELS, NEG_STATUS_OPTIONS } from "./constants";
-import type { Negotiation } from "../../../types";
+import type { Negotiation, NegotiationStatus } from "../../../types";
 import * as S from "../styles";
 
 export function NegotiationsTab() {
     const navigate = useNavigate();
-    const [negotiations, setNegotiations] = useState<Negotiation[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [statusFilter, setStatusFilter] = useState("");
-
-    useEffect(() => {
-        const controller = new AbortController();
-
-        async function load() {
-            try {
-                setIsLoading(true);
-                const data = await listNegotiations(controller.signal);
-                if (!controller.signal.aborted) setNegotiations(data ?? []);
-            } catch (error) {
-                if ((error as {name?: string})?.name === "CanceledError" || (error as {name?: string})?.name === "AbortError") return;
-                toast.error(getErrorMessage(error, "Erro ao carregar negociações."));
-            } finally {
-                if (!controller.signal.aborted) setIsLoading(false);
-            }
-        }
-
-        load();
-        return () => controller.abort();
-    }, []);
+    const { data: negotiations, isLoading } = useApiData<Negotiation[]>(listNegotiations, {
+        initialData: [],
+        errorMessage: "Erro ao carregar negociações.",
+    });
+    const [statusFilter, setStatusFilter] = useState<NegotiationStatus | "">("");
 
     const filtered = statusFilter
-        ? negotiations.filter((n) => (n.status as string) === statusFilter)
-        : negotiations;
+        ? (negotiations ?? []).filter((n) => n.status === statusFilter)
+        : negotiations ?? [];
 
     return (
         <S.Section>
@@ -44,7 +25,7 @@ export function NegotiationsTab() {
             </S.SectionHeader>
 
             <S.FiltersRow>
-                <S.Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                <S.Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as NegotiationStatus | "")}>
                     {NEG_STATUS_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
@@ -79,7 +60,7 @@ export function NegotiationsTab() {
                                     <S.Td>{neg.user?.email ?? "—"}</S.Td>
                                     <S.Td>
                                         <S.NegStatusBadge $status={neg.status}>
-                                            {(NEG_STATUS_LABELS as Record<string, string>)[neg.status] ?? neg.status}
+                                            {NEG_STATUS_LABELS[neg.status] ?? neg.status}
                                         </S.NegStatusBadge>
                                     </S.Td>
                                     <S.Td>{formatDate(neg.createdAt)}</S.Td>

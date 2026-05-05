@@ -6,6 +6,7 @@ import { useGSAP } from "@gsap/react";
 import { getReservation } from "../../services/reservation";
 import { createCheckoutSession, getPaymentStatus } from "../../services/payment";
 import { getErrorMessage } from "../../utils/getErrorMessage";
+import { isAbortError, getHttpStatus } from "../../utils/errors";
 import { PLAN_LABELS, formatDateFull, formatTime, formatCurrency, calcDuration } from "../../utils/reservationFormat";
 import { animateFadeInUp, animateStagger } from "../../utils/animations";
 import type { Reservation, PixChargeResult } from "../../types";
@@ -46,7 +47,7 @@ export default function Checkout() {
                 const data = await getReservation(reservationId!, controller.signal);
                 setReservation(data);
             } catch (error) {
-                if ((error as { name?: string })?.name === "CanceledError" || (error as { name?: string })?.name === "AbortError") return;
+                if (isAbortError(error)) return;
                 toast.error(getErrorMessage(error, "Erro ao carregar a reserva."));
                 navigate("/reservations");
             } finally {
@@ -116,7 +117,7 @@ export default function Checkout() {
                     navigate("/reservations");
                 }
             } catch (err) {
-                if ((err as { name?: string })?.name === "CanceledError" || (err as { name?: string })?.name === "AbortError") return;
+                if (isAbortError(err)) return;
                 consecutiveErrors += 1;
                 if (consecutiveErrors >= MAX_ERRORS) {
                     clearInterval(interval);
@@ -144,7 +145,7 @@ export default function Checkout() {
             const session = await createCheckoutSession(reservationId!);
             window.location.href = session.url;
         } catch (error) {
-            const status = (error as { response?: { status?: number } })?.response?.status;
+            const status = getHttpStatus(error);
 
             if (status === 409) {
                 toast.error("Já existe uma sessão de pagamento ativa para esta reserva. Verifique seu e-mail ou aguarde a expiração.");
