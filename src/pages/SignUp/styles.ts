@@ -9,7 +9,7 @@ export const Form = styled.form`
 export const NameRow = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 8px;
 
   @media (max-width: 480px) {
     grid-template-columns: 1fr;

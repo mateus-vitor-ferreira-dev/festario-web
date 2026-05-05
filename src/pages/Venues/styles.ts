@@ -119,7 +119,7 @@ export const PlansTag = styled.div`
 export const CardDescription = styled.p`
   color: var(--text-medium);
   line-height: 1.6;
-  font-size: 15px;
+  font-size: 14px;
 `;
 
 export const InfoList = styled.ul`

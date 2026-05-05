@@ -15,7 +15,7 @@ export const Fab = styled.button`
   border: none;
   background: var(--brand);
   color: white;
-  font-size: 22px;
+  font-size: 20px;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(31, 79, 65, 0.35);
   display: flex;
@@ -74,7 +74,7 @@ export const Messages = styled.div`
   padding: 16px 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 
   &::-webkit-scrollbar {
     width: 4px;
@@ -95,7 +95,7 @@ export const Bubble = styled.div<{ $role: string }>`
     $role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px"};
   background: ${({ $role }) => ($role === "user" ? "var(--brand)" : "var(--bg-muted)")};
   color: ${({ $role }) => ($role === "user" ? "#fff" : "var(--text-primary)")};
-  font-size: 13.5px;
+  font-size: 14px;
   line-height: 1.5;
   align-self: ${({ $role }) => ($role === "user" ? "flex-end" : "flex-start")};
   white-space: pre-wrap;
@@ -115,7 +115,7 @@ export const Input = styled.input`
   padding: 0 12px;
   border: 1.5px solid var(--border-default);
   border-radius: 10px;
-  font-size: 13.5px;
+  font-size: 14px;
   color: var(--text-primary);
   background: var(--bg-page);
   outline: none;

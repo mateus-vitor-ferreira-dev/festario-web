@@ -3,7 +3,7 @@ import styled from "styled-components";
 export const Container = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     width: 100%;
 `;
 
@@ -23,15 +23,21 @@ export const Input = styled.input<{ $error?: boolean }>`
     color: var(--text-primary);
     font-size: 14px;
     outline: none;
-    transition: 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
 
     &::placeholder {
         color: var(--text-faint);
     }
 
+    &:hover:not(:focus) {
+        border-color: var(--border-medium);
+        background: var(--bg-muted);
+    }
+
     &:focus {
         border-color: ${({ $error }) => ($error ? "var(--color-error)" : "var(--brand)")};
         box-shadow: 0 0 0 4px rgba(31, 79, 65, 0.12);
+        background: var(--bg-surface);
     }
 
     &:-webkit-autofill,
@@ -52,7 +58,7 @@ export const InputWrapper = styled.div<{ $error?: boolean }>`
     border-radius: var(--radius-md);
     border: 1px solid ${({ $error }) => ($error ? "var(--color-error)" : "var(--border-medium)")};
     background: var(--bg-surface);
-    gap: 10px;
+    gap: 8px;
     transition: border-color 0.2s, box-shadow 0.2s;
 
     &:focus-within {

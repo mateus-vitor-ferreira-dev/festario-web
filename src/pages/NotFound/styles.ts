@@ -60,13 +60,13 @@ export const Code = styled.span`
 `;
 
 export const Title = styled.h1`
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--text-primary);
 `;
 
 export const Description = styled.p`
-  font-size: 15px;
+  font-size: 14px;
   color: var(--text-muted);
   line-height: 1.7;
   max-width: 380px;
@@ -87,7 +87,7 @@ export const PrimaryButton = styled.button`
   border-radius: 12px;
   background: var(--brand);
   color: #ffffff;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   transition: opacity 0.15s ease;
@@ -104,7 +104,7 @@ export const SecondaryButton = styled.button`
   border-radius: 12px;
   background: var(--bg-surface);
   color: var(--text-secondary);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s ease;

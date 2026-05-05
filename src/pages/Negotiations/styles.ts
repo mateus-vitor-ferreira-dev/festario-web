@@ -21,7 +21,7 @@ export const Title = styled.h1`
 export const Description = styled.p`
   color: var(--text-muted);
   line-height: 1.6;
-  font-size: 15px;
+  font-size: 14px;
 `;
 
 export const NewButton = styled.button`
@@ -46,14 +46,14 @@ export const NewForm = styled.form`
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: 16px;
-  padding: 22px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 14px;
 `;
 
 export const NewFormTitle = styled.h3`
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--text-primary);
 `;
@@ -90,7 +90,7 @@ export const Textarea = styled.textarea`
 
 export const FormActions = styled.div`
   display: flex;
-  gap: 10px;
+  gap: 8px;
 `;
 
 export const SubmitButton = styled.button`
@@ -165,13 +165,13 @@ export const NegotiationCard = styled.div`
 export const NegotiationInfo = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   flex: 1;
   min-width: 0;
 `;
 
 export const NegotiationSubject = styled.strong`
-  font-size: 15px;
+  font-size: 14px;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;

@@ -23,7 +23,7 @@ export const Title = styled.h1`
 export const Description = styled.p`
   color: var(--text-muted);
   line-height: 1.6;
-  font-size: 15px;
+  font-size: 14px;
 `;
 
 export const SectionTitle = styled.h2`
@@ -110,7 +110,7 @@ export const CampaignMeta = styled.div`
 `;
 
 export const CampaignName = styled.strong`
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text-primary);
 `;
@@ -124,7 +124,7 @@ export const CampaignType = styled.span`
 export const StatusBadge = styled.span<{ $active?: boolean }>`
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 5px 12px;
   border-radius: 999px;
   font-size: 12px;
@@ -160,7 +160,7 @@ export const CampaignDates = styled.span`
 
 export const InviteForm = styled.form`
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
   padding-top: 4px;
   border-top: 1px solid var(--border-default);
@@ -214,7 +214,7 @@ export const NoCampaignBanner = styled.div`
 export const InstagramLink = styled.a`
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 13px;
   font-weight: 600;
   color: var(--brand);
@@ -239,7 +239,7 @@ export const GrantCard = styled.div`
   padding: 20px 22px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 `;
 
 export const GrantPercent = styled.span`
@@ -269,7 +269,7 @@ export const EmptyGrants = styled.p`
 export const ReferralList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 `;
 
 export const ReferralCard = styled.div`

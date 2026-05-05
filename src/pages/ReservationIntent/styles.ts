@@ -30,7 +30,7 @@ export const PageDescription = styled.p`
   color: var(--text-muted);
   max-width: 600px;
   line-height: 1.6;
-  font-size: 15px;
+  font-size: 14px;
 `;
 
 export const EstimatedCard = styled.div`
@@ -51,7 +51,7 @@ export const EstimatedCard = styled.div`
 
   strong {
     display: block;
-    font-size: 26px;
+    font-size: 24px;
     font-weight: 800;
     color: var(--brand);
     margin: 6px 0 4px;
@@ -287,14 +287,14 @@ export const TotalRow = styled.div`
   align-items: center;
 
   span {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text-secondary);
   }
 
   strong {
     color: var(--brand);
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 800;
   }
 `;
@@ -314,7 +314,7 @@ export const ConfirmButton = styled.button`
   border: none;
   background: var(--brand);
   color: #ffffff;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   transition: opacity 0.15s ease;
@@ -339,7 +339,7 @@ export const ContractCard = styled.div`
 `;
 
 export const ContractTitle = styled.h3`
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--text-primary);
 `;
@@ -395,7 +395,7 @@ export const ContractDownloadWrapper = styled.div`
 export const ContractCheckboxWrapper = styled.div`
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 8px;
 
   input {
     margin-top: 2px;
@@ -490,7 +490,7 @@ export const DiscountItem = styled.div`
 export const PlanWarning = styled.div`
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 8px;
   background: var(--status-pending-bg);
   border: 1px solid var(--status-pending-border);
   border-radius: 12px;
@@ -515,7 +515,7 @@ export const KidsInput = styled.input`
   border-radius: 10px;
   background: var(--bg-surface);
   color: var(--text-primary);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   text-align: center;
   outline: none;

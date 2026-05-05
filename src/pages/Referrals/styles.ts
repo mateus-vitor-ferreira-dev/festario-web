@@ -25,7 +25,7 @@ export const Title = styled.h1`
 export const Description = styled.p`
   color: var(--text-muted);
   line-height: 1.6;
-  font-size: 15px;
+  font-size: 14px;
 `;
 
 export const InviteCard = styled.div`
@@ -47,7 +47,7 @@ export const InviteTitle = styled.h2`
 
 export const InviteRow = styled.div`
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 `;
 
@@ -105,7 +105,7 @@ export const NoCampaignBanner = styled.div`
   background: var(--status-pending-bg);
   border: 1px solid var(--status-pending-border);
   border-radius: 12px;
-  padding: 14px 18px;
+  padding: 12px 16px;
   font-size: 14px;
   color: var(--status-pending-text-deep);
   line-height: 1.5;
@@ -142,7 +142,7 @@ export const ReferralInfo = styled.div`
   gap: 4px;
 
   strong {
-    font-size: 15px;
+    font-size: 14px;
     color: var(--text-primary);
   }
 

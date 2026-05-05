@@ -8,7 +8,7 @@ export const Container = styled.button`
   background: linear-gradient(to bottom, #236051, var(--brand-dark));
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.10);
   color: white;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   cursor: pointer;
   letter-spacing: -0.01em;

@@ -26,7 +26,7 @@ export const Content = styled.div`
 export const BrandWrapper = styled(Link)`
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   text-decoration: none;
   white-space: nowrap;
 `;
@@ -38,7 +38,7 @@ export const Logo = styled.img`
 `;
 
 export const BrandText = styled.span`
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--brand);
 
@@ -82,7 +82,7 @@ export const Actions = styled.div`
 export const ProfileLink = styled(Link)`
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   text-decoration: none;
   border-radius: 10px;
   padding: 4px 8px 4px 4px;

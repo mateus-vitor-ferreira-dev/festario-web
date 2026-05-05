@@ -27,7 +27,7 @@ export const LoadingState = styled.div`
 
   p {
     color: var(--text-muted);
-    font-size: 15px;
+    font-size: 14px;
   }
 `;
 
@@ -54,7 +54,7 @@ export const PageTitle = styled.h1`
 
 export const PageDescription = styled.p`
   color: var(--text-muted);
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.6;
 `;
 
@@ -91,7 +91,7 @@ export const SummaryHeader = styled.div`
 `;
 
 export const VenueName = styled.h2`
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--text-primary);
 `;
@@ -153,7 +153,7 @@ export const DetailLabel = styled.span`
 `;
 
 export const DetailValue = styled.strong`
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
 `;
@@ -172,7 +172,7 @@ export const TotalLabel = styled.span`
 `;
 
 export const TotalValue = styled.strong`
-  font-size: 30px;
+  font-size: 32px;
   font-weight: 800;
   color: var(--brand);
 `;
@@ -208,7 +208,7 @@ export const SecurityBadges = styled.ul`
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   background: var(--bg-page);
   border: 1px solid var(--border-default);
   border-radius: 14px;
@@ -217,7 +217,7 @@ export const SecurityBadges = styled.ul`
 export const SecurityItem = styled.li`
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   font-size: 13px;
   color: var(--text-medium);
   font-weight: 500;
@@ -241,13 +241,13 @@ export const AmountSummary = styled.div`
   border-radius: 14px;
 
   span {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text-secondary);
   }
 
   strong {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 800;
     color: var(--brand);
   }
@@ -323,7 +323,7 @@ export const StripeBadge = styled.p`
 
 export const MethodSelector = styled.div`
   display: flex;
-  gap: 10px;
+  gap: 8px;
 `;
 
 export const MethodButton = styled.button<{ $active?: boolean }>`

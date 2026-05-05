@@ -25,7 +25,7 @@ export const Title = styled.h1`
 export const Description = styled.p`
   color: var(--text-muted);
   line-height: 1.6;
-  font-size: 15px;
+  font-size: 14px;
 `;
 
 export const List = styled.div`
@@ -38,7 +38,7 @@ export const Card = styled.article`
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: 18px;
-  padding: 22px;
+  padding: 20px;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
   display: flex;
   flex-direction: column;
@@ -102,7 +102,7 @@ export const CardBody = styled.div`
 export const CardFooter = styled.div`
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 `;
 
@@ -259,7 +259,7 @@ export const ModalBody = styled.p`
 export const PolicySection = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 `;
 
 export const PolicyTitle = styled.h3`
@@ -317,7 +317,7 @@ export const RefundCard = styled.div<{ $neutral?: boolean }>`
   padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 `;
 
 export const RefundCardTitle = styled.h3`
@@ -353,7 +353,7 @@ export const RefundRow = styled.div<{ $accent?: boolean }>`
 export const ModalActions = styled.div`
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 8px;
   padding-top: 4px;
 `;
 

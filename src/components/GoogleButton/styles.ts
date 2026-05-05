@@ -10,11 +10,11 @@ export const GoogleButton = styled.button`
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
     background: var(--bg-surface);
     color: var(--text-primary);
     border: 1px solid var(--border-medium);
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     font-size: 14px;
     font-weight: 500;
     font-family: "Google Sans", Roboto, Arial, sans-serif;

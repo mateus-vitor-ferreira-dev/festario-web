@@ -13,7 +13,7 @@ export const Container = styled.div`
 export const PageHeader = styled.section`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 `;
 
 export const Title = styled.h1`
@@ -24,7 +24,7 @@ export const Title = styled.h1`
 
 export const Description = styled.p`
   color: var(--text-muted);
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.6;
 `;
 
@@ -76,11 +76,11 @@ export const SummaryCard = styled.div`
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: 18px;
-  padding: 22px;
+  padding: 20px;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 `;
 
 export const SummaryLabel = styled.span`
@@ -157,7 +157,7 @@ export const SectionTitle = styled.h2`
 /* Filters row */
 export const FiltersRow = styled.div`
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 `;
 
@@ -215,14 +215,14 @@ export const Th = styled.th`
   color: var(--text-faint);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  padding: 14px 18px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border-default);
   background: var(--bg-page);
   white-space: nowrap;
 `;
 
 export const Td = styled.td`
-  padding: 14px 18px;
+  padding: 12px 16px;
   font-size: 14px;
   color: var(--text-secondary);
   border-bottom: 1px solid var(--bg-muted);
@@ -358,7 +358,7 @@ export const CampaignInfo = styled.div`
   gap: 4px;
 
   strong {
-    font-size: 15px;
+    font-size: 14px;
     color: var(--text-primary);
   }
 
@@ -418,7 +418,7 @@ export const WinnerCard = styled.div`
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 
   strong {
     font-size: 18px;
@@ -588,7 +588,7 @@ export const ModalTitle = styled.h3`
 export const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 
   label {
     font-size: 13px;
@@ -621,7 +621,7 @@ export const TextInput = styled.input`
 export const ModalActions = styled.div`
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 8px;
   padding-top: 4px;
 `;
 
@@ -635,7 +635,7 @@ export const EmptyState = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 
   h3 {
     font-size: 16px;
@@ -669,7 +669,7 @@ export const HolidayCard = styled.div`
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: 14px;
-  padding: 14px 18px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;

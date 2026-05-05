@@ -28,7 +28,7 @@ export const Title = styled.h1`
 export const Description = styled.p`
   color: var(--text-muted);
   line-height: 1.6;
-  font-size: 15px;
+  font-size: 14px;
 `;
 
 export const Card = styled.div`
@@ -101,7 +101,7 @@ export const ContactLabel = styled.span`
 `;
 
 export const ContactValue = styled.span`
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
 `;
@@ -115,7 +115,7 @@ export const ContactArrow = styled.span`
 export const FormField = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 `;
 
 export const FormLabel = styled.label`
@@ -131,7 +131,7 @@ export const FormInput = styled.input`
   border-radius: 10px;
   background: var(--bg-page);
   color: var(--text-primary);
-  font-size: 15px;
+  font-size: 14px;
   outline: none;
   transition: border-color 0.15s;
 
@@ -150,7 +150,7 @@ export const FormTextarea = styled.textarea`
   border-radius: 10px;
   background: var(--bg-page);
   color: var(--text-primary);
-  font-size: 15px;
+  font-size: 14px;
   outline: none;
   resize: vertical;
   font-family: inherit;
@@ -172,7 +172,7 @@ export const SubmitButton = styled.button`
   color: #ffffff;
   border: none;
   border-radius: 12px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.15s;

@@ -26,7 +26,7 @@ export const LoadingState = styled.div`
 
   p {
     color: var(--text-muted);
-    font-size: 15px;
+    font-size: 14px;
   }
 `;
 
@@ -53,13 +53,13 @@ export const HeaderLeft = styled.div`
 `;
 
 export const PageTitle = styled.h1`
-  font-size: 30px;
+  font-size: 32px;
   font-weight: 700;
   color: var(--text-primary);
 `;
 
 export const PageSubtitle = styled.p`
-  font-size: 15px;
+  font-size: 14px;
   color: var(--text-muted);
 `;
 
@@ -85,7 +85,7 @@ export const IdentityCard = styled.div`
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 10px;
+  gap: 8px;
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
 `;
 
@@ -194,7 +194,7 @@ export const FormCard = styled.form`
 `;
 
 export const SectionTitle = styled.h2`
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text-primary);
 `;

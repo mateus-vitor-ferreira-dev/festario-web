@@ -54,7 +54,7 @@ export const Brand = styled.div`
 `;
 
 export const BrandName = styled.span`
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -94,7 +94,7 @@ export const Headline = styled.h1`
 `;
 
 export const Tagline = styled.p`
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.7;
   color: rgba(255, 255, 255, 0.6);
   max-width: 360px;
@@ -168,7 +168,7 @@ export const MobileBrand = styled.div<{ $visible: boolean }>`
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 4px;
     opacity: ${({ $visible }) => ($visible ? 1 : 0)};
     transition: opacity 180ms ease;
@@ -192,11 +192,11 @@ export const MobileBrandName = styled.span`
 export const FormHeader = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 `;
 
 export const Title = styled.h2`
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.02em;

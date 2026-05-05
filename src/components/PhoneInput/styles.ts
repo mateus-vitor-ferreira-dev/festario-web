@@ -3,7 +3,7 @@ import styled from "styled-components";
 export const Container = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     width: 100%;
     position: relative;
 `;
@@ -23,7 +23,7 @@ export const InputWrapper = styled.div<{ $error?: boolean }>`
     border-radius: 14px;
     border: 1px solid ${({ $error }) => ($error ? "var(--color-error)" : "var(--border-medium)")};
     background: var(--bg-surface);
-    gap: 10px;
+    gap: 8px;
     transition: border-color 0.2s, box-shadow 0.2s;
 
     &:focus-within {
@@ -47,7 +47,9 @@ export const CountryButton = styled.button`
     user-select: none;
 
     &:focus-visible {
-        outline: none;
+        outline: 2px solid var(--brand);
+        outline-offset: 2px;
+        border-radius: var(--radius-sm);
     }
 `;
 
@@ -146,7 +148,7 @@ export const List = styled.ul`
 export const ListItem = styled.li<{ $selected?: boolean }>`
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     padding: 8px 14px;
     cursor: pointer;
     font-size: 14px;

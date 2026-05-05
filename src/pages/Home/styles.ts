@@ -31,7 +31,7 @@ export const LoadingState = styled.div`
 
     p {
         color: var(--text-muted);
-        font-size: 15px;
+        font-size: 14px;
     }
 `;
 
@@ -61,7 +61,7 @@ export const HeaderLeft = styled.div`
 `;
 
 export const Greeting = styled.h1`
-    font-size: 30px;
+    font-size: 32px;
     font-weight: 700;
     color: var(--text-primary);
     line-height: 1.2;
@@ -72,7 +72,7 @@ export const Greeting = styled.h1`
 `;
 
 export const Subgreeting = styled.p`
-    font-size: 15px;
+    font-size: 14px;
     color: var(--text-muted);
 `;
 
@@ -111,10 +111,10 @@ export const StatCard = styled.article<{ $accent: string }>`
     border: 1px solid var(--border-default);
     border-left: 4px solid ${({ $accent }) => $accent};
     border-radius: 14px;
-    padding: 22px 24px;
+    padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     box-shadow: var(--shadow-sm);
     transition: box-shadow 0.2s ease, transform 0.2s ease;
 
@@ -164,7 +164,7 @@ export const ActionCard = styled.a<{ $primary?: boolean }>`
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 22px 24px;
+    padding: 24px;
     border-radius: 14px;
     text-decoration: none;
     cursor: pointer;
@@ -190,7 +190,7 @@ export const ActionContent = styled.div`
 
 export const ActionTitle = styled.strong`
     display: block;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
     color: inherit;
 `;
@@ -244,7 +244,7 @@ export const PanelHeader = styled.div`
 `;
 
 export const PanelTitle = styled.h2`
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--text-primary);
 `;
@@ -383,13 +383,13 @@ export const DiscountChip = styled.span`
 export const VenueList = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 `;
 
 export const VenueCard = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     padding: 14px 16px;
     border-radius: 10px;
     background: var(--bg-page);
@@ -477,7 +477,7 @@ export const VenueReserveBtn = styled.button`
 export const EmptyState = styled.div`
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     padding: 20px 0;
 
     span {

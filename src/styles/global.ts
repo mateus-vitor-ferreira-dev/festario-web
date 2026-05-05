@@ -11,7 +11,7 @@ export const GlobalStyle = createGlobalStyle`
     --text-primary:   #0e1c15;
     --text-secondary: #2d3d35;
     --text-muted:     #5a7068;
-    --text-faint:     #8aa99e;
+    --text-faint:     #6b8d81;
     --text-medium:    #3d5549;
 
     /* ── Borders ── */
@@ -179,6 +179,20 @@ export const GlobalStyle = createGlobalStyle`
     transition: background 0.2s ease, color 0.2s ease;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ── Focus ring universal — WCAG 2.4.7 ── */
+  *:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* inputs já usam border + shadow como indicador de foco */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: none;
   }
 
   button, input, textarea, select {

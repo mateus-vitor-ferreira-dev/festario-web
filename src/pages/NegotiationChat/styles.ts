@@ -16,7 +16,7 @@ export const TopBar = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 18px;
+  padding: 12px 16px;
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: 16px 16px 0 0;
@@ -49,7 +49,7 @@ export const TopInfo = styled.div`
 `;
 
 export const TopSubject = styled.strong`
-  font-size: 15px;
+  font-size: 14px;
   color: var(--text-primary);
   display: block;
   white-space: nowrap;
@@ -90,7 +90,7 @@ export const StatusBadge = styled.span<{ $status?: string }>`
 export const MessagesArea = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 20px 18px;
+  padding: 20px 16px;
   background: var(--bg-page);
   border-left: 1px solid var(--border-default);
   border-right: 1px solid var(--border-default);
@@ -154,7 +154,7 @@ export const PixBlock = styled.div`
   border-radius: 10px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 `;
 
 export const PixLabel = styled.span`
@@ -195,7 +195,7 @@ export const CopyButton = styled.button`
 export const InputBar = styled.form`
   display: flex;
   align-items: flex-end;
-  gap: 10px;
+  gap: 8px;
   padding: 12px 14px;
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
@@ -280,14 +280,14 @@ export const AdminPanel = styled.div`
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: 16px;
-  padding: 22px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
 `;
 
 export const AdminPanelTitle = styled.h3`
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--text-primary);
 `;
@@ -341,7 +341,7 @@ export const FieldInput = styled.input`
 
 export const AdminButtons = styled.div`
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 `;
 
@@ -470,7 +470,7 @@ export const ProposalCard = styled.div`
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   min-width: 240px;
 `;
 
@@ -556,7 +556,7 @@ export const DeclineButton = styled.button`
 `;
 
 export const AdminWaiting = styled.div`
-  padding: 14px 18px;
+  padding: 12px 16px;
   background: var(--status-pending-bg, #fffbeb);
   border: 1px dashed var(--status-pending-border);
   border-radius: 12px;

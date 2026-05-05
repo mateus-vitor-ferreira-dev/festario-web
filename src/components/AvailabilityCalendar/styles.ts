@@ -146,7 +146,7 @@ export const Legend = styled.div`
 export const LegendItem = styled.div`
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     font-size: 0.75rem;
     color: var(--text-muted);
 `;
