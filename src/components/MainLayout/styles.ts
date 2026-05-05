@@ -12,5 +12,9 @@ export const Main = styled.main`
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 32px 24px;
+  padding: 40px 24px;
+
+  @media (max-width: 640px) {
+    padding: 24px 16px;
+  }
 `;
