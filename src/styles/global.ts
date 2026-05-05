@@ -53,6 +53,19 @@ export const GlobalStyle = createGlobalStyle`
     --status-success-text: #16a34a;
     --color-error: #ef4444;
 
+    /* ── Status cancelled ── */
+    --status-cancelled-bg:     #fef2f2;
+    --status-cancelled-text:   #b91c1c;
+    --status-cancelled-border: #fecaca;
+
+    /* ── Calendário — datas ocupadas e bloqueadas ── */
+    --calendar-occupied-bg:     #7c2d12;
+    --calendar-occupied-text:   #fdba74;
+    --calendar-occupied-border: #9a3412;
+    --calendar-blocked-bg:      #4c1d95;
+    --calendar-blocked-text:    #c4b5fd;
+    --calendar-blocked-border:  #6d28d9;
+
     /* ── Accents (apenas os que são usados) ── */
     --accent-blue: #2563eb;
     --accent-teal: #0d9488;
@@ -69,65 +82,79 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   [data-theme="dark"] {
-    /* ── Backgrounds (dark green — premium, on-brand) ── */
-    --bg-page:    #0c1a14;
-    --bg-surface: #152a1f;
-    --bg-muted:   #1e3828;
+    /* ── Backgrounds — neutral dark (WhatsApp / Instagram / Android style)
+       Sem tinte verde: a marca aparece só nos acentos, não no fundo. ── */
+    --bg-page:    #111111;
+    --bg-surface: #1c1c1c;
+    --bg-muted:   #272727;
 
-    /* ── Text ── */
-    --text-primary:   #e5f0eb;
-    --text-secondary: #b0ccbe;
-    --text-muted:     #6fa090;
-    --text-faint:     #3d6a58;
-    --text-medium:    #8abfac;
+    /* ── Text — off-white hierárquico ── */
+    --text-primary:   #e8e8e8;
+    --text-secondary: #a0a0a0;
+    --text-muted:     #666666;
+    --text-faint:     #3a3a3a;
+    --text-medium:    #c0c0c0;
 
-    /* ── Borders ── */
-    --border-default: #1e3828;
-    --border-medium:  #2a4a38;
+    /* ── Borders — sutis, quase invisíveis ── */
+    --border-default: #2c2c2c;
+    --border-medium:  #383838;
 
-    /* ── Brand — same family as light, just brighter ── */
-    --brand:        #52c4a0;
-    --brand-mid:    #3da886;
-    --brand-dark:   #2d8a6a;
-    --brand-subtle: #0a1f17;
-    --brand-border: #134830;
+    /* ── Brand — verde como ACENTO, nunca como fundo ── */
+    --brand:        #3ecf8e;
+    --brand-mid:    #2db87a;
+    --brand-dark:   #1da066;
+    --brand-subtle: #0d1f15;
+    --brand-border: #163d26;
 
     /* ── Gold ── */
-    --gold:        #ddb85a;
-    --gold-dark:   #c9a84c;
-    --gold-subtle: #150f00;
-    --gold-border: #3d2800;
+    --gold:        #f0c040;
+    --gold-dark:   #d4a020;
+    --gold-subtle: #1a1200;
+    --gold-border: #3d2c00;
 
     /* ── Status ── */
-    --status-paid-bg:     #052e16;
-    --status-paid-text:   #86efac;
-    --status-paid-border: #166534;
+    --status-paid-bg:     #0a2018;
+    --status-paid-text:   #4ade80;
+    --status-paid-border: #15803d;
 
-    --status-pending-bg:        #1c1400;
-    --status-pending-text:      #fcd34d;
-    --status-pending-text-deep: #fbbf24;
-    --status-pending-border:    #713f12;
+    --status-pending-bg:        #1a1000;
+    --status-pending-text:      #fbbf24;
+    --status-pending-text-deep: #f59e0b;
+    --status-pending-border:    #78350f;
 
-    --status-error-bg:    #1c0a0a;
-    --status-error-text:  #fca5a5;
+    --status-error-bg:    #1a0808;
+    --status-error-text:  #f87171;
     --status-error-border:#7f1d1d;
-    --status-error-hover: #200c0c;
+    --status-error-hover: #220c0c;
 
-    --status-info-bg:     #0c1a3a;
+    --status-info-bg:     #080f1c;
     --status-info-text:   #93c5fd;
     --status-info-border: #1e3a5f;
 
     --status-success-text: #4ade80;
     --color-error: #f87171;
 
+    /* ── Status cancelled ── */
+    --status-cancelled-bg:     #1a0808;
+    --status-cancelled-text:   #f87171;
+    --status-cancelled-border: #7f1d1d;
+
+    /* ── Calendário — datas ocupadas e bloqueadas ── */
+    --calendar-occupied-bg:     #7c2d12;
+    --calendar-occupied-text:   #fdba74;
+    --calendar-occupied-border: #9a3412;
+    --calendar-blocked-bg:      #3b0764;
+    --calendar-blocked-text:    #d8b4fe;
+    --calendar-blocked-border:  #6d28d9;
+
     /* ── Accents ── */
     --accent-blue: #60a5fa;
     --accent-teal: #2dd4bf;
 
-    /* ── Shadows ── */
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.30), 0 1px 2px rgba(0, 0, 0, 0.18);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.22);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.40), 0 4px 8px rgba(0, 0, 0, 0.25);
+    /* ── Shadows — mais pesadas no escuro para dar profundidade ── */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.65), 0 2px 4px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.75), 0 4px 8px rgba(0, 0, 0, 0.55);
 
     /* ── Radius ── */
     --radius-sm: 8px;

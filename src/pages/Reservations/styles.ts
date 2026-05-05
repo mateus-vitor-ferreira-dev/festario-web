@@ -379,7 +379,7 @@ export const ModalConfirmBtn = styled.button`
   padding: 0 20px;
   border-radius: 12px;
   border: none;
-  background: #c0392b;
+  background: var(--status-error-text);
   color: #ffffff;
   font-size: 14px;
   font-weight: 700;

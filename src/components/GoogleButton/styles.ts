@@ -11,9 +11,9 @@ export const GoogleButton = styled.button`
     align-items: center;
     justify-content: center;
     gap: 10px;
-    background: #fff;
-    color: #3c4043;
-    border: 1px solid #dadce0;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-medium);
     border-radius: 4px;
     font-size: 14px;
     font-weight: 500;
@@ -22,12 +22,12 @@ export const GoogleButton = styled.button`
     transition: background 0.2s, box-shadow 0.2s;
 
     &:hover {
-        background: #f8faff;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-        border-color: #c6c6c6;
+        background: var(--bg-muted);
+        box-shadow: var(--shadow-sm);
+        border-color: var(--border-medium);
     }
 
     &:active {
-        background: #f0f0f0;
+        background: var(--bg-muted);
     }
 `;

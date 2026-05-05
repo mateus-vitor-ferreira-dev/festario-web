@@ -371,8 +371,8 @@ export const DangerButton = styled.button`
   height: 40px;
   padding: 0 20px;
   background: var(--bg-page);
-  color: var(--status-cancelled-text, #ef4444);
-  border: 1px solid var(--status-cancelled-border, #fca5a5);
+  color: var(--status-cancelled-text);
+  border: 1px solid var(--status-cancelled-border);
   border-radius: 10px;
   font-size: 14px;
   font-weight: 700;
@@ -380,7 +380,7 @@ export const DangerButton = styled.button`
   transition: background 0.15s;
 
   &:hover:not(:disabled) {
-    background: var(--status-cancelled-bg, #fef2f2);
+    background: var(--status-cancelled-bg);
   }
 
   &:disabled {
@@ -537,8 +537,8 @@ export const DeclineButton = styled.button`
   flex: 1;
   height: 36px;
   background: transparent;
-  color: var(--status-cancelled-text, #ef4444);
-  border: 1px solid var(--status-cancelled-border, #fca5a5);
+  color: var(--status-cancelled-text);
+  border: 1px solid var(--status-cancelled-border);
   border-radius: 10px;
   font-size: 13px;
   font-weight: 700;
@@ -546,7 +546,7 @@ export const DeclineButton = styled.button`
   transition: background 0.15s;
 
   &:hover:not(:disabled) {
-    background: var(--status-cancelled-bg, #fef2f2);
+    background: var(--status-cancelled-bg);
   }
 
   &:disabled {
@@ -558,9 +558,9 @@ export const DeclineButton = styled.button`
 export const AdminWaiting = styled.div`
   padding: 14px 18px;
   background: var(--status-pending-bg, #fffbeb);
-  border: 1px dashed var(--status-pending-border, #fcd34d);
+  border: 1px dashed var(--status-pending-border);
   border-radius: 12px;
   font-size: 13px;
-  color: var(--status-pending-text, #92400e);
+  color: var(--status-pending-text);
   text-align: center;
 `;

@@ -94,17 +94,17 @@ export const Day = styled.button<{ $empty?: boolean; $past?: boolean; $blocked?:
     `}
 
     ${({ $blocked }) => $blocked && `
-        background: #4a1942;
-        color: #e879d8;
+        background: var(--calendar-blocked-bg);
+        color: var(--calendar-blocked-text);
         cursor: not-allowed;
-        border: 1px solid #7b2f70;
+        border: 1px solid var(--calendar-blocked-border);
     `}
 
     ${({ $occupied }) => $occupied && `
-        background: #7a3200;
-        color: #fb923c;
+        background: var(--calendar-occupied-bg);
+        color: var(--calendar-occupied-text);
         cursor: not-allowed;
-        border: 1px solid #b84a00;
+        border: 1px solid var(--calendar-occupied-border);
     `}
 
     ${({ $selected }) => $selected && `
@@ -161,8 +161,8 @@ export const LegendDot = styled.span<{ $variant?: string }>`
         switch ($variant) {
             case "available": return "background: var(--bg-muted); border: 1px solid var(--border-medium);";
             case "selected": return "background: var(--brand);";
-            case "occupied": return "background: #7a3200; border: 1px solid #b84a00;";
-            case "blocked": return "background: #4a1942; border: 1px solid #7b2f70;";
+            case "occupied": return "background: var(--calendar-occupied-bg); border: 1px solid var(--calendar-occupied-border);";
+            case "blocked": return "background: var(--calendar-blocked-bg); border: 1px solid var(--calendar-blocked-border);";
             default: return "";
         }
     }}

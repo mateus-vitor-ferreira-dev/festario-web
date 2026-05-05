@@ -152,9 +152,9 @@ export const LogoutButton = styled.button`
 
 export const VerificationBanner = styled.div`
   width: 100%;
-  background: #fef9c3;
-  border-bottom: 1px solid #fde047;
-  color: #713f12;
+  background: var(--status-pending-bg);
+  border-bottom: 1px solid var(--status-pending-border);
+  color: var(--status-pending-text);
   font-size: 13px;
   padding: 8px 24px;
   display: flex;
@@ -167,7 +167,7 @@ export const VerificationBanner = styled.div`
 export const ResendButton = styled.button`
   background: none;
   border: none;
-  color: #713f12;
+  color: var(--status-pending-text);
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
