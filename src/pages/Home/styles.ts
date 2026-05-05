@@ -115,11 +115,12 @@ export const StatCard = styled.article<{ $accent: string }>`
     display: flex;
     flex-direction: column;
     gap: 6px;
-    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
-    transition: box-shadow 0.15s ease;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
 
     &:hover {
-        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
     }
 `;
 
@@ -133,7 +134,7 @@ export const StatLabel = styled.p`
 
 export const StatNumber = styled.strong<{ $accent: string }>`
     display: block;
-    font-size: 42px;
+    font-size: 36px;
     font-weight: 800;
     color: ${({ $accent }) => $accent};
     line-height: 1;

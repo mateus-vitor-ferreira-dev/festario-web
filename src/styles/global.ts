@@ -42,9 +42,17 @@ export const GlobalStyle = createGlobalStyle`
     --color-error: #ef4444;
 
     --accent-green: #16a34a;
-    --accent-olive: #2563eb;
+    --accent-blue:  #2563eb;
     --accent-teal:  #0d9488;
     --accent-gold:  #c9a84c;
+
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.05);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.10), 0 2px 4px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.12), 0 4px 8px rgba(15, 23, 42, 0.06);
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
   }
 
   [data-theme="dark"] {
@@ -88,9 +96,17 @@ export const GlobalStyle = createGlobalStyle`
     --color-error: #f87171;
 
     --accent-green: #34d399;
-    --accent-olive: #60a5fa;
+    --accent-blue:  #60a5fa;
     --accent-teal:  #2dd4bf;
     --accent-gold:  #fbbf24;
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.30), 0 2px 4px rgba(0, 0, 0, 0.18);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.35), 0 4px 8px rgba(0, 0, 0, 0.20);
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
   }
 
   * {
@@ -104,13 +120,15 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   body {
-    font-family: Inter, sans-serif;
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
     background: var(--bg-page);
     color: var(--text-primary);
     transition: background 0.2s ease, color 0.2s ease;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  button, input {
+  button, input, textarea, select {
     font-family: inherit;
   }
 

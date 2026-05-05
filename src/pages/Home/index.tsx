@@ -158,9 +158,9 @@ export default function Home() {
             </S.PageHeader>
 
             <S.StatsGrid>
-                <S.StatCard className="anim-stat-card" $accent="var(--accent-olive)">
+                <S.StatCard className="anim-stat-card" $accent="var(--accent-blue)">
                     <S.StatLabel>Total de reservas</S.StatLabel>
-                    <S.StatNumber $accent="var(--accent-olive)">
+                    <S.StatNumber $accent="var(--accent-blue)">
                         {dashboard.reservations.length}
                     </S.StatNumber>
                     <S.StatDescription>
