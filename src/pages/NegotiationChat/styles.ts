@@ -416,7 +416,7 @@ export const SelectedDateBadge = styled.span`
   font-size: 12px;
   font-weight: 600;
   color: var(--brand);
-  background: var(--brand-bg, #f0fdf4);
+  background: var(--brand-subtle);
   border: 1px solid var(--brand-border, #bbf7d0);
   border-radius: 6px;
   padding: 2px 8px;

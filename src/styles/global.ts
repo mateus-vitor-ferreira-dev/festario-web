@@ -2,24 +2,36 @@ import { createGlobalStyle } from "styled-components";
 
 export const GlobalStyle = createGlobalStyle`
   :root, [data-theme="light"] {
-    --bg-page:    #f9fafb;
+    /* ── Backgrounds (warm green temperature) ── */
+    --bg-page:    #f5f9f7;
     --bg-surface: #ffffff;
-    --bg-muted:   #f3f4f6;
+    --bg-muted:   #edf3f0;
 
-    --text-primary:   #111827;
-    --text-secondary: #374151;
-    --text-muted:     #6b7280;
-    --text-faint:     #9ca3af;
-    --text-medium:    #4b5563;
+    /* ── Text (green-temperature neutrals) ── */
+    --text-primary:   #0e1c15;
+    --text-secondary: #2d3d35;
+    --text-muted:     #5a7068;
+    --text-faint:     #8aa99e;
+    --text-medium:    #3d5549;
 
-    --border-default: #e5e7eb;
-    --border-medium:  #d1d5db;
+    /* ── Borders ── */
+    --border-default: #dce8e3;
+    --border-medium:  #c4d4ce;
 
+    /* ── Brand — forest green scale ── */
     --brand:        #1f4f41;
+    --brand-mid:    #2d6a57;
     --brand-dark:   #133428;
-    --brand-subtle: #f0fdf9;
-    --brand-border: #d1fae5;
+    --brand-subtle: #eef7f3;
+    --brand-border: #bde3d5;
 
+    /* ── Gold — second accent, full scale ── */
+    --gold:        #c9a84c;
+    --gold-dark:   #a07c2a;
+    --gold-subtle: #fdf7e8;
+    --gold-border: #f0dfa0;
+
+    /* ── Status ── */
     --status-paid-bg:     #ecfdf3;
     --status-paid-text:   #166534;
     --status-paid-border: #bbf7d0;
@@ -41,39 +53,52 @@ export const GlobalStyle = createGlobalStyle`
     --status-success-text: #16a34a;
     --color-error: #ef4444;
 
-    --accent-green: #16a34a;
-    --accent-blue:  #2563eb;
-    --accent-teal:  #0d9488;
-    --accent-gold:  #c9a84c;
+    /* ── Accents (apenas os que são usados) ── */
+    --accent-blue: #2563eb;
+    --accent-teal: #0d9488;
 
-    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.05);
-    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.10), 0 2px 4px rgba(15, 23, 42, 0.06);
-    --shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.12), 0 4px 8px rgba(15, 23, 42, 0.06);
+    /* ── Shadows ── */
+    --shadow-sm: 0 1px 3px rgba(14, 28, 21, 0.08), 0 1px 2px rgba(14, 28, 21, 0.05);
+    --shadow-md: 0 4px 12px rgba(14, 28, 21, 0.10), 0 2px 4px rgba(14, 28, 21, 0.06);
+    --shadow-lg: 0 8px 24px rgba(14, 28, 21, 0.12), 0 4px 8px rgba(14, 28, 21, 0.06);
 
+    /* ── Radius ── */
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 16px;
   }
 
   [data-theme="dark"] {
-    --bg-page:    #0f172a;
-    --bg-surface: #1e293b;
-    --bg-muted:   #334155;
+    /* ── Backgrounds (dark green — premium, on-brand) ── */
+    --bg-page:    #0c1a14;
+    --bg-surface: #152a1f;
+    --bg-muted:   #1e3828;
 
-    --text-primary:   #f1f5f9;
-    --text-secondary: #cbd5e1;
-    --text-muted:     #94a3b8;
-    --text-faint:     #64748b;
-    --text-medium:    #94a3b8;
+    /* ── Text ── */
+    --text-primary:   #e5f0eb;
+    --text-secondary: #b0ccbe;
+    --text-muted:     #6fa090;
+    --text-faint:     #3d6a58;
+    --text-medium:    #8abfac;
 
-    --border-default: #334155;
-    --border-medium:  #475569;
+    /* ── Borders ── */
+    --border-default: #1e3828;
+    --border-medium:  #2a4a38;
 
-    --brand:        #34d399;
-    --brand-dark:   #059669;
-    --brand-subtle: #022c22;
-    --brand-border: #065f46;
+    /* ── Brand — same family as light, just brighter ── */
+    --brand:        #52c4a0;
+    --brand-mid:    #3da886;
+    --brand-dark:   #2d8a6a;
+    --brand-subtle: #0a1f17;
+    --brand-border: #134830;
 
+    /* ── Gold ── */
+    --gold:        #ddb85a;
+    --gold-dark:   #c9a84c;
+    --gold-subtle: #150f00;
+    --gold-border: #3d2800;
+
+    /* ── Status ── */
     --status-paid-bg:     #052e16;
     --status-paid-text:   #86efac;
     --status-paid-border: #166534;
@@ -95,15 +120,16 @@ export const GlobalStyle = createGlobalStyle`
     --status-success-text: #4ade80;
     --color-error: #f87171;
 
-    --accent-green: #34d399;
-    --accent-blue:  #60a5fa;
-    --accent-teal:  #2dd4bf;
-    --accent-gold:  #fbbf24;
+    /* ── Accents ── */
+    --accent-blue: #60a5fa;
+    --accent-teal: #2dd4bf;
 
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.30), 0 2px 4px rgba(0, 0, 0, 0.18);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.35), 0 4px 8px rgba(0, 0, 0, 0.20);
+    /* ── Shadows ── */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.30), 0 1px 2px rgba(0, 0, 0, 0.18);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.22);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.40), 0 4px 8px rgba(0, 0, 0, 0.25);
 
+    /* ── Radius ── */
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 16px;

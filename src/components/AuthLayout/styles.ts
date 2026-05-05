@@ -58,7 +58,7 @@ export const BrandName = styled.span`
   font-weight: 800;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #c9a84c;
+  color: var(--gold);
   text-shadow: 0 2px 12px rgba(201, 168, 76, 0.25);
 `;
 
@@ -186,7 +186,7 @@ export const MobileBrandName = styled.span`
   font-weight: 800;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #c9a84c;
+  color: var(--gold);
 `;
 
 export const FormHeader = styled.div`

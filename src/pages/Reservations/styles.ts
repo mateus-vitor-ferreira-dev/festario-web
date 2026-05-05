@@ -458,7 +458,7 @@ export const PageButton = styled.button`
 
   &:hover:not(:disabled) {
     background: var(--bg-muted);
-    border-color: var(--brand-primary);
+    border-color: var(--brand);
   }
 
   &:disabled {
