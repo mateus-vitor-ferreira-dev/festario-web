@@ -1,6 +1,8 @@
 import { ReactNode, useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import Logo from "../../assets/logo-recanto.svg";
+import { BRAND_NAME } from "../../config/brand";
+import BookingPreview from "./BookingPreview";
 import { animateStagger } from "../../utils/animations";
 import * as S from "./styles";
 
@@ -14,7 +16,8 @@ interface AuthLayoutProps {
 /**
  * Layout de duas colunas para as páginas de autenticação (Login e Cadastro).
  *
- * Coluna esquerda: marca, foto da piscina em arco colonial e chamada. Coluna direita: formulário com GSAP stagger.
+ * Coluna esquerda: marca, prévia do calendário de reservas e chamada (sem foto de
+ * um espaço específico — a plataforma atende vários espaços). Coluna direita: formulário com GSAP stagger.
  * Enquanto `introFinished` é `false`, o logo fica invisível para não conflitar
  * com a `IntroAnimation` que está voando até sua posição.
  *
@@ -44,17 +47,10 @@ export default function AuthLayout({
                     >
                         <S.BrandLogo src={Logo} alt="" />
                     </S.BrandLogoWrapper>
-                    <S.BrandName>Recanto Vila Rica</S.BrandName>
+                    <S.BrandName>{BRAND_NAME}</S.BrandName>
                 </S.Brand>
 
-                <S.Arch>
-                    <img
-                        src="/images/piscina.webp"
-                        alt="Piscina do Recanto Vila Rica"
-                        width={1072}
-                        height={671}
-                    />
-                </S.Arch>
+                <BookingPreview />
 
                 <S.LeftBody>
                     <S.Headline>Sua festa começa pela data certa.</S.Headline>
@@ -72,8 +68,8 @@ export default function AuthLayout({
                         data-intro-target-mobile="true"
                         $visible={introFinished}
                     >
-                        <S.MobileBrandLogo src={Logo} alt="Recanto Vila Rica" />
-                        <S.MobileBrandName>Recanto Vila Rica</S.MobileBrandName>
+                        <S.MobileBrandLogo src={Logo} alt={BRAND_NAME} />
+                        <S.MobileBrandName>{BRAND_NAME}</S.MobileBrandName>
                     </S.MobileBrand>
 
                     <S.FormHeader>

@@ -61,23 +61,119 @@ export const BrandLogo = styled.img`
   object-fit: contain;
 `;
 
-/* Assinatura: janela em arco colonial com a foto da piscina */
-export const Arch = styled.figure`
-  margin: 0;
-  min-height: 0;
-  width: min(100%, 420px);
-  justify-self: start;
-  border-radius: var(--radius-arch);
-  padding: 8px;
-  border: 1px solid #b08a35;
-  overflow: hidden;
+/* Prévia do produto: calendário do mês desenhado em código */
+export const Preview = styled.div`
+  position: relative;
+  align-self: center;
+  width: min(100%, 400px);
+  padding-top: 28px;
+`;
 
-  img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 999px 999px 8px 8px;
+export const PreviewCard = styled.div`
+  background: #ffffff;
+  color: #17241e;
+  border-radius: var(--radius-lg);
+  padding: 24px 24px 20px;
+  box-shadow: 0 24px 48px -16px rgba(0, 0, 0, 0.45);
+`;
+
+export const PreviewMonth = styled.p`
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  margin: 0 0 16px;
+
+  &::first-letter {
+    text-transform: uppercase;
+  }
+`;
+
+export const PreviewGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+`;
+
+export const PreviewWeekday = styled.span`
+  font-size: 12px;
+  font-weight: 500;
+  color: #6f7d75;
+  text-align: center;
+  padding-bottom: 4px;
+`;
+
+const dayStates = {
+  free: "background: #e8ede6; color: #17241e;",
+  /* indisponível sem alarmar: apagado e riscado */
+  booked: "background: transparent; color: #a3aea7; text-decoration: line-through; text-decoration-color: #c3cdc4;",
+  confirmed: "background: #1f4f41; color: #ffffff; box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #b08a35;",
+} as const;
+
+export const PreviewDay = styled.span<{ $state: keyof typeof dayStates }>`
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: lining-nums tabular-nums;
+  ${({ $state }) => dayStates[$state]}
+`;
+
+export const PreviewLegend = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 16px;
+  font-size: 13px;
+  color: #5c6b63;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  i {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+  }
+
+  i[data-state="free"] { background: #e8ede6; }
+  i[data-state="booked"] { background: transparent; border: 1px solid #c3cdc4; }
+  i[data-state="confirmed"] { background: #1f4f41; }
+`;
+
+export const PreviewTicket = styled.div`
+  position: absolute;
+  right: -20px;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: #f7f0de;
+  color: #17241e;
+  border: 1px solid #e6d5a6;
+  box-shadow: 0 16px 32px -12px rgba(0, 0, 0, 0.5);
+
+  strong {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1d6436;
+  }
+
+  span {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 600;
+
+    &::first-letter {
+      text-transform: uppercase;
+    }
   }
 `;
 

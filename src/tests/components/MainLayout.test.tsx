@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import MainLayout from "../../components/MainLayout";
 import { AuthProvider } from "../../contexts/AuthContext";
 import { ThemeProvider } from "../../contexts/ThemeContext";
+import { BRAND_NAME } from "../../config/brand";
 
 describe("MainLayout", () => {
     it("renders header, outlet area and footer", () => {
@@ -17,6 +18,6 @@ describe("MainLayout", () => {
             </ThemeProvider>
         );
         expect(screen.getAllByText(/recanto vila rica/i).length).toBeGreaterThan(0);
-        expect(screen.getByText(/2026 Recanto Vila Rica/i)).toBeInTheDocument();
+        expect(screen.getByText(new RegExp(`${new Date().getFullYear()} ${BRAND_NAME}`, "i"))).toBeInTheDocument();
     });
 });
