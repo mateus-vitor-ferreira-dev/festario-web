@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Festário"><title>Festário</title>
+  <style>.corpo{fill:#27357e}.check{stroke:#fff}@media (prefers-color-scheme:dark){.corpo{fill:#9aa8f2}.check{stroke:#0f1330}}</style>
+  <rect class="corpo" x="4" y="8" width="56" height="52" rx="12"/>
+  <path d="M10 8 H24 L17 22 Z" fill="#f4b41a"/><path d="M25 8 H39 L32 22 Z" fill="#d8344a"/><path d="M40 8 H54 L47 22 Z" fill="#f4b41a"/>
+  <path class="check" d="M18 39 l9 9 l18 -19" fill="none" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
