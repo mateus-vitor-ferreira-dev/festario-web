@@ -1,4 +1,4 @@
-import { InputHTMLAttributes, ReactNode, useState } from "react";
+import { InputHTMLAttributes, ReactNode, useId, useState } from "react";
 import * as S from "./styles";
 
 interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "prefix"> {
@@ -29,7 +29,7 @@ function EyeIcon({ visible }: { visible: boolean }) {
  *
  * @component
  * @param {object} props
- * @param {string} [props.id] - ID do input (vincula ao `<label>`)
+ * @param {string} [props.id] - ID do input; se omitido, um ID único é gerado para vincular o `<label>`
  * @param {string} [props.label] - Texto do rótulo exibido acima do campo
  * @param {string} [props.error] - Mensagem de erro exibida abaixo do campo
  * @param {React.ReactNode} [props.prefix] - Conteúdo exibido antes do texto (ex.: ícone, símbolo)
@@ -37,7 +37,7 @@ function EyeIcon({ visible }: { visible: boolean }) {
  * @param {...*} props - Demais atributos repassados ao `<input>` nativo
  */
 export default function Input({
-    id,
+    id: idProp,
     label,
     error,
     prefix,
@@ -45,15 +45,18 @@ export default function Input({
     ...props
 }: InputProps) {
     const [passwordVisible, setPasswordVisible] = useState(false);
+    // sem id explícito o <label> ficava solto e leitores de tela não anunciavam o campo
+    const generatedId = useId();
+    const id = idProp ?? generatedId;
 
     const resolvedType = showPasswordToggle
         ? (passwordVisible ? "text" : "password")
         : props.type;
 
-    const errorId = id ? `${id}-error` : error ? `${props.name}-error` : undefined;
+    const errorId = `${id}-error`;
     const a11yProps = {
         "aria-invalid": error ? true : undefined,
-        "aria-describedby": error && errorId ? errorId : undefined,
+        "aria-describedby": error ? errorId : undefined,
     };
 
     return (

@@ -32,4 +32,26 @@ describe("Input component", () => {
         render(<Input type="email" placeholder="seu@email.com" />);
         expect(screen.getByPlaceholderText("seu@email.com")).toHaveAttribute("type", "email");
     });
+
+    it("associates the label with the input even without an explicit id", () => {
+        render(<Input label="E-mail" name="email" />);
+        expect(screen.getByLabelText("E-mail")).toHaveAttribute("name", "email");
+    });
+
+    it("keeps an explicit id when provided", () => {
+        render(<Input id="custom-id" label="Nome" />);
+        expect(screen.getByLabelText("Nome")).toHaveAttribute("id", "custom-id");
+    });
+
+    it("links the error message to the input via aria-describedby", () => {
+        render(<Input label="Senha" error="Senha obrigatória" />);
+        const input = screen.getByLabelText("Senha");
+        expect(input).toHaveAttribute("aria-invalid", "true");
+        expect(input).toHaveAccessibleDescription("Senha obrigatória");
+    });
+
+    it("associates the label with the password field when the toggle is shown", () => {
+        render(<Input label="Senha" showPasswordToggle />);
+        expect(screen.getByLabelText("Senha", { selector: "input" })).toHaveAttribute("type", "password");
+    });
 });
