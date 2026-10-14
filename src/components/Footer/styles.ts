@@ -9,7 +9,7 @@ export const Container = styled.footer`
 
 export const Content = styled.div`
   width: 100%;
-  max-width: 1200px;
+  max-width: var(--content-max);
   margin: 0 auto;
   /* 96px à direita: o botão flutuante do chat fica nesse canto */
   padding: 24px 96px 24px 24px;

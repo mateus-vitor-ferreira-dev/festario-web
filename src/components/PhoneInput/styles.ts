@@ -18,7 +18,7 @@ export const InputWrapper = styled.div<{ $error?: boolean }>`
     display: flex;
     align-items: center;
     width: 100%;
-    height: 48px;
+    height: var(--control-h);
     padding: 0 14px;
     border-radius: var(--radius-md);
     border: 1px solid ${({ $error }) => ($error ? "var(--color-error)" : "var(--border-medium)")};
@@ -67,7 +67,7 @@ export const DialCode = styled.span`
 `;
 
 export const Chevron = styled.span<{ $open: boolean }>`
-    font-size: 12px;
+    font-size: var(--text-2xs);
     color: var(--text-faint);
     transition: transform 0.15s;
     transform: ${({ $open }) => ($open ? "rotate(180deg)" : "rotate(0deg)")};

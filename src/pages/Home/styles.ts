@@ -269,7 +269,7 @@ export const DateBlock = styled.time`
     }
 
     span {
-        font-size: 12px;
+        font-size: var(--text-2xs);
         color: var(--text-muted);
         margin-top: 2px;
     }
@@ -431,7 +431,7 @@ export const AmenityChip = styled.span`
     align-items: center;
     padding: 2px 8px;
     border-radius: var(--radius-sm);
-    font-size: 12px;
+    font-size: var(--text-2xs);
     font-weight: 500;
     white-space: nowrap;
     background: var(--bg-muted);

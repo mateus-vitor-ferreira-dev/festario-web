@@ -8,7 +8,9 @@ export const GlobalStyle = createGlobalStyle`
     --font-display: "Alegreya", Georgia, "Times New Roman", serif;
     --font-sans:    "Alegreya Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 
-    /* Escala clássica (Bringhurst): 13 · 15 · 16 · 20 · 24 · 30 · 38 · 48 */
+    /* Escala clássica (Bringhurst): 13 · 15 · 16 · 20 · 24 · 30 · 38 · 48.
+       --text-2xs (12px) é o piso para micro-rótulos — nada menor que isso. */
+    --text-2xs:  12px;
     --text-xs:   13px;
     --text-sm:   15px;
     --text-base: 16px;
@@ -27,6 +29,52 @@ export const GlobalStyle = createGlobalStyle`
     --radius-arch: 999px 999px var(--radius-lg) var(--radius-lg);
 
     --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+    /* ── Tamanhos de controle e ícone (alvo de toque >= 44px, WCAG 2.5.8) ── */
+    --control-h: 48px;
+    --icon-sm: 16px;
+    --icon-md: 20px;
+    --icon-lg: 24px;
+
+    /* Largura máxima do conteúdo das páginas */
+    --content-max: 1200px;
+  }
+
+  /* ── Telas grandes: um degrau a mais na escala para continuar fácil de ler ── */
+  @media (min-width: 1600px) {
+    :root {
+      --text-2xs:  13px;
+      --text-xs:   14px;
+      --text-sm:   16px;
+      --text-base: 17px;
+      --text-lg:   21px;
+      --text-xl:   26px;
+      --text-2xl:  32px;
+      --text-3xl:  42px;
+      --text-4xl:  52px;
+      --control-h: 52px;
+      --icon-md:   22px;
+      --icon-lg:   26px;
+      --content-max: 1320px;
+    }
+  }
+
+  @media (min-width: 1920px) {
+    :root {
+      --text-2xs:  14px;
+      --text-xs:   15px;
+      --text-sm:   17px;
+      --text-base: 18px;
+      --text-lg:   22px;
+      --text-xl:   28px;
+      --text-2xl:  34px;
+      --text-3xl:  46px;
+      --text-4xl:  56px;
+      --control-h: 56px;
+      --icon-md:   24px;
+      --icon-lg:   28px;
+      --content-max: 1440px;
+    }
   }
 
   :root, [data-theme="light"] {

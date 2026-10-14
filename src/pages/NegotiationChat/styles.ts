@@ -224,7 +224,7 @@ export const BubbleText = styled.p<{ $isOwn: boolean; $isSystem?: boolean }>`
 `;
 
 export const BubbleTime = styled.span<{ $isOwn: boolean; $isSystem?: boolean }>`
-  font-size: 12px;
+  font-size: var(--text-2xs);
   color: ${({ $isOwn }) => ($isOwn ? "var(--on-brand)" : "var(--text-faint)")};
   opacity: ${({ $isOwn }) => ($isOwn ? 0.75 : 1)};
   display: block;

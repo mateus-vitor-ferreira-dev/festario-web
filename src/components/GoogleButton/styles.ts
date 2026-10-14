@@ -7,7 +7,7 @@ export const GoogleBtnWrapper = styled.div`
 /* Secundário: superfície + borda média, mesmo raio/altura do botão primário */
 export const GoogleButton = styled.button`
     width: 100%;
-    min-height: 48px;
+    min-height: var(--control-h);
     display: flex;
     align-items: center;
     justify-content: center;

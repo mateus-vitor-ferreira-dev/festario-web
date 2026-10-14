@@ -15,9 +15,9 @@ export const Container = styled.header`
 
 export const Content = styled.div`
   width: 100%;
-  max-width: 1200px;
+  max-width: var(--content-max);
   margin: 0 auto;
-  min-height: 64px;
+  min-height: 72px;
   padding: 0 max(24px, env(safe-area-inset-right)) 0 max(24px, env(safe-area-inset-left));
 
   ${media.sm} {
@@ -39,10 +39,16 @@ export const BrandWrapper = styled(Link)`
   white-space: nowrap;
 `;
 
+/* o logo é um brasão detalhado: abaixo de ~48px o nome interno vira ruído */
 export const Logo = styled.img`
-  width: 44px;
-  height: 44px;
+  width: 52px;
+  height: 52px;
   object-fit: contain;
+
+  ${media.sm} {
+    width: 44px;
+    height: 44px;
+  }
 `;
 
 export const BrandText = styled.span`
@@ -75,7 +81,7 @@ export const Nav = styled.nav<{ $open?: boolean }>`
     background: var(--bg-page);
     border-bottom: 1px solid var(--border-default);
     box-shadow: var(--shadow-lg);
-    max-height: calc(100dvh - 64px);
+    max-height: calc(100dvh - 72px);
     overflow-y: auto;
   }
 `;
@@ -149,7 +155,7 @@ export const UserInfo = styled.div`
   line-height: 1.2;
 
   span {
-    font-size: 12px;
+    font-size: var(--text-2xs);
     color: var(--text-faint);
   }
 
@@ -166,7 +172,7 @@ export const UserInfo = styled.div`
 `;
 
 export const LogoutButton = styled.button`
-  min-height: 40px;
+  min-height: 44px;
   border: 1px solid transparent;
   background: transparent;
   color: var(--text-muted);
@@ -215,8 +221,8 @@ export const ResendButton = styled.button`
 `;
 
 export const ThemeToggle = styled.button`
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   background: transparent;
@@ -234,8 +240,8 @@ export const ThemeToggle = styled.button`
   }
 
   svg {
-    width: 18px;
-    height: 18px;
+    width: var(--icon-md);
+    height: var(--icon-md);
   }
 `;
 
@@ -253,8 +259,8 @@ export const MenuButton = styled.button`
   flex-shrink: 0;
 
   svg {
-    width: 22px;
-    height: 22px;
+    width: var(--icon-lg);
+    height: var(--icon-lg);
   }
 
   ${media.lg} {
