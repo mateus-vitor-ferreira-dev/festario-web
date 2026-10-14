@@ -188,8 +188,9 @@ export const adminHandlers = [
         })
     ),
 
+    // formato real da API: listagem paginada dentro do envelope `data`
     http.get(`${BASE_URL}/admin/reservations`, () =>
-        HttpResponse.json({ success: true, data: [] })
+        HttpResponse.json({ success: true, data: { page: 1, limit: 20, data: [] } })
     ),
 
     http.get(`${BASE_URL}/admin/campaigns`, () =>
@@ -201,7 +202,7 @@ export const adminHandlers = [
     ),
 
     http.get(`${BASE_URL}/admin/users`, () =>
-        HttpResponse.json({ success: true, data: [] })
+        HttpResponse.json({ success: true, data: { page: 1, limit: 20, total: 0, data: [] } })
     ),
 
     http.get(`${BASE_URL}/admin/plans`, () =>

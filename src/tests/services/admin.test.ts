@@ -44,6 +44,20 @@ describe("adminService", () => {
         expect(result).toHaveLength(1);
     });
 
+    it("listAdminReservations unwraps the paginated response returned by the API", async () => {
+        server.use(
+            http.get(`${BASE}/admin/reservations`, () =>
+                HttpResponse.json({
+                    success: true,
+                    data: { page: 1, limit: 20, data: [{ id: "res-1", status: "PAID" }, { id: "res-2", status: "PENDING" }] },
+                })
+            )
+        );
+        const result = await listAdminReservations();
+        expect(Array.isArray(result)).toBe(true);
+        expect(result.map((r) => r.id)).toEqual(["res-1", "res-2"]);
+    });
+
     it("listCampaigns returns campaigns array", async () => {
         server.use(
             http.get(`${BASE}/admin/campaigns`, () =>
@@ -159,6 +173,27 @@ describe("adminService", () => {
         const result = await listAdminUsers();
         expect(result).toHaveLength(1);
         expect(result[0].name).toBe("Mateus");
+    });
+
+    it("listAdminUsers unwraps the paginated response returned by the API", async () => {
+        server.use(
+            http.get(`${BASE}/admin/users`, () =>
+                HttpResponse.json({
+                    success: true,
+                    data: { page: 1, limit: 20, total: 1, data: [{ id: "u-1", name: "Mateus", email: "m@email.com" }] },
+                })
+            )
+        );
+        const result = await listAdminUsers();
+        expect(result).toHaveLength(1);
+        expect(result[0].name).toBe("Mateus");
+    });
+
+    it("listAdminUsers returns an empty list for an unexpected payload", async () => {
+        server.use(
+            http.get(`${BASE}/admin/users`, () => HttpResponse.json({ success: true, data: null }))
+        );
+        expect(await listAdminUsers()).toEqual([]);
     });
 
     it("listAdminUsers passes filters as query params", async () => {

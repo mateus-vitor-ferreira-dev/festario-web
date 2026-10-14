@@ -17,6 +17,18 @@ import type {
     RaffleWinnerResult,
 } from "../types";
 
+/**
+ * As listagens paginadas do admin respondem `{ page, limit, total?, data: [...] }`
+ * dentro do envelope `data`. Extrai a lista (e aceita lista direta, por compatibilidade).
+ */
+function unwrapList<T>(payload: unknown): T[] {
+    if (Array.isArray(payload)) return payload as T[];
+    if (payload && typeof payload === "object" && Array.isArray((payload as { data?: unknown }).data)) {
+        return (payload as { data: T[] }).data;
+    }
+    return [];
+}
+
 // ─── Reservations ────────────────────────────────────────────────────────────
 
 /**
@@ -36,7 +48,7 @@ export async function getReservationsSummary(filters: Record<string, unknown> = 
  */
 export async function listAdminReservations(filters: Record<string, unknown> = {}, signal?: AbortSignal): Promise<Reservation[]> {
     const { data } = await api.get("/admin/reservations", { params: filters, signal });
-    return data.data;
+    return unwrapList<Reservation>(data.data);
 }
 
 /**
@@ -58,7 +70,7 @@ export async function cancelAdminReservation(id: string): Promise<Reservation> {
  */
 export async function listAdminUsers(filters: Record<string, unknown> = {}): Promise<User[]> {
     const { data } = await api.get("/admin/users", { params: filters });
-    return data.data;
+    return unwrapList<User>(data.data);
 }
 
 // ─── Revenue ──────────────────────────────────────────────────────────────────
