@@ -56,3 +56,14 @@ export async function updateVenue(
     const { data } = await api.patch(`/venues/${venueId}`, payload);
     return data.data;
 }
+
+/**
+ * Cadastra um espaço no espaço (tenant) atual — OWNER ou ADMIN.
+ * `basePricePerHour` é obrigatório.
+ *
+ * @see POST /venues
+ */
+export async function createVenue(payload: Partial<Venue>): Promise<Venue> {
+    const { data } = await api.post("/venues", payload);
+    return data.data;
+}
