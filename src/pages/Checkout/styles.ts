@@ -212,10 +212,10 @@ export const PaymentCard = styled.article`
   flex-direction: column;
   gap: 20px;
 
-  /* >lg: coluna de pagamento acompanha a rolagem (64px do header + folga) */
+  /* >lg: coluna de pagamento acompanha a rolagem (72px do header + folga) */
   @media (min-width: 1025px) {
     position: sticky;
-    top: 88px;
+    top: 96px;
   }
 
   ${media.md} {

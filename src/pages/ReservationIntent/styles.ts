@@ -132,9 +132,9 @@ export const RightColumn = styled.div`
   flex-direction: column;
   gap: 24px;
   min-width: 0;
-  /* resumo + confirmar acompanham a rolagem no desktop (header = 64px) */
+  /* resumo + confirmar acompanham a rolagem no desktop (header = 72px) */
   position: sticky;
-  top: 88px;
+  top: 96px;
 
   ${media.lg} {
     position: static;

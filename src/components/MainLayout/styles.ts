@@ -12,7 +12,7 @@ export const Container = styled.div`
 export const Main = styled.main`
   flex: 1;
   width: 100%;
-  max-width: 1200px;
+  max-width: var(--content-max);
   margin: 0 auto;
   padding: 40px max(24px, env(safe-area-inset-right)) 56px max(24px, env(safe-area-inset-left));
   /* evita que filhos com conteúdo largo (tabelas, calendários) estourem a viewport */

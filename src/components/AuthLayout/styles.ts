@@ -23,10 +23,15 @@ export const LeftSide = styled.aside`
   height: 100dvh;
   background: #133428;
   color: #ffffff;
-  padding: 40px clamp(32px, 4vw, 56px) 48px;
+  /* margens e espaços crescem com a tela, limitados também pela altura
+     (monitores largos e baixos não podem empilhar conteúdo além da tela) */
+  padding: clamp(28px, min(3.2vw, 4vh), 72px) clamp(40px, 5vw, 112px);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: 32px;
+  /* áreas fixas: quando a prévia some (telas baixas), o título continua no rodapé do painel */
+  grid-template-areas: "brand" "preview" "body";
+  gap: clamp(20px, min(2.5vw, 3vh), 48px);
+  overflow: hidden;
 
   ${media.lg} {
     display: none;
@@ -34,20 +39,25 @@ export const LeftSide = styled.aside`
 `;
 
 export const Brand = styled.div`
+  grid-area: brand;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: clamp(14px, 1.2vw, 24px);
 `;
 
 export const BrandName = styled.span`
   font-family: var(--font-display);
-  font-size: var(--text-lg);
+  font-size: clamp(22px, 1.6vw, 34px);
   font-weight: 600;
+  line-height: 1.1;
   color: #ffffff;
 `;
 
+/* o logo é um brasão detalhado (louros + nome interno): abaixo de ~88px vira ruído */
 export const BrandLogoWrapper = styled.div<{ $visible: boolean }>`
-  width: 56px;
+  width: clamp(88px, min(6.5vw, 11vh), 136px);
+  aspect-ratio: 1;
+  flex-shrink: 0;
   opacity: ${({ $visible }) => ($visible ? 1 : 0)};
   transition: opacity 180ms ease;
   display: flex;
@@ -61,27 +71,35 @@ export const BrandLogo = styled.img`
   object-fit: contain;
 `;
 
-/* Prévia do produto: calendário do mês desenhado em código */
+/* Prévia do produto: calendário do mês desenhado em código.
+   Tudo em em: o tamanho de fonte da prévia escala com a tela e o resto acompanha. */
 export const Preview = styled.div`
+  grid-area: preview;
   position: relative;
   align-self: center;
-  width: min(100%, 400px);
-  padding-top: 28px;
+  font-size: clamp(13px, min(1.05vw, 1.6vh), 21px);
+  width: min(100%, 27em);
+  padding-top: 1.9em;
+
+  /* em telas baixas a prévia não cabe junto da marca e do título: sai */
+  @media (max-height: 760px) {
+    display: none;
+  }
 `;
 
 export const PreviewCard = styled.div`
   background: #ffffff;
   color: #17241e;
   border-radius: var(--radius-lg);
-  padding: 24px 24px 20px;
+  padding: 1.6em 1.6em 1.35em;
   box-shadow: 0 24px 48px -16px rgba(0, 0, 0, 0.45);
 `;
 
 export const PreviewMonth = styled.p`
   font-family: var(--font-display);
-  font-size: var(--text-xl);
+  font-size: 1.6em;
   font-weight: 600;
-  margin: 0 0 16px;
+  margin: 0 0 0.65em;
 
   &::first-letter {
     text-transform: uppercase;
@@ -91,21 +109,21 @@ export const PreviewMonth = styled.p`
 export const PreviewGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  gap: 0.28em;
 `;
 
 export const PreviewWeekday = styled.span`
-  font-size: 12px;
+  font-size: max(12px, 0.8em);
   font-weight: 500;
-  color: #6f7d75;
+  color: #5c6b63;
   text-align: center;
-  padding-bottom: 4px;
+  padding-bottom: 0.3em;
 `;
 
 const dayStates = {
   free: "background: #e8ede6; color: #17241e;",
   /* indisponível sem alarmar: apagado e riscado */
-  booked: "background: transparent; color: #a3aea7; text-decoration: line-through; text-decoration-color: #c3cdc4;",
+  booked: "background: transparent; color: #8a978f; text-decoration: line-through; text-decoration-color: #c3cdc4;",
   confirmed: "background: #1f4f41; color: #ffffff; box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #b08a35;",
 } as const;
 
@@ -115,7 +133,7 @@ export const PreviewDay = styled.span<{ $state: keyof typeof dayStates }>`
   place-items: center;
   border-radius: var(--radius-sm);
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: 1em;
   font-weight: 600;
   font-variant-numeric: lining-nums tabular-nums;
   ${({ $state }) => dayStates[$state]}
@@ -124,36 +142,36 @@ export const PreviewDay = styled.span<{ $state: keyof typeof dayStates }>`
 export const PreviewLegend = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 16px;
-  margin-top: 16px;
-  font-size: 13px;
+  gap: 0.4em 1.1em;
+  margin-top: 1.1em;
+  font-size: max(12px, 0.87em);
   color: #5c6b63;
 
   span {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 0.45em;
   }
 
   i {
-    width: 10px;
-    height: 10px;
+    width: 0.75em;
+    height: 0.75em;
     border-radius: 3px;
   }
 
   i[data-state="free"] { background: #e8ede6; }
-  i[data-state="booked"] { background: transparent; border: 1px solid #c3cdc4; }
+  i[data-state="booked"] { background: transparent; border: 1px solid #a3aea7; }
   i[data-state="confirmed"] { background: #1f4f41; }
 `;
 
 export const PreviewTicket = styled.div`
   position: absolute;
-  right: -20px;
+  right: -1.3em;
   top: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 12px 16px;
+  gap: 0.15em;
+  padding: 0.8em 1.05em;
   border-radius: var(--radius-md);
   background: #f7f0de;
   color: #17241e;
@@ -161,14 +179,14 @@ export const PreviewTicket = styled.div`
   box-shadow: 0 16px 32px -12px rgba(0, 0, 0, 0.5);
 
   strong {
-    font-size: 13px;
+    font-size: max(12px, 0.87em);
     font-weight: 700;
     color: #1d6436;
   }
 
   span {
     font-family: var(--font-display);
-    font-size: var(--text-lg);
+    font-size: 1.3em;
     font-weight: 600;
 
     &::first-letter {
@@ -178,24 +196,26 @@ export const PreviewTicket = styled.div`
 `;
 
 export const LeftBody = styled.div`
+  grid-area: body;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  max-width: 420px;
+  gap: 0.6em;
+  max-width: 30em;
+  font-size: clamp(16px, min(1.1vw, 2vh), 22px);
 `;
 
 export const Headline = styled.h1`
-  font-size: var(--text-3xl);
+  font-size: 2.4em;
   font-weight: 600;
   color: #ffffff;
-  line-height: 1.1;
+  line-height: 1.08;
   margin: 0;
 `;
 
 export const Tagline = styled.p`
-  font-size: var(--text-base);
+  font-size: 1em;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.78);
   margin: 0;
 `;
 
@@ -217,10 +237,10 @@ export const RightSide = styled.div`
 
 export const FormArea = styled.div`
   width: 100%;
-  max-width: 420px;
+  max-width: clamp(420px, 27vw, 560px);
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: clamp(24px, 1.8vw, 36px);
 `;
 
 export const MobileBrand = styled.div<{ $visible: boolean }>`
@@ -257,7 +277,7 @@ export const FormHeader = styled.div`
 `;
 
 export const Title = styled.h2`
-  font-size: var(--text-2xl);
+  font-size: clamp(30px, 2.1vw, 44px);
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
