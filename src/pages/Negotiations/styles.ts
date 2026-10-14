@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { media } from "../../styles/breakpoints";
 
 export const Container = styled.div`
   display: flex;
@@ -8,197 +9,144 @@ export const Container = styled.div`
 
 export const Header = styled.section`
   display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+`;
+
+export const HeaderText = styled.div`
+  display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
 `;
 
 export const Title = styled.h1`
-  font-size: 32px;
-  font-weight: 700;
+  font-size: var(--text-3xl);
+  font-weight: 600;
+  line-height: 1.1;
   color: var(--text-primary);
+
+  ${media.sm} {
+    font-size: var(--text-2xl);
+  }
 `;
 
 export const Description = styled.p`
   color: var(--text-muted);
-  line-height: 1.6;
-  font-size: 14px;
+  line-height: 1.5;
+  font-size: var(--text-base);
 `;
 
 export const NewButton = styled.button`
-  align-self: flex-start;
-  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
   padding: 0 20px;
   background: var(--brand);
-  color: #ffffff;
+  color: var(--on-brand);
   border: none;
-  border-radius: 12px;
-  font-size: 14px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
   font-weight: 700;
+  white-space: nowrap;
   cursor: pointer;
-  transition: opacity 0.15s;
-
-  &:hover {
-    opacity: 0.9;
-  }
-`;
-
-export const NewForm = styled.form`
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: 16px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-`;
-
-export const NewFormTitle = styled.h3`
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-`;
-
-export const Textarea = styled.textarea`
-  width: 100%;
-  min-height: 90px;
-  padding: 12px 14px;
-  border: 1px solid var(--border-medium);
-  border-radius: 12px;
-  background: var(--bg-page);
-  color: var(--text-primary);
-  font-size: 14px;
-  font-family: inherit;
-  line-height: 1.5;
-  resize: vertical;
-  outline: none;
-  transition: border-color 0.15s;
-  box-sizing: border-box;
-
-  &:focus {
-    border-color: var(--brand);
-  }
-
-  &::placeholder {
-    color: var(--text-faint);
-  }
-
-  &:disabled {
-    background: var(--bg-surface);
-    cursor: not-allowed;
-  }
-`;
-
-export const FormActions = styled.div`
-  display: flex;
-  gap: 8px;
-`;
-
-export const SubmitButton = styled.button`
-  height: 40px;
-  padding: 0 22px;
-  background: var(--brand);
-  color: #ffffff;
-  border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.15s;
+  transition: background 0.15s ease;
 
   &:hover:not(:disabled) {
-    opacity: 0.9;
+    background: var(--brand-dark);
   }
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
-`;
 
-export const CancelButton = styled.button`
-  height: 40px;
-  padding: 0 22px;
-  background: transparent;
-  color: var(--text-muted);
-  border: 1px solid var(--border-default);
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color 0.15s;
-
-  &:hover:not(:disabled) {
-    border-color: var(--text-muted);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  ${media.sm} {
+    width: 100%;
   }
 `;
 
+/* Lista única em painel, linhas separadas por hairline */
 export const List = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 `;
 
 export const NegotiationCard = styled.div`
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: 16px;
-  padding: 20px 22px;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+  padding: 18px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
   cursor: pointer;
-  transition: border-color 0.15s;
+  transition: background 0.15s ease;
+
+  & + & {
+    border-top: 1px solid var(--border-default);
+  }
 
   &:hover {
-    border-color: var(--brand);
+    background: var(--bg-muted);
+  }
+
+  ${media.sm} {
+    padding: 16px;
+    align-items: flex-start;
   }
 `;
 
 export const NegotiationInfo = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   flex: 1;
   min-width: 0;
 `;
 
 export const NegotiationSubject = styled.strong`
-  font-size: 14px;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: 1.25;
   color: var(--text-primary);
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
 `;
 
 export const NegotiationMeta = styled.span`
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 `;
 
 export const LastMessage = styled.p`
-  font-size: 13px;
-  color: var(--text-muted);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 300px;
+  max-width: min(100%, 520px);
 `;
 
 export const StatusBadge = styled.span<{ $status?: string }>`
   display: inline-flex;
   align-items: center;
-  padding: 5px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 600;
   border: 1px solid;
   white-space: nowrap;
   flex-shrink: 0;
@@ -219,26 +167,26 @@ export const StatusBadge = styled.span<{ $status?: string }>`
 `;
 
 export const EmptyState = styled.div`
-  background: var(--bg-page);
-  border: 1px dashed var(--border-medium);
-  border-radius: 16px;
-  padding: 48px 32px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 40px 24px;
+
+  ${media.sm} {
+    padding: 28px 16px;
+  }
 
   p {
     color: var(--text-muted);
-    font-size: 14px;
+    font-size: var(--text-base);
     line-height: 1.6;
+    max-width: 520px;
   }
 `;
 
 export const LoadingCard = styled.div`
   background: var(--bg-surface);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   padding: 48px;
   border: 1px solid var(--border-default);
   display: flex;
@@ -247,6 +195,6 @@ export const LoadingCard = styled.div`
 
   p {
     color: var(--text-muted);
-    font-size: 14px;
+    font-size: var(--text-sm);
   }
 `;

@@ -129,13 +129,15 @@ export default function AvailabilityCalendar({ venueId, selectedDate, onChange, 
     return (
         <S.Wrapper>
             <S.Header>
-                <S.NavButton onClick={prevMonth} disabled={isPrevDisabled} aria-label="Mês anterior">
-                    &#8249;
-                </S.NavButton>
                 <S.MonthLabel>{monthLabel}</S.MonthLabel>
-                <S.NavButton onClick={nextMonth} aria-label="Próximo mês">
-                    &#8250;
-                </S.NavButton>
+                <S.NavGroup>
+                    <S.NavButton type="button" onClick={prevMonth} disabled={isPrevDisabled} aria-label="Mês anterior">
+                        &#8249;
+                    </S.NavButton>
+                    <S.NavButton type="button" onClick={nextMonth} aria-label="Próximo mês">
+                        &#8250;
+                    </S.NavButton>
+                </S.NavGroup>
             </S.Header>
 
             {loading ? (

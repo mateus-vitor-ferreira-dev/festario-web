@@ -55,6 +55,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     useEffect(() => {
         setUserContext(user);
+    // intencional: reidentifica no Sentry só quando o usuário muda, não a cada novo objeto de sessão
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user?.id]);
 
     function login(data: unknown) {

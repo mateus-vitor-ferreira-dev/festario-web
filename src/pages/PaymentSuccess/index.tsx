@@ -1,14 +1,13 @@
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
-import { FADE_UP } from "../../utils/animations";
+import { animateFadeInUp } from "../../utils/animations";
 import * as S from "./styles";
 
 /**
  * Página de confirmação de pagamento bem-sucedido (retorno do Stripe Checkout).
  *
- * Exibe ícone de sucesso com animação GSAP e botão para ir às reservas.
+ * Exibe ícone de sucesso com entrada GSAP e botão para ir às reservas.
  * Rota: `/payment/success`
  *
  * @component
@@ -19,9 +18,7 @@ export default function PaymentSuccess() {
 
     useGSAP(() => {
         if (!cardRef.current) return;
-        const children = cardRef.current.children;
-        gsap.from(children[0], { scale: 0.5, opacity: 0, duration: 0.6, ease: "back.out(1.7)" });
-        gsap.from(Array.from(children).slice(1), { ...FADE_UP, stagger: 0.1, delay: 0.3 });
+        animateFadeInUp(cardRef.current);
     }, { scope: cardRef, dependencies: [] });
 
     return (
@@ -31,7 +28,7 @@ export default function PaymentSuccess() {
                     <S.CheckIcon />
                 </S.IconWrapper>
 
-                <S.Title>Pagamento confirmado!</S.Title>
+                <S.Title>Pagamento confirmado</S.Title>
 
                 <S.Description>
                     Sua reserva foi confirmada com sucesso. Em breve você receberá

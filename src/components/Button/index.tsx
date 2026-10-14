@@ -6,7 +6,7 @@
 import { ButtonHTMLAttributes } from "react";
 import * as S from "./styles";
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {}
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement>;
 
 /**
  * Botão genérico do design system.

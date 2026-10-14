@@ -1,14 +1,17 @@
 import styled from "styled-components";
+import { media } from "../../styles/breakpoints";
 
 export const Container = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 24px;
   max-width: 1100px;
+  align-items: start;
 
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+  ${media.md} {
+    grid-template-columns: minmax(0, 1fr);
     max-width: 640px;
+    gap: 16px;
   }
 `;
 
@@ -16,74 +19,93 @@ export const Header = styled.section`
   grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  margin-bottom: 8px;
 `;
 
 export const Title = styled.h1`
-  font-size: 32px;
-  font-weight: 700;
+  font-size: var(--text-3xl);
+  font-weight: 600;
+  line-height: 1.1;
   color: var(--text-primary);
+
+  ${media.sm} {
+    font-size: var(--text-2xl);
+  }
 `;
 
 export const Description = styled.p`
   color: var(--text-muted);
-  line-height: 1.6;
-  font-size: 14px;
+  line-height: 1.5;
+  font-size: var(--text-base);
+  max-width: 620px;
 `;
 
 export const Card = styled.div`
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: 18px;
-  padding: 28px;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  border-radius: var(--radius-lg);
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
+  min-width: 0;
+
+  ${media.sm} {
+    padding: 20px 16px;
+  }
 `;
 
 export const CardTitle = styled.h2`
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-primary);
 `;
 
+/* Linha de canal: lista com hairlines, sem caixas aninhadas */
 export const ContactItem = styled.a`
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 16px 18px;
-  border-radius: 14px;
-  border: 1px solid var(--border-default);
-  background: var(--bg-page);
+  padding: 10px 8px;
+  margin: -6px -8px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  font: inherit;
+  color: inherit;
   text-decoration: none;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: background 0.15s ease;
   text-align: left;
-  width: 100%;
+  width: calc(100% + 16px);
+  min-height: 56px;
 
   &:hover {
-    border-color: var(--brand);
-    background: var(--bg-surface);
+    background: var(--bg-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
   }
 `;
 
-export const ContactIcon = styled.div<{ $bg?: string }>`
+export const ContactIcon = styled.div`
   width: 44px;
   height: 44px;
-  border-radius: 12px;
-  background: ${({ $bg }) => $bg || "var(--brand)"};
+  border-radius: var(--radius-md);
+  background: var(--brand-subtle);
+  border: 1px solid var(--brand-border);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 
   svg {
-    width: 22px;
-    height: 22px;
-    fill: #ffffff;
+    width: 20px;
+    height: 20px;
+    fill: var(--brand);
   }
 `;
 
@@ -92,24 +114,20 @@ export const ContactInfo = styled.div`
   flex-direction: column;
   gap: 2px;
   flex: 1;
+  min-width: 0;
 `;
 
 export const ContactLabel = styled.span`
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   font-weight: 500;
 `;
 
 export const ContactValue = styled.span`
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--text-primary);
-`;
-
-export const ContactArrow = styled.span`
-  font-size: 18px;
-  color: var(--text-muted);
-  flex-shrink: 0;
+  overflow-wrap: anywhere;
 `;
 
 export const FormField = styled.div`
@@ -119,67 +137,82 @@ export const FormField = styled.div`
 `;
 
 export const FormLabel = styled.label`
-  font-size: 13px;
-  font-weight: 600;
+  font-size: var(--text-sm);
+  font-weight: 500;
   color: var(--text-secondary);
 `;
 
 export const FormInput = styled.input`
-  height: 44px;
+  height: 48px;
   padding: 0 14px;
-  border: 1px solid var(--border-default);
-  border-radius: 10px;
-  background: var(--bg-page);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
   color: var(--text-primary);
-  font-size: 14px;
+  font-family: inherit;
+  font-size: var(--text-base);
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:hover:not(:focus) {
+    border-color: var(--text-faint);
+  }
 
   &:focus {
     border-color: var(--brand);
+    box-shadow: var(--focus-ring);
   }
 
   &::placeholder {
-    color: var(--text-muted);
+    color: var(--text-faint);
   }
 `;
 
 export const FormTextarea = styled.textarea`
   padding: 12px 14px;
-  border: 1px solid var(--border-default);
-  border-radius: 10px;
-  background: var(--bg-page);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: var(--text-base);
+  line-height: 1.5;
   outline: none;
   resize: vertical;
   font-family: inherit;
-  transition: border-color 0.15s;
-  min-height: 120px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  min-height: 132px;
+
+  &:hover:not(:focus) {
+    border-color: var(--text-faint);
+  }
 
   &:focus {
     border-color: var(--brand);
+    box-shadow: var(--focus-ring);
   }
 
   &::placeholder {
-    color: var(--text-muted);
+    color: var(--text-faint);
   }
 `;
 
 export const SubmitButton = styled.button`
-  height: 48px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 20px;
   background: var(--brand);
-  color: #ffffff;
+  color: var(--on-brand);
   border: none;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: background 0.15s ease;
   margin-top: 4px;
 
   &:hover:not(:disabled) {
-    opacity: 0.9;
+    background: var(--brand-dark);
   }
 
   &:disabled {

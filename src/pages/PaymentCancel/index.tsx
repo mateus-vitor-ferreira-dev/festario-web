@@ -1,14 +1,13 @@
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
-import { FADE_UP } from "../../utils/animations";
+import { animateFadeInUp } from "../../utils/animations";
 import * as S from "./styles";
 
 /**
  * Página exibida quando o usuário cancela o pagamento no Stripe Checkout.
  *
- * Exibe ícone de cancelamento com animação GSAP e botão para tentar novamente.
+ * Exibe ícone de cancelamento com entrada GSAP e botão para tentar novamente.
  * Rota: `/payment/cancel`
  *
  * @component
@@ -19,9 +18,7 @@ export default function PaymentCancel() {
 
     useGSAP(() => {
         if (!cardRef.current) return;
-        const children = cardRef.current.children;
-        gsap.from(children[0], { scale: 0.5, opacity: 0, duration: 0.6, ease: "back.out(1.7)" });
-        gsap.from(Array.from(children).slice(1), { ...FADE_UP, stagger: 0.1, delay: 0.3 });
+        animateFadeInUp(cardRef.current);
     }, { scope: cardRef, dependencies: [] });
 
     return (
@@ -34,9 +31,13 @@ export default function PaymentCancel() {
                 <S.Title>Pagamento cancelado</S.Title>
 
                 <S.Description>
-                    Você cancelou o processo de pagamento. Não se preocupe — sua reserva
-                    ainda está pendente e pode ser paga a qualquer momento.
+                    Você saiu do pagamento antes de concluir. Sua reserva continua
+                    pendente — a data ainda não está garantida.
                 </S.Description>
+
+                <S.Hint>
+                    Para concluir, abra suas reservas e use “Pagar” na reserva pendente.
+                </S.Hint>
 
                 <S.Actions>
                     <S.PrimaryButton onClick={() => navigate("/reservations")}>

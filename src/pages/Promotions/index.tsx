@@ -6,13 +6,12 @@ import { listPromotionStatus, listMyGrants } from "../../services/promotion";
 import { createReferral, listReferrals } from "../../services/referral";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { isAbortError } from "../../utils/errors";
-import { animateFadeInUp, animateStagger } from "../../utils/animations";
+import { animateFadeInUp } from "../../utils/animations";
 import type { PromotionGrant, PromotionStatusItem, Referral } from "../../types";
 import * as S from "./styles";
 
 const CAMPAIGN_CONFIGS = {
     REFERRAL_NEXT_BOOKING: {
-        icon: "🎁",
         typeLabel: "Indicação",
         title: "Indique e Ganhe",
         description:
@@ -20,7 +19,6 @@ const CAMPAIGN_CONFIGS = {
         cta: "invite",
     },
     LOYALTY_ALWAYS_HERE: {
-        icon: "⭐",
         typeLabel: "Fidelidade",
         title: "Programa de Fidelidade",
         description:
@@ -28,7 +26,6 @@ const CAMPAIGN_CONFIGS = {
         cta: null,
     },
     RAFFLE_VIP: {
-        icon: "🎰",
         typeLabel: "Sorteio VIP",
         title: "Sorteio VIP",
         description:
@@ -100,7 +97,6 @@ export default function Promotions() {
     useGSAP(() => {
         if (isLoading || !containerRef.current) return;
         animateFadeInUp(containerRef.current.querySelector(".anim-header"));
-        animateStagger(containerRef.current.querySelectorAll(".anim-card"), { delay: 0.08 });
     }, { scope: containerRef, dependencies: [isLoading] });
 
     async function handleInvite(e: React.FormEvent<HTMLFormElement>) {
@@ -164,7 +160,7 @@ export default function Promotions() {
                 <S.Spinner />
             ) : (
                 <>
-                    <div>
+                    <S.Section>
                         <S.SectionTitle>Campanhas</S.SectionTitle>
                         <S.CampaignGrid>
                             {CAMPAIGN_TYPES.map((type) => {
@@ -177,12 +173,11 @@ export default function Promotions() {
                                     <S.CampaignCard
                                         key={type}
                                         $inactive={!isActive}
-                                        className="anim-card"
+                                       
                                         onClick={!isActive ? () => toggleExpand(type) : undefined}
                                     >
                                         <S.CampaignTop>
                                             <S.CampaignLeft>
-                                                <S.CampaignIcon>{config.icon}</S.CampaignIcon>
                                                 <S.CampaignMeta>
                                                     <S.CampaignName>{config.title}</S.CampaignName>
                                                     <S.CampaignType>{config.typeLabel}</S.CampaignType>
@@ -197,14 +192,14 @@ export default function Promotions() {
 
                                         {isActive && entry.campaign?.startsAt && entry.campaign?.endsAt && (
                                             <S.CampaignDates>
-                                                {formatDate(entry.campaign.startsAt)} → {formatDate(entry.campaign.endsAt)}
+                                                De {formatDate(entry.campaign.startsAt)} a {formatDate(entry.campaign.endsAt)}
                                             </S.CampaignDates>
                                         )}
 
                                         {!isActive && (
                                             <>
-                                                <S.ExpandHint>
-                                                    {isOpen ? "▲" : "▼"} {isOpen ? "Ocultar detalhes" : "Ver motivo"}
+                                                <S.ExpandHint $open={isOpen}>
+                                                    {isOpen ? "Ocultar detalhes" : "Ver motivo"}
                                                 </S.ExpandHint>
                                                 <S.UnavailableReason $open={isOpen}>
                                                     <S.UnavailableText>
@@ -243,44 +238,44 @@ export default function Promotions() {
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                             >
-                                                Ir para o Instagram →
+                                                Ir para o Instagram
                                             </S.InstagramLink>
                                         )}
                                     </S.CampaignCard>
                                 );
                             })}
                         </S.CampaignGrid>
-                    </div>
+                    </S.Section>
 
-                    <div>
+                    <S.Section>
                         <S.SectionTitle>Meus descontos</S.SectionTitle>
                         {grants.length === 0 ? (
                             <S.EmptyGrants>
-                                Você ainda não tem descontos disponíveis. Indique amigos para ganhar!
+                                Você ainda não tem descontos disponíveis. Indique um amigo pela campanha de indicação acima — quando ele reservar, seu desconto aparece aqui.
                             </S.EmptyGrants>
                         ) : (
                             <S.GrantsGrid>
                                 {grants.map((grant) => (
-                                    <S.GrantCard key={grant.id} className="anim-card">
-                                        <S.GrantPercent>{grant.percentOff}% OFF</S.GrantPercent>
+                                    <S.GrantCard key={grant.id}>
+                                        <S.GrantPercent>{grant.percentOff}%<small>de desconto</small></S.GrantPercent>
                                         <S.GrantCampaign>{grant.campaign?.name}</S.GrantCampaign>
                                         <S.GrantExpiry>{formatExpiry(grant.validUntil)}</S.GrantExpiry>
                                     </S.GrantCard>
                                 ))}
                             </S.GrantsGrid>
                         )}
-                    </div>
+                    </S.Section>
 
-                    <div>
+                    <S.Section>
                         <S.SectionTitle>Minhas indicações</S.SectionTitle>
                         {referrals.length === 0 ? (
                             <S.EmptyReferrals>
-                                Você ainda não indicou ninguém. Use o formulário acima para começar!
+                                Você ainda não indicou ninguém. Envie o e-mail de um amigo pela campanha de indicação, acima.
                             </S.EmptyReferrals>
                         ) : (
                             <S.ReferralList>
                                 {referrals.map((ref) => (
-                                    <S.ReferralCard key={ref.id} className="anim-card">
+                                    <S.ReferralCard key={ref.id}>
                                         <S.ReferralInfo>
                                             <strong>{ref.referredEmail}</strong>
                                             <span>Indicado em {formatDate(ref.createdAt)}</span>
@@ -292,7 +287,7 @@ export default function Promotions() {
                                 ))}
                             </S.ReferralList>
                         )}
-                    </div>
+                    </S.Section>
                 </>
             )}
         </S.Container>

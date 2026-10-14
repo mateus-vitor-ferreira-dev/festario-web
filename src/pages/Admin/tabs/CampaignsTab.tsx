@@ -17,6 +17,7 @@ import {
     getCampaignDateDisplay,
     getCampaignStatus,
 } from "./constants";
+import { ModalHeader } from "../ModalHeader";
 import * as S from "../styles";
 
 export function CampaignsTab() {
@@ -127,10 +128,10 @@ export function CampaignsTab() {
                                     </S.CampaignStatusBadge>
                                     {c.type === "RAFFLE_VIP" && status === "active" && (
                                         <S.RaffleButton onClick={() => handleDrawWinner(c)} disabled={drawingId === c.id}>
-                                            {drawingId === c.id ? "Sorteando..." : "Realizar Sorteio"}
+                                            {drawingId === c.id ? "Sorteando..." : "Realizar sorteio"}
                                         </S.RaffleButton>
                                     )}
-                                    <S.SecondaryButton onClick={() => handleToggle(c)} disabled={togglingId === c.id}>
+                                    <S.SecondaryButton $size="sm" onClick={() => handleToggle(c)} disabled={togglingId === c.id}>
                                         {togglingId === c.id ? "Salvando..." : c.isActive ? "Desativar" : "Ativar"}
                                     </S.SecondaryButton>
                                 </S.CampaignActions>
@@ -143,67 +144,71 @@ export function CampaignsTab() {
             {showCreateModal && (
                 <S.ModalOverlay onClick={() => setShowCreateModal(false)}>
                     <S.ModalBox onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                        <S.ModalTitle>Nova campanha</S.ModalTitle>
-                        <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                        <ModalHeader onClose={() => setShowCreateModal(false)} disabled={isSaving}>Nova campanha</ModalHeader>
+                        <S.Form onSubmit={handleCreate}>
                             <S.FormGroup>
                                 <label>Nome</label>
                                 <S.TextInput required value={form.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Ex: Indique um amigo" />
                             </S.FormGroup>
-                            <S.FormGroup>
-                                <label>Código</label>
-                                <S.TextInput required value={form.code} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder="Ex: REFERRAL_2026" />
-                            </S.FormGroup>
-                            <S.FormGroup>
-                                <label>Tipo</label>
-                                <S.Select value={form.type} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setForm((f) => ({ ...f, type: e.target.value }))} style={{ height: 42 }}>
-                                    {CAMPAIGN_TYPE_OPTIONS.map((o) => (
-                                        <option key={o.value} value={o.value}>{o.label}</option>
-                                    ))}
-                                </S.Select>
-                            </S.FormGroup>
-                            <S.FormGroup>
-                                <label>Início</label>
-                                <DatePickerInput
-                                    value={form.startsAt}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, startsAt: e.target.value }))}
-                                />
-                            </S.FormGroup>
-                            <S.FormGroup>
-                                <label>Encerramento</label>
-                                <DatePickerInput
-                                    value={form.endsAt}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, endsAt: e.target.value }))}
-                                    minDate={form.startsAt}
-                                />
-                            </S.FormGroup>
+                            <S.FormRow>
+                                <S.FormGroup>
+                                    <label>Código</label>
+                                    <S.TextInput required value={form.code} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder="Ex: REFERRAL_2026" />
+                                </S.FormGroup>
+                                <S.FormGroup>
+                                    <label>Tipo</label>
+                                    <S.Select value={form.type} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setForm((f) => ({ ...f, type: e.target.value }))}>
+                                        {CAMPAIGN_TYPE_OPTIONS.map((o) => (
+                                            <option key={o.value} value={o.value}>{o.label}</option>
+                                        ))}
+                                    </S.Select>
+                                </S.FormGroup>
+                            </S.FormRow>
+                            <S.FormRow>
+                                <S.FormGroup>
+                                    <label>Início</label>
+                                    <DatePickerInput
+                                        value={form.startsAt}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, startsAt: e.target.value }))}
+                                    />
+                                </S.FormGroup>
+                                <S.FormGroup>
+                                    <label>Encerramento</label>
+                                    <DatePickerInput
+                                        value={form.endsAt}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, endsAt: e.target.value }))}
+                                        minDate={form.startsAt}
+                                    />
+                                </S.FormGroup>
+                            </S.FormRow>
                             <S.ModalActions>
                                 <S.SecondaryButton type="button" onClick={() => setShowCreateModal(false)} disabled={isSaving}>Cancelar</S.SecondaryButton>
                                 <S.PrimaryButton type="submit" disabled={isSaving}>{isSaving ? "Criando..." : "Criar campanha"}</S.PrimaryButton>
                             </S.ModalActions>
-                        </form>
+                        </S.Form>
                     </S.ModalBox>
                 </S.ModalOverlay>
             )}
 
             {winnerResult && (
                 <S.ModalOverlay onClick={() => { setWinnerResult(null); setCopied(false); }}>
-                    <S.ModalBox onClick={(e: React.MouseEvent) => e.stopPropagation()} style={{ maxWidth: 520 }}>
-                        <S.ModalTitle>Ganhador do Sorteio</S.ModalTitle>
+                    <S.ModalBox onClick={(e: React.MouseEvent) => e.stopPropagation()} $maxWidth={520}>
+                        <ModalHeader onClose={() => { setWinnerResult(null); setCopied(false); }}>Ganhador do sorteio</ModalHeader>
                         <S.WinnerCard>
                             <strong>{winnerResult.winner.name}</strong>
                             <span>{winnerResult.winner.email}</span>
                             {winnerResult.winner.phone && <span>{winnerResult.winner.phone}</span>}
-                            <span style={{ marginTop: 4, fontSize: 12, color: "var(--text-muted)" }}>
+                            <S.WinnerMeta>
                                 Sorteado entre {winnerResult.totalEntries} {winnerResult.totalEntries === 1 ? "participante" : "participantes"}
-                            </span>
+                            </S.WinnerMeta>
                         </S.WinnerCard>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)" }}>Mensagem para enviar ao ganhador:</span>
+                        <S.MessageBlock>
+                            <S.SummaryLabel>Mensagem para enviar ao ganhador</S.SummaryLabel>
                             <S.MessagePreview>{buildWinnerMessage(winnerResult.winner, winnerResult.campaignName)}</S.MessagePreview>
                             <S.CopyButton onClick={() => handleCopyMessage(buildWinnerMessage(winnerResult.winner, winnerResult.campaignName))}>
                                 {copied ? "Copiado!" : "Copiar mensagem"}
                             </S.CopyButton>
-                        </div>
+                        </S.MessageBlock>
                         <S.ModalActions>
                             <S.PrimaryButton onClick={() => { setWinnerResult(null); setCopied(false); }}>Fechar</S.PrimaryButton>
                         </S.ModalActions>

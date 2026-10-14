@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { listVenues, updateVenue } from "../../../services/venue";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
 import type { Venue } from "../../../types";
+import { ModalHeader } from "../ModalHeader";
 import * as S from "../styles";
 
 interface VenueForm {
@@ -195,9 +196,9 @@ export function VenueTab() {
                         <thead>
                             <tr>
                                 <S.Th>Nome</S.Th>
-                                <S.Th>Capacidade</S.Th>
+                                <S.Th $num>Capacidade</S.Th>
                                 <S.Th>Localização</S.Th>
-                                <S.Th>Área Kids</S.Th>
+                                <S.Th>Área kids</S.Th>
                                 <S.Th>Piscina</S.Th>
                                 <S.Th></S.Th>
                             </tr>
@@ -208,13 +209,13 @@ export function VenueTab() {
                                     <S.Td>
                                         <strong>{v.name}</strong>
                                     </S.Td>
-                                    <S.Td>{v.capacity} pessoas</S.Td>
+                                    <S.Td $num>{v.capacity} pessoas</S.Td>
                                     <S.Td>{v.location || "—"}</S.Td>
                                     <S.Td>{v.hasKidsArea ? "Sim" : "Não"}</S.Td>
                                     <S.Td>{v.hasPool ? "Sim" : "Não"}</S.Td>
                                     <S.Td>
                                         <S.SecondaryButton
-                                            style={{ height: "30px", padding: "0 10px", fontSize: "12px" }}
+                                            $size="sm"
                                             onClick={() => openEdit(v)}
                                         >
                                             Editar
@@ -231,13 +232,10 @@ export function VenueTab() {
                 <S.ModalOverlay onClick={() => setShowModal(false)}>
                     <S.ModalBox
                         onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                        style={{ maxWidth: 540, maxHeight: "90vh", overflowY: "auto" }}
+                        $maxWidth={540}
                     >
-                        <S.ModalTitle>Editar espaço</S.ModalTitle>
-                        <form
-                            onSubmit={handleSubmit}
-                            style={{ display: "flex", flexDirection: "column", gap: 14 }}
-                        >
+                        <ModalHeader onClose={() => setShowModal(false)} disabled={isSaving}>Editar espaço</ModalHeader>
+                        <S.Form onSubmit={handleSubmit}>
                             <S.FormGroup>
                                 <label>Nome</label>
                                 <S.TextInput required {...field("name")} placeholder="Nome do espaço" />
@@ -257,95 +255,46 @@ export function VenueTab() {
                                 />
                             </S.FormGroup>
 
-                            <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
-                                <p
-                                    style={{
-                                        fontSize: 13,
-                                        fontWeight: 600,
-                                        marginBottom: 10,
-                                        color: "var(--text-muted)",
-                                    }}
-                                >
-                                    ENDEREÇO
-                                </p>
-                                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                            <S.FormSection>
+                                <legend>Endereço</legend>
+                                <S.FormGroup>
+                                    <label>Rua</label>
+                                    <S.TextInput {...field("rua")} placeholder="Ex: Rua Bernadino Antônio Tomás" />
+                                </S.FormGroup>
+                                <S.FormRow>
                                     <S.FormGroup>
-                                        <label>Rua</label>
-                                        <S.TextInput
-                                            {...field("rua")}
-                                            placeholder="Ex: Rua Bernadino Antônio Tomás"
-                                        />
+                                        <label>Número</label>
+                                        <S.TextInput {...field("numero")} inputMode="numeric" placeholder="Ex: 21" />
                                     </S.FormGroup>
-                                    <div
-                                        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}
-                                    >
-                                        <S.FormGroup>
-                                            <label>Número</label>
-                                            <S.TextInput {...field("numero")} placeholder="Ex: 21" />
-                                        </S.FormGroup>
-                                        <S.FormGroup>
-                                            <label>CEP</label>
-                                            <S.TextInput {...field("cep")} placeholder="Ex: 37203-775" />
-                                        </S.FormGroup>
-                                    </div>
                                     <S.FormGroup>
-                                        <label>Bairro</label>
-                                        <S.TextInput {...field("bairro")} placeholder="Ex: Jardim Vila Rica" />
+                                        <label>CEP</label>
+                                        <S.TextInput {...field("cep")} inputMode="numeric" placeholder="Ex: 37203-775" />
                                     </S.FormGroup>
-                                    <div
-                                        style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}
-                                    >
-                                        <S.FormGroup>
-                                            <label>Cidade</label>
-                                            <S.TextInput {...field("cidade")} placeholder="Ex: Lavras" />
-                                        </S.FormGroup>
-                                        <S.FormGroup>
-                                            <label>Estado (UF)</label>
-                                            <S.TextInput
-                                                {...field("estado")}
-                                                placeholder="Ex: MG"
-                                                maxLength={2}
-                                            />
-                                        </S.FormGroup>
-                                    </div>
-                                    {locationPreview && (
-                                        <p
-                                            style={{
-                                                fontSize: 12,
-                                                color: "var(--text-muted)",
-                                                background: "var(--bg-muted)",
-                                                padding: "8px 10px",
-                                                borderRadius: 6,
-                                            }}
-                                        >
-                                            Endereço gerado:{" "}
-                                            <strong>{locationPreview}</strong>
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
+                                </S.FormRow>
+                                <S.FormGroup>
+                                    <label>Bairro</label>
+                                    <S.TextInput {...field("bairro")} placeholder="Ex: Jardim Vila Rica" />
+                                </S.FormGroup>
+                                <S.FormRow $cols="2fr 1fr">
+                                    <S.FormGroup>
+                                        <label>Cidade</label>
+                                        <S.TextInput {...field("cidade")} placeholder="Ex: Lavras" />
+                                    </S.FormGroup>
+                                    <S.FormGroup>
+                                        <label>Estado (UF)</label>
+                                        <S.TextInput {...field("estado")} placeholder="Ex: MG" maxLength={2} />
+                                    </S.FormGroup>
+                                </S.FormRow>
+                                {locationPreview && (
+                                    <S.FieldHint>
+                                        Endereço gerado: <strong>{locationPreview}</strong>
+                                    </S.FieldHint>
+                                )}
+                            </S.FormSection>
 
-                            <div
-                                style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: 10,
-                                    borderTop: "1px solid var(--border)",
-                                    paddingTop: 12,
-                                }}
-                            >
-                                <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>
-                                    COMODIDADES
-                                </p>
-                                <label
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 8,
-                                        fontSize: 14,
-                                        cursor: "pointer",
-                                    }}
-                                >
+                            <S.FormSection>
+                                <legend>Comodidades</legend>
+                                <S.CheckboxLabel>
                                     <input
                                         type="checkbox"
                                         checked={form.hasKidsArea}
@@ -354,7 +303,7 @@ export function VenueTab() {
                                         }
                                     />
                                     Possui área kids
-                                </label>
+                                </S.CheckboxLabel>
                                 {form.hasKidsArea && (
                                     <S.FormGroup>
                                         <label>Preço da área kids (R$/hora)</label>
@@ -368,15 +317,7 @@ export function VenueTab() {
                                         />
                                     </S.FormGroup>
                                 )}
-                                <label
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 8,
-                                        fontSize: 14,
-                                        cursor: "pointer",
-                                    }}
-                                >
+                                <S.CheckboxLabel>
                                     <input
                                         type="checkbox"
                                         checked={form.hasPool}
@@ -385,7 +326,7 @@ export function VenueTab() {
                                         }
                                     />
                                     Possui piscina
-                                </label>
+                                </S.CheckboxLabel>
                                 {form.hasPool && (
                                     <S.FormGroup>
                                         <label>Preço da piscina (R$/dia)</label>
@@ -399,7 +340,7 @@ export function VenueTab() {
                                         />
                                     </S.FormGroup>
                                 )}
-                            </div>
+                            </S.FormSection>
 
                             <S.ModalActions>
                                 <S.SecondaryButton
@@ -413,7 +354,7 @@ export function VenueTab() {
                                     {isSaving ? "Salvando..." : "Salvar alterações"}
                                 </S.PrimaryButton>
                             </S.ModalActions>
-                        </form>
+                        </S.Form>
                     </S.ModalBox>
                 </S.ModalOverlay>
             )}

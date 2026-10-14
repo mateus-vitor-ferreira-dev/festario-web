@@ -98,6 +98,10 @@ function ProposalMessage({ msg, metadata: p, canRespond, onAccept, onDecline, is
             <S.BubbleText $isOwn={false} $isSystem>{msg.content}</S.BubbleText>
             <S.ProposalCard>
                 <S.ProposalTitle>Proposta de reserva</S.ProposalTitle>
+                <S.ProposalPrice>
+                    <S.ProposalLabel>Valor proposto</S.ProposalLabel>
+                    <S.ProposalPriceValue>{formatCurrency(p.customPriceCents)}</S.ProposalPriceValue>
+                </S.ProposalPrice>
                 <S.ProposalDetail>
                     {p.venueName && (
                         <S.ProposalRow>
@@ -112,10 +116,6 @@ function ProposalMessage({ msg, metadata: p, canRespond, onAccept, onDecline, is
                     <S.ProposalRow>
                         <S.ProposalLabel>Fim</S.ProposalLabel>
                         <S.ProposalValue>{formatDateTimeFull(p.endDate)}</S.ProposalValue>
-                    </S.ProposalRow>
-                    <S.ProposalRow>
-                        <S.ProposalLabel>Valor</S.ProposalLabel>
-                        <S.ProposalValue>{formatCurrency(p.customPriceCents)}</S.ProposalValue>
                     </S.ProposalRow>
                     {p.notes && (
                         <S.ProposalRow>
@@ -142,7 +142,7 @@ function ProposalMessage({ msg, metadata: p, canRespond, onAccept, onDecline, is
 export default function NegotiationChat() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const messagesEndRef = useRef<HTMLDivElement | null>(null);
+    const messagesAreaRef = useRef<HTMLDivElement | null>(null);
 
     const [negotiation, setNegotiation] = useState<Negotiation | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -234,7 +234,9 @@ export default function NegotiationChat() {
     }, [id]);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        // Rola só a área de mensagens — nunca a janela.
+        const area = messagesAreaRef.current;
+        if (area) area.scrollTop = area.scrollHeight;
     }, [negotiation?.messages]);
 
     async function submitMessage() {
@@ -410,7 +412,7 @@ export default function NegotiationChat() {
         <div>
             <S.Wrapper>
                 <S.TopBar>
-                    <S.BackButton onClick={() => navigate("/negociacoes")} title="Voltar">
+                    <S.BackButton onClick={() => navigate("/negociacoes")} title="Voltar" aria-label="Voltar">
                         <BackIcon />
                     </S.BackButton>
                     <S.TopInfo>
@@ -425,7 +427,7 @@ export default function NegotiationChat() {
                     </S.StatusBadge>
                 </S.TopBar>
 
-                <S.MessagesArea>
+                <S.MessagesArea ref={messagesAreaRef}>
                     {negotiation.messages.map((msg, idx) => {
                         const isOwn = !msg.isSystem && msg.author.id === currentUserId;
                         const meta = msg.metadata;
@@ -436,8 +438,8 @@ export default function NegotiationChat() {
                             : msg.content;
 
                         return (
-                            <S.MessageRow key={msg.id} $isOwn={isOwn}>
-                                <S.Bubble $isOwn={isOwn} $isSystem={msg.isSystem}>
+                            <S.MessageRow key={msg.id} $isOwn={isOwn} $isSystem={msg.isSystem}>
+                                <S.Bubble $isOwn={isOwn} $isSystem={msg.isSystem} $isProposal={isProposal}>
                                     {!isOwn && !msg.isSystem && (
                                         <S.BubbleAuthor $isOwn={isOwn}>
                                             {msg.author.role === "ADMIN" ? "Recanto Vila Rica" : msg.author.name}
@@ -469,14 +471,13 @@ export default function NegotiationChat() {
                                         </S.PixBlock>
                                     )}
 
-                                    <S.BubbleTime $isOwn={isOwn}>
+                                    <S.BubbleTime $isOwn={isOwn} $isSystem={msg.isSystem}>
                                         {formatDate(msg.createdAt)} {formatTime(msg.createdAt)}
                                     </S.BubbleTime>
                                 </S.Bubble>
                             </S.MessageRow>
                         );
                     })}
-                    <div ref={messagesEndRef} />
                 </S.MessagesArea>
 
                 {isClosed ? (
@@ -491,7 +492,7 @@ export default function NegotiationChat() {
                             disabled={isSending}
                             rows={1}
                         />
-                        <S.SendButton type="submit" disabled={isSending || !text.trim()}>
+                        <S.SendButton type="submit" disabled={isSending || !text.trim()} aria-label="Enviar mensagem">
                             <SendIcon />
                         </S.SendButton>
                     </S.InputBar>
@@ -547,7 +548,6 @@ export default function NegotiationChat() {
                                         }}
                                         disabled={isSendingProposal}
                                         required
-                                        style={{ height: "40px", paddingLeft: "12px" }}
                                     >
                                         <option value="">Selecione...</option>
                                         {venues.map((v) => (
@@ -632,7 +632,6 @@ export default function NegotiationChat() {
                                         value={proposalForm.notes}
                                         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setProposalForm((f) => ({ ...f, notes: e.target.value }))}
                                         disabled={isSendingProposal}
-                                        style={{ height: "60px", paddingTop: "10px", resize: "vertical" }}
                                     />
                                 </S.Field>
 

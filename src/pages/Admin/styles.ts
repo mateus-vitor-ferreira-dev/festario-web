@@ -1,139 +1,182 @@
-import styled, { keyframes } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
+import { media } from "../../styles/breakpoints";
 
 const spin = keyframes`
   to { transform: rotate(360deg); }
 `;
 
+/* ─── Page ─── */
+
 export const Container = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 24px;
 `;
 
 export const PageHeader = styled.section`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 `;
 
 export const Title = styled.h1`
-  font-size: 32px;
-  font-weight: 700;
+  font-size: var(--text-3xl);
+  line-height: 1.15;
   color: var(--text-primary);
+
+  ${media.sm} {
+    font-size: var(--text-2xl);
+  }
 `;
 
 export const Description = styled.p`
   color: var(--text-muted);
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: var(--text-base);
+  line-height: 1.5;
 `;
 
-/* Tabs */
-export const TabBar = styled.div`
+/* ─── Tabs — sublinhadas, rolagem horizontal ─── */
+
+const fadeMask = (start?: boolean, end?: boolean) => {
+  if (!start && !end) return "none";
+  const from = start ? "transparent 0, black 40px" : "black 0";
+  const to = end ? "black calc(100% - 40px), transparent 100%" : "black 100%";
+  return `linear-gradient(to right, ${from}, ${to})`;
+};
+
+/** $fadeStart/$fadeEnd: há abas escondidas à esquerda/direita (indicador de rolagem). */
+export const TabBar = styled.div<{ $fadeStart?: boolean; $fadeEnd?: boolean }>`
   display: flex;
   gap: 4px;
-  background: var(--bg-muted);
-  border-radius: 14px;
-  padding: 4px;
-  width: fit-content;
+  border-bottom: 1px solid var(--border-default);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  mask-image: ${({ $fadeStart, $fadeEnd }) => fadeMask($fadeStart, $fadeEnd)};
+  -webkit-mask-image: ${({ $fadeStart, $fadeEnd }) => fadeMask($fadeStart, $fadeEnd)};
 
-  @media (max-width: 600px) {
-    width: 100%;
-    flex-wrap: wrap;
+  &::-webkit-scrollbar {
+    display: none;
   }
 `;
 
 export const Tab = styled.button<{ $active?: boolean }>`
-  height: 40px;
-  padding: 0 20px;
-  border-radius: 10px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  height: 44px;
+  padding: 0 12px;
+  margin-bottom: -1px;
   border: none;
-  font-size: 14px;
-  font-weight: 600;
+  border-bottom: 2px solid ${({ $active }) => ($active ? "var(--brand)" : "transparent")};
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: ${({ $active }) => ($active ? 700 : 500)};
+  color: ${({ $active }) => ($active ? "var(--text-primary)" : "var(--text-muted)")};
+  white-space: nowrap;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 
-  background: ${({ $active }) => ($active ? "var(--brand)" : "transparent")};
-  color: ${({ $active }) => ($active ? "#ffffff" : "var(--text-muted)")};
-
-  &:hover:not([disabled]) {
-    color: ${({ $active }) => ($active ? "#ffffff" : "var(--text-primary)")};
+  &:hover {
+    color: var(--text-primary);
+    background: ${({ $active }) => ($active ? "transparent" : "var(--bg-muted)")};
   }
 
-  @media (max-width: 600px) {
-    flex: 1;
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
   }
 `;
 
-/* Summary cards */
-export const SummaryGrid = styled.div`
+/* ─── KPIs — grade quieta com divisórias ─── */
+
+const quietGrid = css`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+
+  /* Divisórias: cada célula desenha a linha à direita e abaixo;
+     as que caem na borda externa ficam cortadas pelo overflow. */
+  & > * {
+    box-shadow: 1px 0 0 0 var(--border-default), 0 1px 0 0 var(--border-default);
+  }
+`;
+
+export const SummaryGrid = styled.div`
+  ${quietGrid}
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+
+  /* 5 KPIs sem célula vazia: 3 + 2 no tablet, 1 (total) + 2 + 2 no celular */
+  ${media.md} {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+
+    & > :nth-child(-n + 3) { grid-column: span 2; }
+    & > :nth-child(n + 4) { grid-column: span 3; }
+  }
+
+  ${media.sm} {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    & > :nth-child(n) { grid-column: span 1; }
+    & > :first-child { grid-column: 1 / -1; }
+  }
 `;
 
 export const SummaryCard = styled.div`
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: 18px;
-  padding: 20px;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
+  padding: 16px 20px;
+  min-width: 0;
 `;
 
 export const SummaryLabel = styled.span`
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-weight: 500;
-  color: var(--text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-`;
-
-export const SummaryValue = styled.span<{ $accent?: boolean }>`
-  font-size: 28px;
-  font-weight: 700;
-  color: ${({ $accent }) => ($accent ? "var(--brand)" : "var(--text-primary)")};
-`;
-
-export const SummarySubtitle = styled.span`
-  font-size: 13px;
   color: var(--text-muted);
 `;
 
-export const RevenueBreakdown = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+export const SummaryValue = styled.span`
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--text-primary);
+  font-variant-numeric: lining-nums tabular-nums;
+  overflow-wrap: anywhere;
 
-  @media (max-width: 600px) {
+  ${media.sm} {
+    font-size: var(--text-xl);
+  }
+`;
+
+export const SummarySubtitle = styled.span`
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+`;
+
+export const RevenueBreakdown = styled.div`
+  ${quietGrid}
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  /* Receita total na linha inteira; cartão e PIX lado a lado */
+  ${media.md} {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    & > :first-child { grid-column: 1 / -1; }
+  }
+
+  ${media.sm} {
     grid-template-columns: 1fr;
   }
 `;
 
-export const RevenueMethodCard = styled.div`
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: 16px;
-  padding: 20px 24px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-`;
+/* ─── Section ─── */
 
-export const RevenueMethodIcon = styled.span`
-  font-size: 28px;
-  flex-shrink: 0;
-`;
-
-export const RevenueMethodInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-`;
-
-/* Generic section */
 export const Section = styled.div`
   display: flex;
   flex-direction: column;
@@ -146,58 +189,153 @@ export const SectionHeader = styled.div`
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
+
+  /* Ação única do cabeçalho ocupa a largura toda no celular */
+  ${media.sm} {
+    & > button {
+      flex: 1 1 100%;
+    }
+  }
+`;
+
+/** Grupo de ações do cabeçalho de seção: no celular empilha, primária primeiro. */
+export const SectionActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  ${media.sm} {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+
+    & > button {
+      width: 100%;
+      white-space: normal;
+    }
+  }
 `;
 
 export const SectionTitle = styled.h2`
-  font-size: 20px;
-  font-weight: 700;
+  font-size: var(--text-xl);
+  line-height: 1.2;
   color: var(--text-primary);
 `;
 
-/* Filters row */
-export const FiltersRow = styled.div`
+/** Grupo de ações/controles lado a lado (cabeçalho de seção, linhas de tabela). */
+export const InlineGroup = styled.div`
   display: flex;
+  align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 `;
 
-export const Select = styled.select`
+/* ─── Controles (mesmos tokens do componente Input) ─── */
+
+const fieldBase = css`
   height: 40px;
   padding: 0 12px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-medium);
   background: var(--bg-surface);
-  color: var(--text-secondary);
-  font-size: 14px;
-  cursor: pointer;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
   outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &::placeholder {
+    color: var(--text-faint);
+  }
+
+  &:hover:not(:focus):not(:disabled) {
+    border-color: var(--text-faint);
+  }
 
   &:focus {
     border-color: var(--brand);
+    box-shadow: var(--focus-ring);
   }
+
+  &:disabled {
+    background: var(--bg-muted);
+    color: var(--text-muted);
+    cursor: not-allowed;
+  }
+
+  ${media.md} {
+    height: 44px;
+  }
+`;
+
+/* Filtros: mesma altura do componente Input/DatePickerInput (48px) */
+export const FiltersRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  & > select,
+  & > input {
+    height: 48px;
+  }
+
+  & > button {
+    min-height: 48px;
+  }
+
+  ${media.sm} {
+    & > select {
+      flex: 1 1 100%;
+    }
+  }
+`;
+
+/** Envolve DatePickerInput (que ocupa 100% da largura) dentro de FiltersRow. */
+export const FilterField = styled.div`
+  width: 200px;
+
+  ${media.md} {
+    flex: 1 1 150px;
+    width: auto;
+    min-width: 0;
+  }
+`;
+
+export const Select = styled.select`
+  ${fieldBase}
+  cursor: pointer;
 `;
 
 export const DateInput = styled.input`
-  height: 40px;
-  padding: 0 12px;
-  border-radius: 10px;
-  border: 1px solid var(--border-medium);
-  background: var(--bg-surface);
-  color: var(--text-secondary);
-  font-size: 14px;
-  outline: none;
+  ${fieldBase}
+`;
 
-  &:focus {
-    border-color: var(--brand);
+export const SearchInput = styled.input`
+  ${fieldBase}
+  min-width: 260px;
+
+  ${media.md} {
+    min-width: 0;
+    flex: 1 1 100%;
   }
 `;
 
-/* Table */
+export const TextInput = styled.input`
+  ${fieldBase}
+  height: 44px;
+  width: 100%;
+  box-sizing: border-box;
+`;
+
+/* ─── Table ─── */
+
 export const TableWrapper = styled.div`
+  position: relative; /* contém o texto acessível oculto dentro da rolagem */
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: 18px;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   overflow-x: auto;
 `;
@@ -208,29 +346,52 @@ export const Table = styled.table`
   min-width: 700px;
 `;
 
-export const Th = styled.th`
-  text-align: left;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border-default);
-  background: var(--bg-page);
-  white-space: nowrap;
+const numericCell = css`
+  text-align: right;
+  font-variant-numeric: lining-nums tabular-nums;
 `;
 
-export const Td = styled.td`
-  padding: 12px 16px;
-  font-size: 14px;
-  color: var(--text-secondary);
-  border-bottom: 1px solid var(--bg-muted);
+/* No tablet/celular a 1ª coluna fica fixa enquanto a tabela rola de lado */
+const stickyFirstColumn = css`
+  ${media.md} {
+    &:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      background: var(--bg-surface);
+      box-shadow: inset -1px 0 0 var(--border-default);
+    }
+  }
+`;
+
+export const Th = styled.th<{ $num?: boolean }>`
+  text-align: left;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-default);
   white-space: nowrap;
 
-  &:last-child {
+  ${({ $num }) => $num && numericCell}
+  ${stickyFirstColumn}
+`;
+
+export const Td = styled.td<{ $num?: boolean }>`
+  padding: 10px 16px;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-default);
+  white-space: nowrap;
+  vertical-align: middle;
+
+  strong {
+    font-weight: 600;
     color: var(--text-primary);
   }
+
+  ${({ $num }) => $num && numericCell}
+  ${stickyFirstColumn}
 `;
 
 export const Tr = styled.tr`
@@ -243,83 +404,213 @@ export const Tr = styled.tr`
   }
 `;
 
-/* Status badge */
-export const StatusBadge = styled.span<{ $status?: string }>`
+/* ─── Status chips ─── */
+
+const chipBase = css`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.5;
   border: 1px solid;
   white-space: nowrap;
+`;
+
+const chipPaid = `background: var(--status-paid-bg); color: var(--status-paid-text); border-color: var(--status-paid-border);`;
+const chipNeutral = `background: var(--bg-muted); color: var(--text-muted); border-color: var(--border-default);`;
+const chipPending = `background: var(--status-pending-bg); color: var(--status-pending-text); border-color: var(--status-pending-border);`;
+const chipError = `background: var(--status-error-bg); color: var(--status-error-text); border-color: var(--status-error-border);`;
+const chipInfo = `background: var(--status-info-bg); color: var(--status-info-text); border-color: var(--status-info-border);`;
+
+export const StatusBadge = styled.span<{ $status?: string }>`
+  ${chipBase}
 
   ${({ $status }) => {
     switch ($status) {
       case "PAID":
-        return `background: var(--status-paid-bg); color: var(--status-paid-text); border-color: var(--status-paid-border);`;
+        return chipPaid;
       case "CANCELLED":
       case "EXPIRED":
-        return `background: var(--bg-muted); color: var(--text-muted); border-color: var(--border-default);`;
+        return chipNeutral;
       case "PENDING":
       default:
-        return `background: var(--status-pending-bg); color: var(--status-pending-text); border-color: var(--status-pending-border);`;
+        return chipPending;
     }
   }}
 `;
 
 export const NegStatusBadge = styled.span<{ $status?: string }>`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  border: 1px solid;
-  white-space: nowrap;
+  ${chipBase}
 
   ${({ $status }) => {
     switch ($status) {
       case "ACCEPTED":
-        return `background: var(--status-paid-bg); color: var(--status-paid-text); border-color: var(--status-paid-border);`;
+        return chipPaid;
       case "REJECTED":
-        return `background: var(--status-error-bg); color: var(--status-error-text); border-color: var(--status-error-border);`;
+        return chipError;
       case "CLOSED":
-        return `background: var(--bg-muted); color: var(--text-muted); border-color: var(--border-default);`;
+        return chipNeutral;
       case "OPEN":
       default:
-        return `background: var(--status-info-bg); color: var(--status-info-text); border-color: var(--status-info-border);`;
+        return chipInfo;
     }
   }}
 `;
 
-/* Pagination */
+export const ActiveBadge = styled.span<{ $active?: boolean }>`
+  ${chipBase}
+  ${({ $active }) => ($active ? chipPaid : chipNeutral)}
+`;
+
+export const CampaignStatusBadge = styled.span<{ $status?: string }>`
+  ${chipBase}
+
+  ${({ $status }) => {
+    switch ($status) {
+      case "active":
+        return chipPaid;
+      case "scheduled":
+        return chipInfo;
+      case "ended":
+        return chipNeutral;
+      case "disabled":
+      default:
+        return chipError;
+    }
+  }}
+`;
+
+export const RoleBadge = styled.span<{ $role?: string }>`
+  ${chipBase}
+  ${({ $role }) => ($role === "ADMIN" ? chipPaid : chipNeutral)}
+`;
+
+/* Tipo de feriado — rótulo de categoria, não status: chip quadrado */
+export const HolidayType = styled.span`
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--bg-muted);
+`;
+
+/* ─── Pagination ─── */
+
 export const Pagination = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  padding-top: 4px;
 `;
 
 export const PageInfo = styled.span`
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+`;
+
+/* ─── Buttons ─── */
+
+const buttonBase = css`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+`;
+
+/** Variante compacta para ações dentro de linhas de tabela/lista. */
+const buttonSmall = css`
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 600;
+
+  ${media.md} {
+    min-height: 44px;
+    padding: 0 14px;
+  }
+`;
+
+type ButtonSize = { $size?: "sm" };
+
+export const PrimaryButton = styled.button<ButtonSize>`
+  ${buttonBase}
+  border: 1px solid var(--brand);
+  background: var(--brand);
+  color: var(--on-brand);
+
+  &:hover:not(:disabled) {
+    background: var(--brand-dark);
+    border-color: var(--brand-dark);
+  }
+
+  ${({ $size }) => $size === "sm" && buttonSmall}
+`;
+
+export const SecondaryButton = styled.button<ButtonSize>`
+  ${buttonBase}
+  border: 1px solid var(--brand-border);
+  background: transparent;
+  color: var(--brand);
+
+  &:hover:not(:disabled) {
+    background: var(--brand-subtle);
+    border-color: var(--brand);
+  }
+
+  ${({ $size }) => $size === "sm" && buttonSmall}
+`;
+
+export const DangerButton = styled.button<ButtonSize>`
+  ${buttonBase}
+  border: 1px solid var(--status-error-border);
+  background: transparent;
+  color: var(--status-error-text);
+
+  &:hover:not(:disabled) {
+    background: var(--status-error-bg);
+  }
+
+  ${({ $size }) => $size === "sm" && buttonSmall}
 `;
 
 export const PageButton = styled.button`
-  height: 36px;
-  padding: 0 14px;
-  border-radius: 10px;
-  border: 1px solid var(--border-default);
+  ${buttonBase}
+  ${buttonSmall}
+  min-height: 36px;
+
+  ${media.md} {
+    min-height: 44px;
+  }
+  border: 1px solid var(--border-medium);
   background: var(--bg-surface);
-  font-size: 14px;
   color: var(--text-secondary);
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.15s ease;
 
   &:hover:not(:disabled) {
     border-color: var(--brand);
@@ -327,44 +618,86 @@ export const PageButton = styled.button`
   }
 
   &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+    opacity: 0.45;
   }
 `;
 
-/* Cards list (campaigns) */
+export const RaffleButton = styled.button`
+  ${buttonBase}
+  ${buttonSmall}
+  border: 1px solid var(--brand);
+  background: transparent;
+  color: var(--brand);
+
+  &:hover:not(:disabled) {
+    background: var(--brand);
+    color: var(--on-brand);
+  }
+`;
+
+export const CopyButton = styled.button`
+  ${buttonBase}
+  ${buttonSmall}
+  align-self: flex-end;
+  border: 1px solid var(--brand-border);
+  background: transparent;
+  color: var(--brand);
+
+  &:hover:not(:disabled) {
+    background: var(--brand-subtle);
+    border-color: var(--brand);
+  }
+`;
+
+/* ─── Listas (campanhas, feriados) — um painel, linhas com hairline ─── */
+
 export const CardList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 14px;
-`;
-
-export const CampaignCard = styled.div`
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: 16px;
-  padding: 18px 22px;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+
+  & > * + * {
+    border-top: 1px solid var(--border-default);
+  }
+`;
+
+const listRow = css`
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+  padding: 14px 20px;
+`;
+
+export const CampaignCard = styled.div`
+  ${listRow}
 `;
 
 export const CampaignInfo = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  min-width: 0;
 
-  strong {
-    font-size: 14px;
+  & > strong {
+    font-size: var(--text-base);
+    font-weight: 600;
     color: var(--text-primary);
   }
 
   span {
-    font-size: 13px;
+    font-size: var(--text-sm);
     color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  span strong {
+    font-weight: 600;
+    color: var(--text-secondary);
   }
 `;
 
@@ -375,283 +708,389 @@ export const CampaignActions = styled.div`
   flex-wrap: wrap;
 `;
 
-export const ActiveBadge = styled.span<{ $active?: boolean }>`
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  border: 1px solid;
-
-  ${({ $active }) =>
-    $active
-      ? `background: var(--status-paid-bg); color: var(--status-paid-text); border-color: var(--status-paid-border);`
-      : `background: var(--bg-muted); color: var(--text-muted); border-color: var(--border-default);`}
+export const HolidayCard = styled.div`
+  ${listRow}
+  padding: 10px 20px;
 `;
 
-export const CampaignStatusBadge = styled.span<{ $status?: string }>`
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  border: 1px solid;
-  white-space: nowrap;
-
-  ${({ $status }) => {
-    switch ($status) {
-      case "active":
-        return `background: var(--status-paid-bg); color: var(--status-paid-text); border-color: var(--status-paid-border);`;
-      case "scheduled":
-        return `background: var(--status-info-bg); color: var(--status-info-text); border-color: var(--status-info-border);`;
-      case "ended":
-        return `background: var(--bg-muted); color: var(--text-muted); border-color: var(--border-default);`;
-      case "disabled":
-      default:
-        return `background: var(--status-error-bg); color: var(--status-error-text); border-color: var(--status-error-border);`;
-    }
-  }}
-`;
-
-export const WinnerCard = styled.div`
-  background: var(--status-paid-bg);
-  border: 1px solid var(--status-paid-border);
-  border-radius: 14px;
-  padding: 20px;
+export const HolidayInfo = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: baseline;
+  gap: 16px;
+  min-width: 0;
 
   strong {
-    font-size: 18px;
+    font-size: var(--text-base);
+    font-weight: 600;
     color: var(--text-primary);
   }
 
   span {
-    font-size: 14px;
+    order: -1;
+    min-width: 88px;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+`;
+
+/* ─── Sorteio ─── */
+
+export const WinnerCard = styled.div`
+  background: var(--brand-subtle);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  span {
+    font-size: var(--text-sm);
     color: var(--text-secondary);
   }
+`;
+
+export const WinnerMeta = styled.span`
+  margin-top: 6px;
+  font-size: var(--text-xs) !important;
+  color: var(--text-muted) !important;
+`;
+
+export const MessageBlock = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 `;
 
 export const MessagePreview = styled.div`
   background: var(--bg-page);
   border: 1px solid var(--border-default);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 14px 16px;
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
   white-space: pre-wrap;
   line-height: 1.6;
 `;
 
-export const CopyButton = styled.button`
-  align-self: flex-end;
-  height: 36px;
-  padding: 0 16px;
-  border-radius: 10px;
-  border: 1px solid var(--border-medium);
-  background: var(--bg-surface);
-  color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color 0.15s ease;
+/* ─── Modal ─── */
 
-  &:hover {
-    border-color: var(--brand);
-    color: var(--brand);
-  }
-`;
-
-export const RaffleButton = styled.button`
-  height: 40px;
-  padding: 0 18px;
-  border-radius: 10px;
-  border: 1px solid var(--brand);
-  background: var(--bg-surface);
-  color: var(--brand);
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-  white-space: nowrap;
-
-  &:hover:not(:disabled) {
-    background: var(--brand);
-    color: #ffffff;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-/* Buttons */
-export const PrimaryButton = styled.button`
-  height: 40px;
-  padding: 0 18px;
-  border-radius: 10px;
-  border: none;
-  background: var(--brand);
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-  white-space: nowrap;
-
-  &:hover:not(:disabled) {
-    opacity: 0.88;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-export const SecondaryButton = styled.button`
-  height: 40px;
-  padding: 0 18px;
-  border-radius: 10px;
-  border: 1px solid var(--border-medium);
-  background: var(--bg-surface);
-  color: var(--text-secondary);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color 0.15s ease;
-  white-space: nowrap;
-
-  &:hover:not(:disabled) {
-    border-color: var(--brand);
-    color: var(--brand);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-export const DangerButton = styled.button`
-  height: 36px;
-  padding: 0 14px;
-  border-radius: 10px;
-  border: 1px solid var(--status-error-border);
-  background: var(--status-error-bg);
-  color: var(--status-error-text);
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s ease;
-  white-space: nowrap;
-
-  &:hover:not(:disabled) {
-    background: var(--status-error-hover);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-/* Modal */
 export const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(10, 18, 14, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  /* Acima do botão do chat (1000/1001) */
+  z-index: 1100;
   padding: 20px;
+
+  ${media.sm} {
+    align-items: flex-end;
+    padding: 0;
+  }
 `;
 
-export const ModalBox = styled.div`
+export const ModalBox = styled.div<{ $maxWidth?: number }>`
   background: var(--bg-surface);
-  border-radius: 20px;
-  padding: 32px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 28px;
   width: 100%;
-  max-width: 480px;
+  max-width: ${({ $maxWidth }) => $maxWidth ?? 480}px;
+  max-height: 90vh;
+  max-height: 90dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 20px;
+
+  /* Folha inferior de largura total */
+  ${media.sm} {
+    max-width: none;
+    max-height: 100vh;
+    max-height: 100dvh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border-bottom: none;
+    padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+  }
+`;
+
+/* Cabeçalho do modal: título + fechar, fixo no topo da área rolável */
+export const ModalHeader = styled.div`
+  position: sticky;
+  top: -28px; /* compensa o padding do ModalBox */
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin: -28px -28px 0;
+  padding: 20px 16px 4px 28px;
+  background: var(--bg-surface);
+
+  ${media.sm} {
+    top: -20px;
+    margin: -20px -16px 0;
+    padding: 12px 8px 4px 16px;
+  }
+`;
+
+export const ModalClose = styled.button`
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-top: -4px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--bg-muted);
+    color: var(--text-primary);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
 `;
 
 export const ModalTitle = styled.h3`
-  font-size: 20px;
-  font-weight: 700;
+  padding-top: 8px;
+  font-size: var(--text-xl);
+  line-height: 1.2;
   color: var(--text-primary);
 `;
 
-export const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-
-  label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-secondary);
-  }
+export const ModalText = styled.p`
+  max-width: none;
+  font-size: var(--text-base);
+  line-height: 1.5;
+  color: var(--text-secondary);
 `;
 
-export const TextInput = styled.input`
-  height: 42px;
-  padding: 0 14px;
-  border-radius: 10px;
-  border: 1px solid var(--border-medium);
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  font-size: 14px;
-  outline: none;
-  width: 100%;
-  box-sizing: border-box;
-
-  &:focus {
-    border-color: var(--brand);
-  }
-
-  &::placeholder {
-    color: var(--text-faint);
-  }
+export const ModalNote = styled.p`
+  max-width: none;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--text-muted);
 `;
 
 export const ModalActions = styled.div`
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 8px;
   padding-top: 4px;
+
+  ${media.sm} {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+
+    & > button {
+      width: 100%;
+      white-space: normal;
+    }
+  }
 `;
 
-/* Empty / Loading states */
+/* Resumo de reembolso (cancelamento de reserva paga) */
+export const RefundSummary = styled.dl`
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+
+  & > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 10px 14px;
+  }
+
+  & > div + div {
+    border-top: 1px solid var(--border-default);
+  }
+
+  dt {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+  }
+
+  dd {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--text-primary);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+`;
+
+export const RefundWarning = styled.p`
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--status-error-text);
+`;
+
+/* ─── Forms ─── */
+
+export const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+export const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+
+  & > label {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  & > select,
+  & > input {
+    height: 44px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+`;
+
+/** Campos lado a lado; empilha no mobile. */
+export const FormRow = styled.div<{ $cols?: string }>`
+  display: grid;
+  grid-template-columns: ${({ $cols }) => $cols ?? "1fr 1fr"};
+  gap: 12px;
+
+  ${media.sm} {
+    grid-template-columns: 1fr;
+  }
+`;
+
+/** Bloco temático do formulário (ex.: Endereço, Comodidades). */
+export const FormSection = styled.fieldset`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 16px 0 0;
+  border: none;
+  border-top: 1px solid var(--border-default);
+  min-width: 0;
+
+  & > legend {
+    float: left;
+    width: 100%;
+    padding: 0;
+    margin-bottom: 4px;
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  & > legend + * {
+    clear: both;
+  }
+`;
+
+export const CheckboxGroup = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+`;
+
+export const CheckboxLabel = styled.label`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  font-size: var(--text-base);
+
+  ${media.md} {
+    min-height: 44px;
+  }
+  color: var(--text-secondary);
+  cursor: pointer;
+
+  input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--brand);
+    cursor: pointer;
+  }
+`;
+
+export const FieldHint = styled.p`
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  background: var(--bg-muted);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+
+  strong {
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+`;
+
+/* ─── Empty / Loading ─── */
+
 export const EmptyState = styled.div`
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: 18px;
-  padding: 48px 32px;
-  text-align: center;
+  border-radius: var(--radius-lg);
+  padding: 32px 28px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 6px;
 
   h3 {
-    font-size: 16px;
-    color: var(--text-secondary);
-    font-weight: 600;
+    font-size: var(--text-lg);
+    color: var(--text-primary);
   }
 
   p {
-    font-size: 14px;
-    color: var(--text-faint);
+    font-size: var(--text-base);
+    color: var(--text-muted);
   }
 `;
 
 export const LoadingSpinner = styled.div`
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: 3px solid var(--border-default);
   border-top-color: var(--brand);
@@ -664,61 +1103,70 @@ export const TabPanel = styled.div<{ $active?: boolean }>`
   display: ${({ $active }) => ($active ? "contents" : "none")};
 `;
 
-/* Holiday row */
-export const HolidayCard = styled.div`
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: 14px;
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-`;
+/* ─── Receita mensal ─── */
 
-export const HolidayInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-
-  strong {
-    font-size: 14px;
-    color: var(--text-primary);
-  }
-
-  span {
-    font-size: 13px;
-    color: var(--text-muted);
-  }
-`;
-
-/* Monthly revenue table */
 export const MonthlyTable = styled.table`
   width: 100%;
   border-collapse: collapse;
+  min-width: 640px;
+
+  /* Celular: só mês, receita (com nº de reservas embaixo) e barra — cabe sem rolar */
+  ${media.sm} {
+    min-width: 0;
+  }
 `;
 
-export const MonthlyTh = styled.th`
+const hideOnSm = css`
+  ${media.sm} {
+    display: none;
+  }
+`;
+
+export const MonthlyCount = styled.span`
+  display: none;
+
+  ${media.sm} {
+    display: block;
+    font-size: var(--text-xs);
+    color: var(--text-faint);
+  }
+`;
+
+export const MonthlyTh = styled.th<{ $num?: boolean; $hideSm?: boolean }>`
   text-align: left;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-muted);
   padding: 10px 16px;
   border-bottom: 1px solid var(--border-default);
-  background: var(--bg-page);
   white-space: nowrap;
+
+  ${({ $num }) => $num && numericCell}
+  ${({ $hideSm }) => $hideSm && hideOnSm}
+
+  ${media.sm} {
+    padding: 10px 12px;
+  }
 `;
 
-export const MonthlyTd = styled.td`
-  padding: 10px 16px;
-  font-size: 14px;
-  color: var(--text-secondary);
-  border-bottom: 1px solid var(--bg-muted);
+export const MonthlyTd = styled.td<{ $num?: boolean; $muted?: boolean; $hideSm?: boolean }>`
+  padding: 8px 16px;
+  font-size: var(--text-sm);
+  color: ${({ $muted }) => ($muted ? "var(--text-faint)" : "var(--text-secondary)")};
+  border-bottom: 1px solid var(--border-default);
+  white-space: nowrap;
 
-  &:first-child { color: var(--text-primary); font-weight: 600; }
+  &:first-child {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  ${({ $num }) => $num && numericCell}
+  ${({ $hideSm }) => $hideSm && hideOnSm}
+
+  ${media.sm} {
+    padding: 8px 12px;
+  }
 `;
 
 export const MonthlyTr = styled.tr`
@@ -727,12 +1175,15 @@ export const MonthlyTr = styled.tr`
 `;
 
 export const RevenueBar = styled.div<{ $pct: number }>`
-  height: 6px;
-  border-radius: 999px;
-  background: var(--border-default);
+  height: 10px;
+  min-width: 120px;
+  border-radius: 2px;
+
+  ${media.sm} {
+    min-width: 48px;
+  }
+  background: var(--bg-muted);
   overflow: hidden;
-  min-width: 60px;
-  flex: 1;
 
   &::after {
     content: "";
@@ -740,46 +1191,17 @@ export const RevenueBar = styled.div<{ $pct: number }>`
     height: 100%;
     width: ${({ $pct }) => $pct}%;
     background: var(--brand);
-    border-radius: 999px;
-    transition: width 0.4s ease;
   }
 `;
 
-/* Search input */
-export const SearchInput = styled.input`
-  height: 40px;
-  padding: 0 14px;
-  border-radius: 10px;
-  border: 1px solid var(--border-medium);
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  font-size: 14px;
-  outline: none;
-  min-width: 220px;
-
-  &:focus { border-color: var(--brand); }
-  &::placeholder { color: var(--text-faint); }
-`;
-
-export const RoleBadge = styled.span<{ $role?: string }>`
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  border: 1px solid;
-
-  ${({ $role }) =>
-    $role === "ADMIN"
-      ? `background: var(--status-paid-bg); color: var(--status-paid-text); border-color: var(--status-paid-border);`
-      : `background: var(--bg-muted); color: var(--text-muted); border-color: var(--border-default);`}
-`;
-
-export const HolidayType = styled.span`
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  background: var(--status-info-bg);
-  color: var(--status-info-text);
-  border: 1px solid var(--status-info-border);
+export const VisuallyHidden = styled.span`
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 `;

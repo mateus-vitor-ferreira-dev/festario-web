@@ -10,6 +10,6 @@ describe("Footer", () => {
 
     it("renders tagline text", () => {
         render(<Footer />);
-        expect(screen.getByText(/reservas com praticidade/i)).toBeInTheDocument();
+        expect(screen.getByText(/dúvidas sobre sua reserva/i)).toBeInTheDocument();
     });
 });

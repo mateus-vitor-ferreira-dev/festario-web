@@ -1,97 +1,70 @@
-import styled, { keyframes } from "styled-components";
-
-const fadeUp = keyframes`
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-`;
-
-const checkPop = keyframes`
-  0%   { transform: scale(0.6); opacity: 0; }
-  70%  { transform: scale(1.1); }
-  100% { transform: scale(1); opacity: 1; }
-`;
+import styled from "styled-components";
+import { media } from "../../styles/breakpoints";
 
 export const Container = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 60vh;
+  min-height: 60dvh;
   padding: 32px 0;
 `;
 
+/* "O convite confirmado" — única página fora da Home/AuthLayout que usa o arco. */
 export const Card = styled.div`
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: 28px;
-  padding: 56px 48px;
-  max-width: 520px;
+  border-radius: var(--radius-arch);
+  padding: 88px 48px 48px;
+  max-width: 480px;
   width: 100%;
-  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 20px;
-  animation: ${fadeUp} 0.4s ease;
+  gap: 16px;
 
-  @media (max-width: 600px) {
-    padding: 40px 24px;
+  ${media.sm} {
+    padding: 72px 24px 32px;
   }
 `;
 
 export const IconWrapper = styled.div`
-  width: 80px;
-  height: 80px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   background: var(--status-paid-bg);
-  border: 2px solid var(--status-paid-border);
+  border: 1px solid var(--status-paid-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: ${checkPop} 0.5s ease 0.1s both;
+  margin-bottom: 8px;
 `;
 
 export const CheckIcon = styled.div`
-  width: 36px;
-  height: 36px;
-  position: relative;
-
-  &::before {
-    content: '';
-    position: absolute;
-    left: 4px;
-    top: 50%;
-    width: 10px;
-    height: 3px;
-    background: var(--status-paid-text);
-    border-radius: 2px;
-    transform: rotate(45deg) translateY(-4px);
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    width: 20px;
-    height: 3px;
-    background: var(--status-paid-text);
-    border-radius: 2px;
-    transform: rotate(-50deg) translateY(-6px);
-  }
+  width: 12px;
+  height: 22px;
+  margin-top: -4px;
+  border-right: 3px solid var(--status-paid-text);
+  border-bottom: 3px solid var(--status-paid-text);
+  transform: rotate(45deg);
 `;
 
 export const Title = styled.h1`
-  font-size: 24px;
-  font-weight: 700;
+  font-size: var(--text-3xl);
   color: var(--text-primary);
+  line-height: 1.1;
+
+  ${media.sm} {
+    font-size: var(--text-2xl);
+  }
 `;
 
 export const Description = styled.p`
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--text-muted);
-  line-height: 1.7;
-  max-width: 380px;
+  line-height: 1.6;
+  max-width: 360px;
 `;
 
 export const Actions = styled.div`
@@ -99,39 +72,43 @@ export const Actions = styled.div`
   flex-direction: column;
   gap: 12px;
   width: 100%;
-  margin-top: 8px;
+  margin-top: 16px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-default);
 `;
 
 export const PrimaryButton = styled.button`
   width: 100%;
-  padding: 14px;
+  min-height: 44px;
+  padding: 0 20px;
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--brand);
-  color: #ffffff;
-  font-size: 14px;
+  color: var(--on-brand);
+  font-size: var(--text-base);
   font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: background 0.15s ease;
 
   &:hover {
-    opacity: 0.92;
+    background: var(--brand-dark);
   }
 `;
 
 export const SecondaryButton = styled.button`
   width: 100%;
-  padding: 14px;
-  border: 1px solid var(--border-default);
-  border-radius: 12px;
-  background: var(--bg-surface);
-  color: var(--text-secondary);
-  font-size: 14px;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--brand);
+  font-size: var(--text-base);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s ease;
 
   &:hover {
-    background: var(--bg-page);
+    background: var(--brand-subtle);
   }
 `;

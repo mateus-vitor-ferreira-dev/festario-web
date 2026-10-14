@@ -22,6 +22,8 @@ export default function PhoneInput({ label, name, value, onChange, onDialCodeCha
 
     useEffect(() => {
         onDialCodeChange?.(DEFAULT_COUNTRY.dialCode);
+    // só na montagem: o callback costuma ser inline e mudaria a cada render do pai
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {

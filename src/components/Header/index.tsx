@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useGSAP } from "@gsap/react";
@@ -34,6 +34,25 @@ function SunIcon() {
     );
 }
 
+function MenuIcon({ open }: { open: boolean }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            {open ? (
+                <>
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                </>
+            ) : (
+                <>
+                    <line x1="4" y1="7" x2="20" y2="7" />
+                    <line x1="4" y1="12" x2="20" y2="12" />
+                    <line x1="4" y1="17" x2="20" y2="17" />
+                </>
+            )}
+        </svg>
+    );
+}
+
 function MoonIcon() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -47,7 +66,9 @@ function MoonIcon() {
  *
  * Lê o perfil do usuário do `localStorage` (`recanto:userData`) para exibir
  * iniciais no avatar e o link de Admin (visível apenas para `role === "ADMIN"`).
- * Inclui botão de toggle de tema claro/escuro e botão de logout.
+ * Inclui botão de toggle de tema claro/escuro e botão de logout. Abaixo de
+ * 1024px a mesma `<nav>` vira um painel aberto pelo botão de menu (fecha com
+ * Esc ou ao trocar de rota).
  * Anima a entrada com GSAP (`animateFadeInUp` de cima para baixo).
  *
  * @component
@@ -59,6 +80,20 @@ export default function Header() {
     const { user, logout: authLogout } = useAuth();
     const containerRef = useRef(null);
     const [resending, setResending] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
+
+    useEffect(() => {
+        setMenuOpen(false);
+    }, [location.pathname]);
+
+    useEffect(() => {
+        if (!menuOpen) return;
+        function onKeyDown(event: KeyboardEvent) {
+            if (event.key === "Escape") setMenuOpen(false);
+        }
+        document.addEventListener("keydown", onKeyDown);
+        return () => document.removeEventListener("keydown", onKeyDown);
+    }, [menuOpen]);
 
     useGSAP(() => {
         animateFadeInUp(containerRef.current, { y: -20, duration: 0.5 });
@@ -105,7 +140,7 @@ export default function Header() {
                     <S.BrandText>Recanto Vila Rica</S.BrandText>
                 </S.BrandWrapper>
 
-                <S.Nav>
+                <S.Nav id="main-nav" aria-label="Principal" $open={menuOpen}>
                     <S.NavLink $active={location.pathname === "/home"} as={Link} to="/home">
                         Início
                     </S.NavLink>
@@ -157,6 +192,7 @@ export default function Header() {
                     <S.ThemeToggle
                         onClick={toggleTheme}
                         title={theme === "dark" ? "Mudar para tema claro" : "Mudar para tema escuro"}
+                        aria-label={theme === "dark" ? "Mudar para tema claro" : "Mudar para tema escuro"}
                     >
                         {theme === "dark" ? <SunIcon /> : <MoonIcon />}
                     </S.ThemeToggle>
@@ -170,6 +206,16 @@ export default function Header() {
                     </S.ProfileLink>
 
                     <S.LogoutButton onClick={handleLogout}>Sair</S.LogoutButton>
+
+                    <S.MenuButton
+                        type="button"
+                        aria-expanded={menuOpen}
+                        aria-controls="main-nav"
+                        aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
+                        onClick={() => setMenuOpen((open) => !open)}
+                    >
+                        <MenuIcon open={menuOpen} />
+                    </S.MenuButton>
                 </S.Actions>
             </S.Content>
         </S.Container>

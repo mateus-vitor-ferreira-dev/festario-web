@@ -80,9 +80,12 @@ export default function ResetPassword({ introFinished = true }) {
             >
                 <S.Form>
                     <S.ErrorBox>
-                        Este link não é válido. Solicite um novo link de redefinição
-                        na página de login.
+                        Este link não é válido. Peça um novo link de redefinição
+                        para o seu e-mail.
                     </S.ErrorBox>
+                    <S.FooterText>
+                        <Link to="/esqueci-senha">Solicitar novo link</Link>
+                    </S.FooterText>
                     <S.FooterText>
                         <Link to="/login">Voltar para o login</Link>
                     </S.FooterText>

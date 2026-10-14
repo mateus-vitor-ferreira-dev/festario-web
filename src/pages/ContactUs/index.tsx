@@ -16,7 +16,7 @@ import { useGSAP } from "@gsap/react";
  */
 import { submitContact } from "../../services/contact";
 import { getErrorMessage } from "../../utils/getErrorMessage";
-import { animateFadeInUp, animateStagger } from "../../utils/animations";
+import { animateFadeInUp } from "../../utils/animations";
 import * as S from "./styles";
 
 function WhatsAppIcon() {
@@ -62,7 +62,6 @@ export default function ContactUs() {
     useGSAP(() => {
         if (!containerRef.current) return;
         animateFadeInUp(containerRef.current.querySelector(".anim-header"));
-        animateStagger(containerRef.current.querySelectorAll(".anim-card"), { delay: 0.1 });
     }, { scope: containerRef, dependencies: [] });
 
     function field(key: keyof typeof form) {
@@ -95,7 +94,7 @@ export default function ContactUs() {
                 </S.Description>
             </S.Header>
 
-            <S.Card className="anim-card">
+            <S.Card>
                 <S.CardTitle>Nossos canais</S.CardTitle>
 
                 <S.ContactItem
@@ -104,7 +103,7 @@ export default function ContactUs() {
                     target="_blank"
                     rel="noopener noreferrer"
                 >
-                    <S.ContactIcon $bg="#25D366">
+                    <S.ContactIcon>
                         <WhatsAppIcon />
                     </S.ContactIcon>
                     <S.ContactInfo>
@@ -117,7 +116,7 @@ export default function ContactUs() {
                     as="a"
                     href="mailto:recanto.vilaricafestas@gmail.com"
                 >
-                    <S.ContactIcon $bg="#EA4335">
+                    <S.ContactIcon>
                         <EmailIcon />
                     </S.ContactIcon>
                     <S.ContactInfo>
@@ -132,7 +131,7 @@ export default function ContactUs() {
                     target="_blank"
                     rel="noopener noreferrer"
                 >
-                    <S.ContactIcon $bg="#E1306C">
+                    <S.ContactIcon>
                         <InstagramIcon />
                     </S.ContactIcon>
                     <S.ContactInfo>
@@ -142,18 +141,17 @@ export default function ContactUs() {
                 </S.ContactItem>
 
                 <S.ContactItem as="button" onClick={() => navigate("/negociacoes")}>
-                    <S.ContactIcon $bg="var(--brand)">
+                    <S.ContactIcon>
                         <ChatIcon />
                     </S.ContactIcon>
                     <S.ContactInfo>
                         <S.ContactLabel>Negociação pela plataforma</S.ContactLabel>
                         <S.ContactValue>Negocie condições especiais no chat</S.ContactValue>
                     </S.ContactInfo>
-                    <S.ContactArrow>→</S.ContactArrow>
                 </S.ContactItem>
             </S.Card>
 
-            <S.Card className="anim-card" as="form" onSubmit={handleSubmit}>
+            <S.Card as="form" onSubmit={handleSubmit}>
                 <S.CardTitle>Enviar mensagem</S.CardTitle>
 
                 <S.FormField>

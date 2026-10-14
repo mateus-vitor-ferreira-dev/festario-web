@@ -68,7 +68,7 @@ export default defineConfig([
     },
     rules: {
       ...tsPlugin.configs.recommended.rules,
-      ...reactHooks.configs["flat/recommended"].rules,
+      ...reactHooks.configs.flat.recommended.rules,
       "@typescript-eslint/no-unused-vars": ["error", { varsIgnorePattern: "^[A-Z_]", argsIgnorePattern: "^_" }],
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-require-imports": "off",

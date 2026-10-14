@@ -1,10 +1,10 @@
 import { useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useGSAP } from "@gsap/react";
 
 import { listVenues } from "../../services/venue";
 import { useApiData } from "../../hooks/useApiData";
-import { animateFadeInUp, animateStagger } from "../../utils/animations";
+import { animateFadeInUp } from "../../utils/animations";
 import * as S from "./styles";
 
 /**
@@ -29,7 +29,6 @@ export default function Venues() {
         if (isLoading || !containerRef.current) return;
         const el = containerRef.current;
         animateFadeInUp(el.querySelector(".anim-header"));
-        animateStagger(el.querySelectorAll(".anim-card"), { delay: 0.15 });
     }, { scope: containerRef, dependencies: [isLoading] });
 
     if (isLoading) {
@@ -46,7 +45,7 @@ export default function Venues() {
 
                 <S.LoadingCard>
                     <h2>Carregando espaços...</h2>
-                    <p>Aguarde enquanto buscamos os dados da API.</p>
+                    <p>Estamos buscando os ambientes disponíveis.</p>
                 </S.LoadingCard>
             </S.Container>
         );
@@ -66,7 +65,8 @@ export default function Venues() {
 
                 <S.EmptyState>
                     <h2>Nenhum espaço encontrado</h2>
-                    <p>A API não retornou espaços cadastrados no momento.</p>
+                    <p>Ainda não há espaços abertos para reserva. Fale com a gente para combinar seu evento.</p>
+                    <S.EmptyLink as={Link} to="/contate-nos">Entrar em contato</S.EmptyLink>
                 </S.EmptyState>
             </S.Container>
         );
@@ -93,7 +93,8 @@ export default function Venues() {
                                 <S.CardTitle>{venue.name}</S.CardTitle>
 
                                 <S.PlansTag>
-                                    A partir de R$ 650
+                                    <span>A partir de</span>
+                                    <strong>R$ 650</strong>
                                 </S.PlansTag>
                             </S.CardHeader>
 
@@ -112,16 +113,19 @@ export default function Venues() {
                                     {venue.location || "Não informada"}
                                 </li>
 
-                                <li>
+                            </S.InfoList>
+
+                            <S.Amenities aria-label="Comodidades">
+                                <S.Amenity $available={Boolean(venue.hasKidsArea)}>
                                     <strong>Área Kids</strong>
                                     {venue.hasKidsArea ? "Disponível" : "Não disponível"}
-                                </li>
+                                </S.Amenity>
 
-                                <li>
+                                <S.Amenity $available={Boolean(venue.hasPool)}>
                                     <strong>Piscina</strong>
                                     {venue.hasPool ? "Disponível" : "Não disponível"}
-                                </li>
-                            </S.InfoList>
+                                </S.Amenity>
+                            </S.Amenities>
                         </S.CardContent>
 
                         <S.Actions>
