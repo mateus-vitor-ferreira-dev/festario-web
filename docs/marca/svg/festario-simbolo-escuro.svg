@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Festário"><title>Festário</title>
+  <rect x="6" y="18" width="52" height="40" rx="10" fill="#f5f6fb"/>
+  <path d="M5 13 Q32 22 59 13" fill="none" stroke="#f5f6fb" stroke-width="3.2" stroke-linecap="round"/>
+  <path d="M12 15.3 L22 16.7 L16.8 26.5 Z" fill="#f4b41a" stroke-linejoin="round"/>
+  <path d="M27 17.4 L37 17.4 L32 27.5 Z" fill="#d8344a" stroke-linejoin="round"/>
+  <path d="M42 16.7 L52 15.3 L47.2 26.5 Z" fill="#f4b41a" stroke-linejoin="round"/>
+  <path d="M21 38 l8 8 l15 -16" fill="none" stroke="#27357e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

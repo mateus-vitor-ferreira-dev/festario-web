@@ -1,0 +1,16 @@
+/* Festário — tokens de cor da marca. Pares de texto/fundo verificados em AA (WCAG 2.2).
+   Aplicação no app: web#29. Milho é SÓ decorativo sobre fundo claro (1,84:1). */
+:root {
+  --festario-anil: #27357e;          /* primária: botões, links, marca */
+  --festario-anil-escuro: #141936;   /* texto principal */
+  --festario-anil-claro: #9aa8f2;    /* marca e links no tema escuro */
+  --festario-milho: #f4b41a;         /* destaque: bandeirinhas, selos; texto sobre ele = anil-escuro */
+  --festario-pitanga: #d8344a;       /* destaque: bandeirinha central, celebração */
+  --festario-pitanga-escura: #b8233a;/* erro e alerta como texto */
+  --festario-nevoa: #f5f6fb;         /* fundo da página */
+  --festario-papel: #ffffff;         /* superfícies */
+  --festario-grafite: #5a6079;       /* texto secundário */
+  --festario-noite: #0f1330;         /* fundo do tema escuro */
+  --festario-noite-superficie: #1a1f45;
+  --festario-nevoa-texto: #c9cde6;   /* texto secundário no escuro */
+}
