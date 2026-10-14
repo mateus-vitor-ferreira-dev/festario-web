@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { readTenant } from "../../config/tenantStorage";
+import { BRAND_NAME } from "../../config/brand";
+import { isManagerRole, PANEL_PATH } from "../../utils/roles";
 import { toast } from "react-toastify";
 
 /**
@@ -166,7 +169,10 @@ export default function NegotiationChat() {
 
     const session = readSession();
     const currentUserId = session?.user?.id ?? null;
-    const isAdmin = session?.user?.role === "ADMIN";
+    // nome mostrado nas mensagens da equipe: o do espaço guardado, ou a marca no espaço padrão
+    const teamName = readTenant()?.name || BRAND_NAME;
+    // equipe do espaço: dono (OWNER) ou equipe da plataforma (ADMIN)
+    const isAdmin = isManagerRole(session?.user?.role);
 
     useEffect(() => {
         if (!id) return;
@@ -364,7 +370,7 @@ export default function NegotiationChat() {
             setNegotiation(refetch);
             // Optionally navigate to the reservation
             if (result?.reservation?.id) {
-                setTimeout(() => navigate(`/admin`), 1500);
+                setTimeout(() => navigate(isAdmin ? PANEL_PATH : "/reservations"), 1500);
             }
         } catch (error) {
             toast.error(getErrorMessage(error, "Erro ao confirmar proposta."));
@@ -442,7 +448,7 @@ export default function NegotiationChat() {
                                 <S.Bubble $isOwn={isOwn} $isSystem={msg.isSystem} $isProposal={isProposal}>
                                     {!isOwn && !msg.isSystem && (
                                         <S.BubbleAuthor $isOwn={isOwn}>
-                                            {msg.author.role === "ADMIN" ? "Recanto Vila Rica" : msg.author.name}
+                                            {isManagerRole(msg.author.role) ? teamName : msg.author.name}
                                         </S.BubbleAuthor>
                                     )}
 

@@ -5,6 +5,7 @@ import type { NavigateFunction } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/getErrorMessage";
+import { homePathFor } from "../../utils/roles";
 import * as S from "./styles";
 
 interface GoogleButtonProps {
@@ -26,7 +27,7 @@ export default function GoogleButton({ navigate }: GoogleButtonProps) {
                 const { data } = await api.post("/auth/google", { id_token: credential });
                 login(data.data);
                 toast.success(data.message || "Sucesso com Google.");
-                navigate("/home");
+                navigate(homePathFor(data.data?.user?.role));
             } catch (error) {
                 toast.error(getErrorMessage(error, "Erro ao autenticar com Google."));
             }

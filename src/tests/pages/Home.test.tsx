@@ -5,15 +5,18 @@ import { ToastContainer } from "react-toastify";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import Home from "../../pages/Home";
 import { server } from "../mocks/server";
+import { AuthProvider } from "../../contexts/AuthContext";
 
 const BASE = "http://localhost:3000";
 
 function renderPage() {
     return render(
-        <MemoryRouter>
-            <Home />
-            <ToastContainer />
-        </MemoryRouter>
+        <AuthProvider>
+            <MemoryRouter>
+                <Home />
+                <ToastContainer />
+            </MemoryRouter>
+        </AuthProvider>
     );
 }
 

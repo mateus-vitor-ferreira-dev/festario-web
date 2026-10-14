@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import ErrorBoundary from "../../components/ErrorBoundary";
+import { useAuth } from "../../contexts/AuthContext";
+import { PLATFORM_PATH } from "../../utils/roles";
 import { TABS } from "./tabs/constants";
 import { BlockedDatesTab } from "./tabs/BlockedDatesTab";
 import { CampaignsTab } from "./tabs/CampaignsTab";
@@ -25,7 +27,13 @@ const TAB_COMPONENTS = {
     venues:       VenueTab,
 };
 
+/**
+ * Painel do espaço (`/painel`) — OWNER do próprio espaço e ADMIN da plataforma.
+ * O espaço exibido é o do `X-Tenant-Slug` guardado (ou o padrão).
+ */
 export default function Admin() {
+    const { user, tenant, setTenant } = useAuth();
+    const isPlatformAdmin = user?.role === "ADMIN";
     // a aba fica na URL (?tab=reservations) junto com os filtros/página da aba,
     // para que recarregar, voltar ou compartilhar o link reabra a mesma visão
     const [searchParams, setSearchParams] = useSearchParams();
@@ -70,9 +78,35 @@ export default function Admin() {
     return (
         <S.Container>
             <S.PageHeader>
-                <S.Title>Painel administrativo</S.Title>
-                <S.Description>Gerencie reservas, usuários, campanhas e configurações.</S.Description>
+                <S.Title>
+                    Painel do espaço
+                    {tenant?.name && <S.TitleTenant>{tenant.name}</S.TitleTenant>}
+                </S.Title>
+                <S.Description>Gerencie reservas, clientes, campanhas e configurações do espaço.</S.Description>
             </S.PageHeader>
+
+            {isPlatformAdmin && (
+                <S.ContextBar role="note">
+                    {tenant ? (
+                        <>
+                            <span>
+                                Você está no painel de <strong>{tenant.name || tenant.slug}</strong> como equipe da plataforma.
+                            </span>
+                            <S.InlineGroup>
+                                <S.SecondaryButton type="button" $size="sm" onClick={() => setTenant(null)}>
+                                    Voltar ao espaço padrão
+                                </S.SecondaryButton>
+                                <S.ContextLink to={PLATFORM_PATH}>Ir para a plataforma</S.ContextLink>
+                            </S.InlineGroup>
+                        </>
+                    ) : (
+                        <>
+                            <span>Você está no painel do espaço padrão. Para ver outro espaço, abra-o na plataforma.</span>
+                            <S.ContextLink to={PLATFORM_PATH}>Ir para a plataforma</S.ContextLink>
+                        </>
+                    )}
+                </S.ContextBar>
+            )}
 
             <S.TabBar
                 ref={tabBarRef}
@@ -96,7 +130,7 @@ export default function Admin() {
             <S.TabPanel $active>
                 {/* erro em uma aba não derruba o painel inteiro; key reinicia ao trocar de aba */}
                 <ErrorBoundary
-                    key={activeTab}
+                    key={`${activeTab}:${tenant?.slug ?? "padrao"}`}
                     fallback={
                         <S.EmptyState role="alert">
                             Esta aba não carregou. Tente outra aba ou recarregue a página.

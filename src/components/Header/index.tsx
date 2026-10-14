@@ -9,6 +9,7 @@ import { resendVerification } from "../../services/auth";
 import { animateFadeInUp } from "../../utils/animations";
 import { getHttpStatus } from "../../utils/errors";
 import { BRAND_NAME } from "../../config/brand";
+import { isManagerRole, PANEL_PATH, PLATFORM_PATH } from "../../utils/roles";
 import * as S from "./styles";
 
 function getInitials(name: string): string {
@@ -66,7 +67,8 @@ function MoonIcon() {
  * Barra de navegação principal da aplicação.
  *
  * Lê o perfil do usuário do `localStorage` (`recanto:userData`) para exibir
- * iniciais no avatar e o link de Admin (visível apenas para `role === "ADMIN"`).
+ * iniciais no avatar e os atalhos por papel: OWNER vê "Painel"; ADMIN vê
+ * "Plataforma" e "Painel"; USER vê só a navegação de cliente.
  * Inclui botão de toggle de tema claro/escuro e botão de logout. Abaixo de
  * 1024px a mesma `<nav>` vira um painel aberto pelo botão de menu (fecha com
  * Esc ou ao trocar de rota).
@@ -183,8 +185,24 @@ export default function Header() {
                     </S.NavLink>
 
                     {userRole === "ADMIN" && (
-                        <S.NavLink $active={location.pathname === "/admin"} as={Link} to="/admin">
-                            Admin
+                        <S.NavLink
+                            $active={location.pathname.startsWith(PLATFORM_PATH)}
+                            aria-current={location.pathname.startsWith(PLATFORM_PATH) ? "page" : undefined}
+                            as={Link}
+                            to={PLATFORM_PATH}
+                        >
+                            Plataforma
+                        </S.NavLink>
+                    )}
+
+                    {isManagerRole(userRole) && (
+                        <S.NavLink
+                            $active={location.pathname === PANEL_PATH}
+                            aria-current={location.pathname === PANEL_PATH ? "page" : undefined}
+                            as={Link}
+                            to={PANEL_PATH}
+                        >
+                            Painel
                         </S.NavLink>
                     )}
                 </S.Nav>

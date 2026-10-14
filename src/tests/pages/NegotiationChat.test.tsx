@@ -68,7 +68,7 @@ function renderPage(id = "neg-1") {
                 <Route path="/negociacoes/:id" element={<NegotiationChat />} />
                 <Route path="/negociacoes" element={<div>Negotiations List</div>} />
                 <Route path="/checkout/:id" element={<div>Checkout Page</div>} />
-                <Route path="/admin" element={<div>Admin Page</div>} />
+                <Route path="/painel" element={<div>Painel Page</div>} />
             </Routes>
             <ToastContainer />
         </MemoryRouter>
@@ -304,6 +304,22 @@ describe("NegotiationChat page", () => {
 
     it("admin sees email in top bar", async () => {
         setLocalStorage("ADMIN");
+        server.use(
+            http.get(`${BASE}/negotiations/neg-1`, () =>
+                HttpResponse.json({ success: true, data: userNegotiation })
+            ),
+            http.get(`${BASE}/venues`, () =>
+                HttpResponse.json({ success: true, data: [] })
+            )
+        );
+        renderPage();
+        await waitFor(() =>
+            expect(screen.getByText(/mateus@email\.com/i)).toBeInTheDocument()
+        );
+    });
+
+    it("owner (dono do espaço) also acts as the venue team", async () => {
+        setLocalStorage("OWNER");
         server.use(
             http.get(`${BASE}/negotiations/neg-1`, () =>
                 HttpResponse.json({ success: true, data: userNegotiation })

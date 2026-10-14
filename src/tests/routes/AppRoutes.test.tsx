@@ -55,13 +55,46 @@ describe("AppRoutes", () => {
         expect(await screen.findByText(/total de reservas/i, {}, LAZY_TIMEOUT)).toBeInTheDocument();
     });
 
-    it("redirects non-admin from /admin to /home", async () => {
+    it("redirects USER from the old /admin link (now /painel) to /home", async () => {
         localStorage.setItem(
             "recanto:userData",
             JSON.stringify({ token: "t", user: { id: "u-1", role: "USER" } })
         );
         renderRoutes("/admin");
         expect(await screen.findByText(/total de reservas/i, {}, LAZY_TIMEOUT)).toBeInTheDocument();
-        expect(screen.queryByText(/painel administrativo/i)).not.toBeInTheDocument();
+        expect(screen.queryByText(/painel do espaço/i)).not.toBeInTheDocument();
+    });
+
+    it("redirects the old /admin link to /painel for ADMIN", async () => {
+        localStorage.setItem(
+            "recanto:userData",
+            JSON.stringify({ token: "t", user: { id: "u-1", name: "Admin", role: "ADMIN" } })
+        );
+        renderRoutes("/admin");
+        expect(await screen.findByRole("heading", { name: /painel do espaço/i }, LAZY_TIMEOUT)).toBeInTheDocument();
+    });
+
+    it("blocks OWNER from /plataforma and shows the panel instead", async () => {
+        localStorage.setItem(
+            "recanto:userData",
+            JSON.stringify({ token: "t", user: { id: "u-1", name: "Dona", role: "OWNER" } })
+        );
+        renderRoutes("/plataforma");
+        expect(await screen.findByRole("heading", { name: /painel do espaço/i }, LAZY_TIMEOUT)).toBeInTheDocument();
+        expect(screen.queryByRole("heading", { name: /^plataforma$/i })).not.toBeInTheDocument();
+    });
+
+    it("renders the platform for ADMIN", async () => {
+        localStorage.setItem(
+            "recanto:userData",
+            JSON.stringify({ token: "t", user: { id: "u-1", name: "Admin", role: "ADMIN" } })
+        );
+        renderRoutes("/plataforma");
+        expect(await screen.findByRole("heading", { name: /^plataforma$/i }, LAZY_TIMEOUT)).toBeInTheDocument();
+    });
+
+    it("renders the public invite page without session", async () => {
+        renderRoutes(`/convite/${"a".repeat(64)}`);
+        expect(await screen.findByRole("heading", { name: /criar conta de dono/i }, LAZY_TIMEOUT)).toBeInTheDocument();
     });
 });

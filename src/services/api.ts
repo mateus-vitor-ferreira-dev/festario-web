@@ -11,11 +11,20 @@
  *   com backoff linear (1 s, 2 s, 3 s). Não reenvía em ambiente de teste,
  *   em endpoints `/auth/*`, nem em erros 429.
  * - **Rate limit (429)**: rejeitado imediatamente sem retry.
+ * - **Espaço (tenant)**: com um espaço guardado em `localStorage["recanto:tenant"]`
+ *   (convite aceito, `/login?espaco=<slug>` ou painel aberto pelo ADMIN), envia
+ *   `X-Tenant-Slug` em toda requisição. Sem espaço guardado, a API usa o padrão.
+ * - **403 de espaço**: `TENANT_INACTIVE` mostra um aviso único; `TENANT_ACCESS_DENIED`
+ *   (a conta é de outro espaço) avisa e encerra a sessão — fora de `/platform/*`,
+ *   onde o 403 só significa "não é ADMIN" e é tratado pela tela.
  */
 import axios from "axios";
+import { toast } from "react-toastify";
 import { env } from "../config/env";
 import { readSession, clearSession, updateSessionTokens } from "../config/authStorage";
-import { isAbortError } from "../utils/errors";
+import { readTenant, tenantHeaders } from "../config/tenantStorage";
+import { getApiErrorCode, isAbortError } from "../utils/errors";
+import { API_ERROR_CODE_MESSAGES } from "../utils/getErrorMessage";
 
 const BASE_URL = env.apiUrl;
 
@@ -26,6 +35,11 @@ api.interceptors.request.use((config) => {
 
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    const tenantSlug = readTenant()?.slug;
+    if (tenantSlug) {
+        config.headers["X-Tenant-Slug"] = tenantSlug;
     }
 
     return config;
@@ -60,6 +74,22 @@ function invalidateSession() {
     window.location.href = "/login";
 }
 
+/** Avisos de espaço (403). Retorna `true` quando a sessão foi encerrada. */
+function handleTenantForbidden(code: string | undefined, url: string | undefined): boolean {
+    if (code === "TENANT_INACTIVE") {
+        toast.error(API_ERROR_CODE_MESSAGES.TENANT_INACTIVE, { toastId: "tenant-inactive" });
+        return false;
+    }
+    if (code === "TENANT_ACCESS_DENIED" && !url?.startsWith("/platform")) {
+        toast.error(API_ERROR_CODE_MESSAGES.TENANT_ACCESS_DENIED, { toastId: "tenant-access-denied" });
+        if (readSession()) {
+            invalidateSession();
+            return true;
+        }
+    }
+    return false;
+}
+
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -67,6 +97,11 @@ api.interceptors.response.use(
         const status = error.response?.status;
 
         if (status === 429) {
+            return Promise.reject(error);
+        }
+
+        if (status === 403) {
+            handleTenantForbidden(getApiErrorCode(error), config.url);
             return Promise.reject(error);
         }
 
@@ -92,7 +127,7 @@ api.interceptors.response.use(
             try {
                 const res = await fetch(`${BASE_URL}/auth/refresh`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: { "Content-Type": "application/json", ...tenantHeaders() },
                     body: JSON.stringify({ refreshToken }),
                 });
 

@@ -46,7 +46,7 @@ describe("Profile page", () => {
     it("shows USER role badge", async () => {
         renderPage();
         await waitFor(() =>
-            expect(screen.getByText("Usuário")).toBeInTheDocument()
+            expect(screen.getByText("Cliente")).toBeInTheDocument()
         );
     });
 
@@ -61,7 +61,7 @@ describe("Profile page", () => {
         );
         renderPage();
         await waitFor(() =>
-            expect(screen.getByText("Administrador")).toBeInTheDocument()
+            expect(screen.getByText("Equipe da plataforma")).toBeInTheDocument()
         );
     });
 

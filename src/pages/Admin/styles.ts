@@ -1,4 +1,5 @@
 import styled, { css, keyframes } from "styled-components";
+import { Link } from "react-router-dom";
 import { media } from "../../styles/breakpoints";
 
 const spin = keyframes`
@@ -485,7 +486,7 @@ export const CampaignStatusBadge = styled.span<{ $status?: string }>`
 
 export const RoleBadge = styled.span<{ $role?: string }>`
   ${chipBase}
-  ${({ $role }) => ($role === "ADMIN" ? chipPaid : chipNeutral)}
+  ${({ $role }) => ($role === "ADMIN" ? chipInfo : $role === "OWNER" ? chipPaid : chipNeutral)}
 `;
 
 /* Tipo de feriado — rótulo de categoria, não status: chip quadrado */
@@ -1236,4 +1237,63 @@ export const ResultCount = styled.p`
 /** Seletor de ano no cabeçalho de Feriados — mesmo controle da barra de filtros. */
 export const YearField = styled.div`
   width: 140px;
+`;
+
+/* ─── Painel do espaço: nome do espaço e barra de contexto (ADMIN) ─── */
+
+export const TitleTenant = styled.span`
+  display: block;
+  margin-top: 2px;
+  font-size: var(--text-xl);
+  font-weight: 500;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+`;
+
+/** Faixa informativa: em qual espaço o ADMIN está operando. Sem sombra (painel). */
+export const ContextBar = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--status-info-border);
+  border-radius: var(--radius-lg);
+  background: var(--status-info-bg);
+  color: var(--status-info-text);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+
+  strong {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  & > span {
+    min-width: 0;
+    flex: 1 1 280px;
+  }
+`;
+
+export const ContextLink = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--brand);
+  text-decoration: underline;
+  text-decoration-color: var(--brand-border);
+  text-underline-offset: 3px;
+
+  &:hover {
+    text-decoration-color: currentColor;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: var(--radius-sm);
+  }
 `;

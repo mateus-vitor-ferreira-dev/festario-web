@@ -56,14 +56,22 @@ describe("Header component", () => {
         expect(screen.getByRole("link", { name: /promoções/i })).toBeInTheDocument();
     });
 
-    it("shows Admin link only for ADMIN role", () => {
+    it("shows Plataforma and Painel links for ADMIN role", () => {
         renderHeader({ token: "t", user: { name: "Admin", role: "ADMIN" } });
-        expect(screen.getByRole("link", { name: /^admin$/i })).toBeInTheDocument();
+        expect(screen.getByRole("link", { name: /^plataforma$/i })).toHaveAttribute("href", "/plataforma");
+        expect(screen.getByRole("link", { name: /^painel$/i })).toHaveAttribute("href", "/painel");
     });
 
-    it("does not show Admin link for USER role", () => {
+    it("shows only the Painel link for OWNER role", () => {
+        renderHeader({ token: "t", user: { name: "Dona", role: "OWNER" } });
+        expect(screen.getByRole("link", { name: /^painel$/i })).toHaveAttribute("href", "/painel");
+        expect(screen.queryByRole("link", { name: /^plataforma$/i })).not.toBeInTheDocument();
+    });
+
+    it("does not show panel links for USER role", () => {
         renderHeader({ token: "t", user: { name: "Mateus", role: "USER" } });
-        expect(screen.queryByRole("link", { name: /^admin$/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole("link", { name: /^painel$/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole("link", { name: /^plataforma$/i })).not.toBeInTheDocument();
     });
 
     it("shows user initials in avatar", () => {

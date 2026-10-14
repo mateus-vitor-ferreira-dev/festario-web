@@ -13,6 +13,7 @@ import { formatPhone } from "../../utils/formatPhone";
 import { validatePassword } from "../../utils/validatePassword";
 import { animateFadeInUp } from "../../utils/animations";
 import type { User } from "../../types";
+import { ROLE_LABELS } from "../../utils/roles";
 import * as S from "./styles";
 
 interface ProfileUser extends User {
@@ -256,7 +257,7 @@ export default function Profile() {
                     <S.AvatarLarge>{getInitials(user?.name)}</S.AvatarLarge>
                     <S.IdentityName>{user?.name}</S.IdentityName>
                     <S.IdentityEmail>{user?.email}</S.IdentityEmail>
-                    <S.RoleBadge>{user?.role === "ADMIN" ? "Administrador" : "Usuário"}</S.RoleBadge>
+                    <S.RoleBadge>{(user?.role && ROLE_LABELS[user.role]) || ROLE_LABELS.USER}</S.RoleBadge>
                 </S.IdentityCard>
 
                 <S.FormStack>

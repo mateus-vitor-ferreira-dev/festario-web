@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { listVenues, updateVenue } from "../../../services/venue";
+import { createVenue, listVenues, updateVenue } from "../../../services/venue";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
 import type { Venue } from "../../../types";
 import { ModalHeader } from "../ModalHeader";
@@ -10,6 +10,7 @@ interface VenueForm {
     name: string;
     description: string;
     capacity: number | string;
+    basePricePerHour: number | string;
     rua: string;
     numero: string;
     bairro: string;
@@ -26,6 +27,7 @@ const EMPTY_FORM: VenueForm = {
     name: "",
     description: "",
     capacity: "",
+    basePricePerHour: "",
     rua: "",
     numero: "",
     bairro: "",
@@ -98,6 +100,7 @@ function venueToForm(v: Venue): VenueForm {
         name: v.name ?? "",
         description: v.description ?? "",
         capacity: v.capacity ?? "",
+        basePricePerHour: v.basePricePerHour ?? v.basePrice ?? "",
         ...addr,
         hasKidsArea: v.hasKidsArea ?? false,
         kidsAreaPricePerHour: v.kidsAreaPricePerHour ?? "",
@@ -136,8 +139,15 @@ export function VenueTab() {
         setShowModal(true);
     }
 
+    function openCreate() {
+        setEditingVenue(null);
+        setForm(EMPTY_FORM);
+        setShowModal(true);
+    }
+
     function field(key: keyof VenueForm) {
         return {
+            id: `venue-${key}`,
             value: form[key] as string,
             onChange: (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [key]: e.target.value })),
         };
@@ -145,7 +155,6 @@ export function VenueTab() {
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        if (!editingVenue) return;
         try {
             setIsSaving(true);
             const location = buildLocation(form) || null;
@@ -165,8 +174,14 @@ export function VenueTab() {
                         ? Number(form.poolPricePerDay)
                         : null,
             };
-            await updateVenue(editingVenue.id, payload as Partial<Venue>);
-            toast.success("Espaço atualizado com sucesso.");
+            const basePricePerHour = form.basePricePerHour !== "" ? Number(form.basePricePerHour) : undefined;
+            if (editingVenue) {
+                await updateVenue(editingVenue.id, (basePricePerHour !== undefined ? { ...payload, basePricePerHour } : payload) as Partial<Venue>);
+                toast.success("Espaço atualizado com sucesso.");
+            } else {
+                await createVenue({ ...payload, basePricePerHour } as Partial<Venue>);
+                toast.success("Espaço criado. Agora cadastre os planos para ele aparecer na reserva.");
+            }
             setShowModal(false);
             load();
         } catch (error) {
@@ -182,6 +197,7 @@ export function VenueTab() {
         <S.Section>
             <S.SectionHeader>
                 <S.SectionTitle>Espaços</S.SectionTitle>
+                <S.PrimaryButton type="button" onClick={openCreate}>+ Novo espaço</S.PrimaryButton>
             </S.SectionHeader>
 
             {isLoading ? (
@@ -189,6 +205,7 @@ export function VenueTab() {
             ) : venues.length === 0 ? (
                 <S.EmptyState>
                     <h3>Nenhum espaço cadastrado</h3>
+                    <p>Use “+ Novo espaço” para cadastrar o salão que os clientes vão reservar.</p>
                 </S.EmptyState>
             ) : (
                 <S.TableWrapper>
@@ -234,18 +251,18 @@ export function VenueTab() {
                         onClick={(e: React.MouseEvent) => e.stopPropagation()}
                         $maxWidth={540}
                     >
-                        <ModalHeader onClose={() => setShowModal(false)} disabled={isSaving}>Editar espaço</ModalHeader>
+                        <ModalHeader onClose={() => setShowModal(false)} disabled={isSaving}>{editingVenue ? "Editar espaço" : "Novo espaço"}</ModalHeader>
                         <S.Form onSubmit={handleSubmit}>
                             <S.FormGroup>
-                                <label>Nome</label>
+                                <label htmlFor="venue-name">Nome</label>
                                 <S.TextInput required {...field("name")} placeholder="Nome do espaço" />
                             </S.FormGroup>
                             <S.FormGroup>
-                                <label>Descrição</label>
+                                <label htmlFor="venue-description">Descrição</label>
                                 <S.TextInput {...field("description")} placeholder="Descrição (opcional)" />
                             </S.FormGroup>
                             <S.FormGroup>
-                                <label>Capacidade (pessoas)</label>
+                                <label htmlFor="venue-capacity">Capacidade (pessoas)</label>
                                 <S.TextInput
                                     required
                                     type="number"
@@ -254,34 +271,46 @@ export function VenueTab() {
                                     placeholder="Ex: 100"
                                 />
                             </S.FormGroup>
+                            <S.FormGroup>
+                                <label htmlFor="venue-basePricePerHour">Preço base (R$/hora)</label>
+                                <S.TextInput
+                                    required={!editingVenue}
+                                    type="number"
+                                    min="0.01"
+                                    step="0.01"
+                                    inputMode="decimal"
+                                    {...field("basePricePerHour")}
+                                    placeholder="Ex: 150"
+                                />
+                            </S.FormGroup>
 
                             <S.FormSection>
                                 <legend>Endereço</legend>
                                 <S.FormGroup>
-                                    <label>Rua</label>
+                                    <label htmlFor="venue-rua">Rua</label>
                                     <S.TextInput {...field("rua")} placeholder="Ex: Rua Bernadino Antônio Tomás" />
                                 </S.FormGroup>
                                 <S.FormRow>
                                     <S.FormGroup>
-                                        <label>Número</label>
+                                        <label htmlFor="venue-numero">Número</label>
                                         <S.TextInput {...field("numero")} inputMode="numeric" placeholder="Ex: 21" />
                                     </S.FormGroup>
                                     <S.FormGroup>
-                                        <label>CEP</label>
+                                        <label htmlFor="venue-cep">CEP</label>
                                         <S.TextInput {...field("cep")} inputMode="numeric" placeholder="Ex: 37203-775" />
                                     </S.FormGroup>
                                 </S.FormRow>
                                 <S.FormGroup>
-                                    <label>Bairro</label>
+                                    <label htmlFor="venue-bairro">Bairro</label>
                                     <S.TextInput {...field("bairro")} placeholder="Ex: Jardim Vila Rica" />
                                 </S.FormGroup>
                                 <S.FormRow $cols="2fr 1fr">
                                     <S.FormGroup>
-                                        <label>Cidade</label>
+                                        <label htmlFor="venue-cidade">Cidade</label>
                                         <S.TextInput {...field("cidade")} placeholder="Ex: Lavras" />
                                     </S.FormGroup>
                                     <S.FormGroup>
-                                        <label>Estado (UF)</label>
+                                        <label htmlFor="venue-estado">Estado (UF)</label>
                                         <S.TextInput {...field("estado")} placeholder="Ex: MG" maxLength={2} />
                                     </S.FormGroup>
                                 </S.FormRow>
@@ -306,7 +335,7 @@ export function VenueTab() {
                                 </S.CheckboxLabel>
                                 {form.hasKidsArea && (
                                     <S.FormGroup>
-                                        <label>Preço da área kids (R$/hora)</label>
+                                        <label htmlFor="venue-kidsAreaPricePerHour">Preço da área kids (R$/hora)</label>
                                         <S.TextInput
                                             required
                                             type="number"
@@ -329,7 +358,7 @@ export function VenueTab() {
                                 </S.CheckboxLabel>
                                 {form.hasPool && (
                                     <S.FormGroup>
-                                        <label>Preço da piscina (R$/dia)</label>
+                                        <label htmlFor="venue-poolPricePerDay">Preço da piscina (R$/dia)</label>
                                         <S.TextInput
                                             required
                                             type="number"
@@ -351,7 +380,7 @@ export function VenueTab() {
                                     Cancelar
                                 </S.SecondaryButton>
                                 <S.PrimaryButton type="submit" disabled={isSaving}>
-                                    {isSaving ? "Salvando..." : "Salvar alterações"}
+                                    {isSaving ? "Salvando..." : editingVenue ? "Salvar alterações" : "Criar espaço"}
                                 </S.PrimaryButton>
                             </S.ModalActions>
                         </S.Form>

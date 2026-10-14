@@ -4,6 +4,9 @@ import { toast } from "react-toastify";
 import { useGSAP } from "@gsap/react";
 
 import api from "../../services/api";
+import { useAuth } from "../../contexts/AuthContext";
+import { BRAND_NAME } from "../../config/brand";
+import { PANEL_PATH, PLATFORM_PATH } from "../../utils/roles";
 import { listMyGrants } from "../../services/promotion";
 import { listReservations } from "../../services/reservation";
 import { listVenues } from "../../services/venue";
@@ -75,6 +78,8 @@ interface Dashboard {
  */
 export default function Home() {
     const navigate = useNavigate();
+    const { user: sessionUser, tenant } = useAuth();
+    const role = sessionUser?.role;
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [dashboard, setDashboard] = useState<Dashboard>({
         user: null,
@@ -163,13 +168,29 @@ export default function Home() {
                         {getGreeting()}, {userName}.
                     </S.Greeting>
                     <S.Subgreeting>
-                        Seus eventos e os espaços disponíveis no Recanto Vila Rica.
+                        {role === "ADMIN"
+                            ? "A plataforma e o painel de cada espaço estão nos atalhos ao lado."
+                            : role === "OWNER"
+                                ? "Reservas, clientes e configurações do seu espaço ficam no painel."
+                                : `Seus eventos e os espaços disponíveis no ${tenant?.name || BRAND_NAME}.`}
                     </S.Subgreeting>
                 </S.HeaderLeft>
 
-                <S.NewReservationButton as={Link} to="/venues">
-                    Nova reserva
-                </S.NewReservationButton>
+                <S.HeaderActions>
+                    {role === "ADMIN" && (
+                        <S.ShortcutLink as={Link} to={PLATFORM_PATH}>
+                            Abrir plataforma
+                        </S.ShortcutLink>
+                    )}
+                    {(role === "OWNER" || role === "ADMIN") && (
+                        <S.ShortcutLink as={Link} to={PANEL_PATH}>
+                            Abrir painel do espaço
+                        </S.ShortcutLink>
+                    )}
+                    <S.NewReservationButton as={Link} to="/venues">
+                        Nova reserva
+                    </S.NewReservationButton>
+                </S.HeaderActions>
             </S.PageHeader>
 
             <S.Facts>

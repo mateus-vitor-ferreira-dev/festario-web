@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { env } from "../../config/env";
+import { tenantHeaders } from "../../config/tenantStorage";
 import { useAuth } from "../../contexts/AuthContext";
 import * as S from "./styles";
 
@@ -88,6 +89,7 @@ export default function ChatWidget() {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    ...tenantHeaders(),
                     ...(token && { Authorization: `Bearer ${token}` }),
                 },
                 body: JSON.stringify({ messages: updatedMessages.slice(-20) }),

@@ -11,3 +11,10 @@ export function getHttpStatus(error: unknown): number | undefined {
     const status = (response as Record<string, unknown>).status;
     return typeof status === "number" ? status : undefined;
 }
+
+/** Código de erro da API (`{ error: { code } }`), quando houver. */
+export function getApiErrorCode(error: unknown): string | undefined {
+    const e = error as { response?: { data?: { error?: { code?: unknown }; code?: unknown } } } | null;
+    const code = e?.response?.data?.error?.code ?? e?.response?.data?.code;
+    return typeof code === "string" ? code : undefined;
+}
