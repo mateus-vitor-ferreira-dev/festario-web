@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import ErrorBoundary from "../../components/ErrorBoundary";
 import { TABS } from "./tabs/constants";
 import { BlockedDatesTab } from "./tabs/BlockedDatesTab";
 import { CampaignsTab } from "./tabs/CampaignsTab";
@@ -81,7 +82,17 @@ export default function Admin() {
             </S.TabBar>
 
             <S.TabPanel $active>
-                <ActiveTab />
+                {/* erro em uma aba não derruba o painel inteiro; key reinicia ao trocar de aba */}
+                <ErrorBoundary
+                    key={activeTab}
+                    fallback={
+                        <S.EmptyState role="alert">
+                            Esta aba não carregou. Tente outra aba ou recarregue a página.
+                        </S.EmptyState>
+                    }
+                >
+                    <ActiveTab />
+                </ErrorBoundary>
             </S.TabPanel>
         </S.Container>
     );
