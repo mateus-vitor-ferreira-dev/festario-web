@@ -14,7 +14,7 @@ interface AuthLayoutProps {
 /**
  * Layout de duas colunas para as páginas de autenticação (Login e Cadastro).
  *
- * Coluna esquerda: branding + decorações. Coluna direita: formulário com GSAP stagger.
+ * Coluna esquerda: marca, foto da piscina em arco colonial e chamada. Coluna direita: formulário com GSAP stagger.
  * Enquanto `introFinished` é `false`, o logo fica invisível para não conflitar
  * com a `IntroAnimation` que está voando até sua posição.
  *
@@ -36,31 +36,33 @@ export default function AuthLayout({
     return (
         <S.Container>
             <S.LeftSide>
-                <S.LeftInner>
-                    <S.Brand>
-                        <S.BrandName>Recanto Vila Rica</S.BrandName>
+                <S.Brand>
+                    <S.BrandLogoWrapper
+                        data-intro-logo-target="true"
+                        data-intro-target-desktop="true"
+                        $visible={introFinished}
+                    >
+                        <S.BrandLogo src={Logo} alt="" />
+                    </S.BrandLogoWrapper>
+                    <S.BrandName>Recanto Vila Rica</S.BrandName>
+                </S.Brand>
 
-                        <S.BrandLogoWrapper
-                            data-intro-logo-target="true"
-                            data-intro-target-desktop="true"
-                            $visible={introFinished}
-                        >
-                            <S.BrandLogo src={Logo} alt="Recanto Vila Rica" />
-                        </S.BrandLogoWrapper>
-                    </S.Brand>
+                <S.Arch>
+                    <img
+                        src="/images/piscina.webp"
+                        alt="Piscina do Recanto Vila Rica"
+                        width={1072}
+                        height={671}
+                    />
+                </S.Arch>
 
-                    <S.LeftBody>
-                        <S.Headline>Reserve com elegância e simplicidade.</S.Headline>
-                        <S.Tagline>
-                            Uma experiência profissional para organizar eventos, pagamentos
-                            e disponibilidade em um só lugar.
-                        </S.Tagline>
-                    </S.LeftBody>
-                </S.LeftInner>
-
-                <S.Deco1 />
-                <S.Deco2 />
-                <S.Deco3 />
+                <S.LeftBody>
+                    <S.Headline>Sua festa começa pela data certa.</S.Headline>
+                    <S.Tagline>
+                        Veja os dias livres, escolha o pacote, assine o contrato e pague,
+                        tudo sem trocar mensagens.
+                    </S.Tagline>
+                </S.LeftBody>
             </S.LeftSide>
 
             <S.RightSide>

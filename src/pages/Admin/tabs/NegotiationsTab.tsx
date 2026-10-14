@@ -49,13 +49,13 @@ export function NegotiationsTab() {
                                 <S.Th>E-mail</S.Th>
                                 <S.Th>Status</S.Th>
                                 <S.Th>Criada em</S.Th>
-                                <S.Th>Ação</S.Th>
+                                <S.Th><S.VisuallyHidden>Ação</S.VisuallyHidden></S.Th>
                             </tr>
                         </thead>
                         <tbody>
                             {filtered.map((neg) => (
                                 <S.Tr key={neg.id}>
-                                    <S.Td>{neg.subject}</S.Td>
+                                    <S.Td><strong>{neg.subject}</strong></S.Td>
                                     <S.Td>{neg.user?.name ?? "—"}</S.Td>
                                     <S.Td>{neg.user?.email ?? "—"}</S.Td>
                                     <S.Td>
@@ -66,7 +66,7 @@ export function NegotiationsTab() {
                                     <S.Td>{formatDate(neg.createdAt)}</S.Td>
                                     <S.Td>
                                         <S.SecondaryButton
-                                            style={{ height: "32px", padding: "0 12px", fontSize: "13px" }}
+                                            $size="sm"
                                             onClick={() => navigate(`/negociacoes/${neg.id}`)}
                                         >
                                             Abrir chat

@@ -11,7 +11,7 @@ import { getErrorMessage } from "../../utils/getErrorMessage";
 import { isAbortError, getHttpStatus } from "../../utils/errors";
 import { formatPhone } from "../../utils/formatPhone";
 import { validatePassword } from "../../utils/validatePassword";
-import { animateFadeInUp, animateStagger } from "../../utils/animations";
+import { animateFadeInUp } from "../../utils/animations";
 import type { User } from "../../types";
 import * as S from "./styles";
 
@@ -214,7 +214,6 @@ export default function Profile() {
         if (isLoading || !containerRef.current) return;
         const el = containerRef.current;
         animateFadeInUp(el.querySelector(".anim-header"));
-        animateStagger(el.querySelectorAll(".anim-card"), { delay: 0.15 });
     }, { scope: containerRef, dependencies: [isLoading] });
 
     if (isLoading) {
@@ -253,15 +252,15 @@ export default function Profile() {
             )}
 
             <S.Layout>
-                <S.IdentityCard className="anim-card">
+                <S.IdentityCard>
                     <S.AvatarLarge>{getInitials(user?.name)}</S.AvatarLarge>
                     <S.IdentityName>{user?.name}</S.IdentityName>
                     <S.IdentityEmail>{user?.email}</S.IdentityEmail>
                     <S.RoleBadge>{user?.role === "ADMIN" ? "Administrador" : "Usuário"}</S.RoleBadge>
                 </S.IdentityCard>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                    <S.FormCard className="anim-card" onSubmit={handleSubmit}>
+                <S.FormStack>
+                    <S.FormCard onSubmit={handleSubmit}>
                         <S.SectionTitle>Informações pessoais</S.SectionTitle>
 
                         <S.FieldGrid>
@@ -312,7 +311,7 @@ export default function Profile() {
                     </S.FormCard>
 
                     {passwordStep === "verify" ? (
-                        <S.FormCard className="anim-card" as="form" onSubmit={handleVerifyPassword}>
+                        <S.FormCard as="form" onSubmit={handleVerifyPassword}>
                             <S.SectionTitle>Alterar senha</S.SectionTitle>
 
                             <S.FieldGrid>
@@ -333,7 +332,7 @@ export default function Profile() {
                             </S.FormFooter>
                         </S.FormCard>
                     ) : (
-                        <S.FormCard className="anim-card" as="form" onSubmit={handlePasswordSubmit}>
+                        <S.FormCard as="form" onSubmit={handlePasswordSubmit}>
                             <S.SectionTitle>Nova senha</S.SectionTitle>
 
                             <S.FieldGrid>
@@ -366,7 +365,7 @@ export default function Profile() {
                             </S.FormFooter>
                         </S.FormCard>
                     )}
-                </div>
+                </S.FormStack>
             </S.Layout>
         </S.Container>
     );

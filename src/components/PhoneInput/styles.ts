@@ -9,8 +9,8 @@ export const Container = styled.div`
 `;
 
 export const Label = styled.label`
-    font-size: 13px;
-    font-weight: 600;
+    font-size: var(--text-sm);
+    font-weight: 500;
     color: var(--text-secondary);
 `;
 
@@ -20,7 +20,7 @@ export const InputWrapper = styled.div<{ $error?: boolean }>`
     width: 100%;
     height: 48px;
     padding: 0 14px;
-    border-radius: 14px;
+    border-radius: var(--radius-md);
     border: 1px solid ${({ $error }) => ($error ? "var(--color-error)" : "var(--border-medium)")};
     background: var(--bg-surface);
     gap: 8px;
@@ -28,7 +28,7 @@ export const InputWrapper = styled.div<{ $error?: boolean }>`
 
     &:focus-within {
         border-color: ${({ $error }) => ($error ? "var(--color-error)" : "var(--brand)")};
-        box-shadow: 0 0 0 4px rgba(31, 79, 65, 0.12);
+        box-shadow: var(--focus-ring);
     }
 `;
 
@@ -41,8 +41,10 @@ export const CountryButton = styled.button`
     padding: 0;
     cursor: pointer;
     flex-shrink: 0;
+    min-height: 44px;
     color: var(--text-primary);
-    font-size: 14px;
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
     font-weight: 500;
     user-select: none;
 
@@ -59,12 +61,13 @@ export const Flag = styled.span`
 `;
 
 export const DialCode = styled.span`
-    font-size: 13px;
+    font-size: var(--text-sm);
     color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
 `;
 
 export const Chevron = styled.span<{ $open: boolean }>`
-    font-size: 10px;
+    font-size: 12px;
     color: var(--text-faint);
     transition: transform 0.15s;
     transform: ${({ $open }) => ($open ? "rotate(180deg)" : "rotate(0deg)")};
@@ -82,7 +85,7 @@ export const PhoneNumberInput = styled.input`
     height: 100%;
     border: none;
     outline: none;
-    font-size: 14px;
+    font-size: var(--text-base);
     background: transparent;
     color: var(--text-primary);
     padding: 0;
@@ -108,20 +111,23 @@ export const Dropdown = styled.div`
     width: 100%;
     background: var(--bg-surface);
     border: 1px solid var(--border-medium);
-    border-radius: 14px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
     z-index: 100;
     overflow: hidden;
+    max-width: 100%;
+    min-width: 0;
 `;
 
 export const SearchInput = styled.input`
     width: 100%;
+    min-height: 44px;
     padding: 10px 14px;
     border: none;
     border-bottom: 1px solid var(--border-medium);
     background: var(--bg-surface);
     color: var(--text-primary);
-    font-size: 13px;
+    font-size: var(--text-base);
     outline: none;
 
     &::placeholder {
@@ -150,19 +156,21 @@ export const ListItem = styled.li<{ $selected?: boolean }>`
     align-items: center;
     gap: 8px;
     padding: 8px 14px;
+    min-height: 44px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: var(--text-sm);
     color: var(--text-primary);
     transition: background 0.15s;
 
     &:hover {
-        background: var(--bg-hover, rgba(0,0,0,0.04));
+        background: var(--bg-muted);
     }
 
     ${({ $selected }) =>
         $selected &&
         `
-        background: var(--bg-hover, rgba(0,0,0,0.06));
+        background: var(--brand-subtle);
+        color: var(--brand);
         font-weight: 600;
     `}
 `;
@@ -175,6 +183,6 @@ export const CountryName = styled.span`
 `;
 
 export const Error = styled.span`
-    font-size: 12px;
+    font-size: var(--text-xs);
     color: var(--color-error);
 `;

@@ -9,7 +9,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { getVenue } from "../../services/venue";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { isAbortError } from "../../utils/errors";
-import { animateFadeInUp, animateStagger } from "../../utils/animations";
+import { animateFadeInUp } from "../../utils/animations";
 import { formatCents } from "../../utils/reservationFormat";
 import type { Venue } from "../../types";
 import type { ContratoRVRProps } from "../../components/ContratoRVR";
@@ -55,7 +55,6 @@ export default function ReservationIntent() {
         if (loading || !containerRef.current) return;
         const el = containerRef.current;
         animateFadeInUp(el.querySelector(".anim-top"));
-        animateStagger(el.querySelectorAll(".anim-card"), { delay: 0.15 });
     }, { scope: containerRef, dependencies: [loading] });
 
     if (loading) {
@@ -157,7 +156,7 @@ export default function ReservationIntent() {
                         <S.Card className="anim-card">
                             <S.CardTitle>Data e horário</S.CardTitle>
                             <S.CardDescription>
-                                Selecione a data do evento no calendário. Datas em laranja já estão reservadas e datas em roxo estão bloqueadas.
+                                Escolha um dia disponível no calendário. Dias reservados ou bloqueados não podem ser selecionados — veja a legenda abaixo.
                             </S.CardDescription>
                             <AvailabilityCalendar
                                 venueId={venueId ?? ""}

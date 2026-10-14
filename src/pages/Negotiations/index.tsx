@@ -6,7 +6,7 @@ import { useGSAP } from "@gsap/react";
 import { createNegotiation } from "../../services/negotiation";
 import { useNegotiations } from "../../hooks/useNegotiations";
 import { getErrorMessage } from "../../utils/getErrorMessage";
-import { animateFadeInUp, animateStagger } from "../../utils/animations";
+import { animateFadeInUp } from "../../utils/animations";
 import * as S from "./styles";
 
 /**
@@ -44,7 +44,6 @@ export default function Negotiations() {
     useGSAP(() => {
         if (!containerRef.current) return;
         animateFadeInUp(containerRef.current.querySelector(".anim-header"));
-        animateStagger(containerRef.current.querySelectorAll(".anim-card"), { delay: 0.1 });
     }, { scope: containerRef, dependencies: [] });
 
     async function handleCreate() {
@@ -64,15 +63,17 @@ export default function Negotiations() {
     return (
         <S.Container ref={containerRef}>
             <S.Header className="anim-header">
-                <S.Title>Negociações</S.Title>
-                <S.Description>
-                    Acompanhe suas conversas de negociação. Clique em uma para continuar.
-                </S.Description>
-            </S.Header>
+                <S.HeaderText>
+                    <S.Title>Negociações</S.Title>
+                    <S.Description>
+                        Acompanhe suas conversas de negociação. Clique em uma para continuar.
+                    </S.Description>
+                </S.HeaderText>
 
-            <S.NewButton onClick={handleCreate} disabled={isSending}>
-                {isSending ? "Iniciando..." : "+ Nova negociação"}
-            </S.NewButton>
+                <S.NewButton onClick={handleCreate} disabled={isSending}>
+                    {isSending ? "Iniciando..." : "Nova negociação"}
+                </S.NewButton>
+            </S.Header>
 
             {isLoading ? (
                 <S.LoadingCard>
@@ -80,14 +81,13 @@ export default function Negotiations() {
                 </S.LoadingCard>
             ) : negotiations.length === 0 ? (
                 <S.EmptyState>
-                    <p>Você ainda não possui negociações.<br />Clique em "+ Nova negociação" para começar.</p>
+                    <p>Você ainda não possui negociações.<br />Use "Nova negociação" para conversar com a equipe sobre datas, convidados ou condições especiais.</p>
                 </S.EmptyState>
             ) : (
                 <S.List>
                     {negotiations.map((neg) => (
                         <S.NegotiationCard
                             key={neg.id}
-                            className="anim-card"
                             onClick={() => navigate(`/negociacoes/${neg.id}`)}
                         >
                             <S.NegotiationInfo>

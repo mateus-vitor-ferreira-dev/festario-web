@@ -28,6 +28,24 @@ function formatDate(dateStr: string) {
     });
 }
 
+function formatLongDate(dateStr: string) {
+    return new Date(dateStr).toLocaleDateString("pt-BR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+    });
+}
+
+function formatDay(dateStr: string) {
+    return new Date(dateStr).toLocaleDateString("pt-BR", { day: "2-digit" });
+}
+
+function formatMonth(dateStr: string) {
+    return new Date(dateStr)
+        .toLocaleDateString("pt-BR", { month: "short" })
+        .replace(".", "");
+}
+
 function formatCurrency(value: number | string) {
     return Number(value).toLocaleString("pt-BR", {
         style: "currency",
@@ -123,9 +141,7 @@ export default function Home() {
         if (isLoading || !containerRef.current) return;
         const el = containerRef.current;
         animateFadeInUp(el.querySelector(".anim-header"));
-        animateStagger(el.querySelectorAll(".anim-stat-card"));
-        animateStagger(el.querySelectorAll(".anim-action-card"), { delay: 0.2 });
-        animateStagger(el.querySelectorAll(".anim-panel"), { delay: 0.3 });
+        animateStagger(el.querySelectorAll(".anim-panel"), { delay: 0.1 });
     }, { scope: containerRef, dependencies: [isLoading] });
 
     if (isLoading) {
@@ -144,10 +160,10 @@ export default function Home() {
             <S.PageHeader className="anim-header">
                 <S.HeaderLeft>
                     <S.Greeting>
-                        {getGreeting()}, <span>{userName}</span>.
+                        {getGreeting()}, {userName}.
                     </S.Greeting>
                     <S.Subgreeting>
-                        Aqui está um resumo da sua conta no Recanto Vila Rica.
+                        Seus eventos e os espaços disponíveis no Recanto Vila Rica.
                     </S.Subgreeting>
                 </S.HeaderLeft>
 
@@ -156,59 +172,20 @@ export default function Home() {
                 </S.NewReservationButton>
             </S.PageHeader>
 
-            <S.StatsGrid>
-                <S.StatCard className="anim-stat-card" $accent="var(--accent-blue)">
-                    <S.StatLabel>Total de reservas</S.StatLabel>
-                    <S.StatNumber $accent="var(--accent-blue)">
-                        {dashboard.reservations.length}
-                    </S.StatNumber>
-                    <S.StatDescription>
-                        Reservas vinculadas à sua conta
-                    </S.StatDescription>
-                </S.StatCard>
-
-                <S.StatCard className="anim-stat-card" $accent="var(--accent-teal)">
-                    <S.StatLabel>Espaços disponíveis</S.StatLabel>
-                    <S.StatNumber $accent="var(--accent-teal)">
-                        {dashboard.venues.length}
-                    </S.StatNumber>
-                    <S.StatDescription>
-                        Ambientes para locação e eventos
-                    </S.StatDescription>
-                </S.StatCard>
-
-                <S.StatCard className="anim-stat-card" $accent="var(--brand-dark)">
-                    <S.StatLabel>Próximas reservas</S.StatLabel>
-                    <S.StatNumber $accent="var(--brand-dark)">
-                        {upcomingReservations.length}
-                    </S.StatNumber>
-                    <S.StatDescription>
-                        Eventos agendados para os próximos dias
-                    </S.StatDescription>
-                </S.StatCard>
-            </S.StatsGrid>
-
-            <S.ActionRow>
-                <S.ActionCard className="anim-action-card" as={Link} to="/venues" $primary>
-                    <S.ActionContent>
-                        <S.ActionTitle>Reservar um espaço</S.ActionTitle>
-                        <S.ActionDesc>
-                            Escolha o local ideal e configure seu evento
-                        </S.ActionDesc>
-                    </S.ActionContent>
-                    <S.ActionArrow $primary>›</S.ActionArrow>
-                </S.ActionCard>
-
-                <S.ActionCard className="anim-action-card" as={Link} to="/reservations">
-                    <S.ActionContent>
-                        <S.ActionTitle>Minhas reservas</S.ActionTitle>
-                        <S.ActionDesc>
-                            Acompanhe e gerencie suas reservas ativas
-                        </S.ActionDesc>
-                    </S.ActionContent>
-                    <S.ActionArrow>›</S.ActionArrow>
-                </S.ActionCard>
-            </S.ActionRow>
+            <S.Facts>
+                <S.Fact>
+                    <S.FactLabel>Total de reservas</S.FactLabel>
+                    <S.FactValue>{dashboard.reservations.length}</S.FactValue>
+                </S.Fact>
+                <S.Fact>
+                    <S.FactLabel>Eventos marcados</S.FactLabel>
+                    <S.FactValue>{upcomingReservations.length}</S.FactValue>
+                </S.Fact>
+                <S.Fact>
+                    <S.FactLabel>Espaços para reservar</S.FactLabel>
+                    <S.FactValue>{dashboard.venues.length}</S.FactValue>
+                </S.Fact>
+            </S.Facts>
 
             <S.ContentGrid>
                 <S.Panel className="anim-panel">
@@ -221,19 +198,39 @@ export default function Home() {
 
                     {upcomingReservations.length === 0 ? (
                         <S.EmptyState>
-                            <S.EmptyDot />
                             <span>Nenhuma reserva futura encontrada.</span>
+                            <S.PanelLink as={Link} to="/venues">
+                                Ver datas livres
+                            </S.PanelLink>
                         </S.EmptyState>
                     ) : (
                         <S.List>
-                            {upcomingReservations.slice(0, 5).map((r) => {
+                            {upcomingReservations.slice(0, 5).map((r, index) => {
                                 const status = STATUS_MAP[r.status] ?? { label: r.status, color: "gray" };
+                                const venueName = r.venue?.name || "Reserva";
+
+                                if (index === 0) {
+                                    return (
+                                        <S.FeaturedItem key={r.id}>
+                                            <S.FeaturedDate dateTime={r.startDate}>
+                                                {formatLongDate(r.startDate)}
+                                            </S.FeaturedDate>
+                                            <S.FeaturedVenue>{venueName}</S.FeaturedVenue>
+                                            <S.StatusChip $color={status.color}>
+                                                {status.label}
+                                            </S.StatusChip>
+                                        </S.FeaturedItem>
+                                    );
+                                }
+
                                 return (
                                     <S.ListItem key={r.id}>
+                                        <S.DateBlock dateTime={r.startDate} aria-label={formatDate(r.startDate)}>
+                                            <strong>{formatDay(r.startDate)}</strong>
+                                            <span>{formatMonth(r.startDate)}</span>
+                                        </S.DateBlock>
                                         <S.ListItemMain>
-                                            <S.ListItemTitle>
-                                                {r.venue?.name || "Reserva"}
-                                            </S.ListItemTitle>
+                                            <S.ListItemTitle>{venueName}</S.ListItemTitle>
                                             <S.ListItemSub>
                                                 {formatDate(r.startDate)}
                                             </S.ListItemSub>
@@ -250,7 +247,7 @@ export default function Home() {
 
                 <S.Panel className="anim-panel">
                     <S.PanelHeader>
-                        <S.PanelTitle>Espaços disponíveis</S.PanelTitle>
+                        <S.PanelTitle>Espaços</S.PanelTitle>
                         <S.PanelLink as={Link} to="/venues">
                             Ver todos
                         </S.PanelLink>
@@ -258,7 +255,6 @@ export default function Home() {
 
                     {dashboard.venues.length === 0 ? (
                         <S.EmptyState>
-                            <S.EmptyDot />
                             <span>Nenhum espaço encontrado.</span>
                         </S.EmptyState>
                     ) : (
@@ -303,7 +299,7 @@ export default function Home() {
             </S.ContentGrid>
 
             {dashboard.grants.length > 0 && (
-                <S.Panel>
+                <S.Panel className="anim-panel">
                     <S.PanelHeader>
                         <S.PanelTitle>Seus descontos disponíveis</S.PanelTitle>
                         <S.PanelLink as={Link} to="/referrals">

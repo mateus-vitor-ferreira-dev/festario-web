@@ -5,6 +5,7 @@ import { listVenues } from "../../../services/venue";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
 import type { BlockedDate, Venue } from "../../../types";
 import { formatDateTime } from "./constants";
+import { ModalHeader } from "../ModalHeader";
 import * as S from "../styles";
 
 export function BlockedDatesTab() {
@@ -99,13 +100,13 @@ export function BlockedDatesTab() {
                         <tbody>
                             {blockedDates.map((d) => (
                                 <S.Tr key={d.id}>
-                                    <S.Td>{d.venue?.name ?? d.venueId}</S.Td>
+                                    <S.Td><strong>{d.venue?.name ?? d.venueId}</strong></S.Td>
                                     <S.Td>{formatDateTime(d.startDate)}</S.Td>
                                     <S.Td>{formatDateTime(d.endDate)}</S.Td>
                                     <S.Td>{d.reason ?? "—"}</S.Td>
                                     <S.Td>
                                         <S.DangerButton
-                                            style={{ height: "30px", padding: "0 10px", fontSize: "12px" }}
+                                            $size="sm"
                                             onClick={() => handleDelete(d.id)}
                                             disabled={deletingId === d.id}
                                         >
@@ -122,22 +123,24 @@ export function BlockedDatesTab() {
             {showModal && (
                 <S.ModalOverlay onClick={() => setShowModal(false)}>
                     <S.ModalBox onClick={(e) => e.stopPropagation()}>
-                        <S.ModalTitle>Bloquear período</S.ModalTitle>
-                        <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                        <ModalHeader onClose={() => setShowModal(false)} disabled={isSaving}>Bloquear período</ModalHeader>
+                        <S.Form onSubmit={handleCreate}>
                             <S.FormGroup>
                                 <label>Espaço</label>
-                                <S.Select value={form.venueId} onChange={(e) => setForm((f) => ({ ...f, venueId: e.target.value }))} style={{ height: 42 }} required>
+                                <S.Select value={form.venueId} onChange={(e) => setForm((f) => ({ ...f, venueId: e.target.value }))} required>
                                     {venues.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
                                 </S.Select>
                             </S.FormGroup>
-                            <S.FormGroup>
-                                <label>Início</label>
-                                <S.DateInput required type="datetime-local" value={form.startDate} onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))} style={{ height: 42, width: "100%", boxSizing: "border-box" }} />
-                            </S.FormGroup>
-                            <S.FormGroup>
-                                <label>Fim</label>
-                                <S.DateInput required type="datetime-local" value={form.endDate} onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))} style={{ height: 42, width: "100%", boxSizing: "border-box" }} />
-                            </S.FormGroup>
+                            <S.FormRow>
+                                <S.FormGroup>
+                                    <label>Início</label>
+                                    <S.DateInput required type="datetime-local" value={form.startDate} onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))} />
+                                </S.FormGroup>
+                                <S.FormGroup>
+                                    <label>Fim</label>
+                                    <S.DateInput required type="datetime-local" value={form.endDate} onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))} />
+                                </S.FormGroup>
+                            </S.FormRow>
                             <S.FormGroup>
                                 <label>Motivo (opcional)</label>
                                 <S.TextInput value={form.reason} onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))} placeholder="Ex: Manutenção da piscina" maxLength={255} />
@@ -146,7 +149,7 @@ export function BlockedDatesTab() {
                                 <S.SecondaryButton type="button" onClick={() => setShowModal(false)} disabled={isSaving}>Cancelar</S.SecondaryButton>
                                 <S.PrimaryButton type="submit" disabled={isSaving}>{isSaving ? "Salvando..." : "Bloquear período"}</S.PrimaryButton>
                             </S.ModalActions>
-                        </form>
+                        </S.Form>
                     </S.ModalBox>
                 </S.ModalOverlay>
             )}

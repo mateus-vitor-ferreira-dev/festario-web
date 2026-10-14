@@ -4,27 +4,27 @@ export const GoogleBtnWrapper = styled.div`
     width: 100%;
 `;
 
+/* Secundário: superfície + borda média, mesmo raio/altura do botão primário */
 export const GoogleButton = styled.button`
     width: 100%;
-    height: 44px;
+    min-height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 10px;
     background: var(--bg-surface);
     color: var(--text-primary);
     border: 1px solid var(--border-medium);
-    border-radius: var(--radius-sm);
-    font-size: 14px;
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
     font-weight: 500;
-    font-family: "Google Sans", Roboto, Arial, sans-serif;
     cursor: pointer;
-    transition: background 0.2s, box-shadow 0.2s;
+    transition: background 0.15s ease, border-color 0.15s ease;
 
     &:hover {
         background: var(--bg-muted);
-        box-shadow: var(--shadow-sm);
-        border-color: var(--border-medium);
+        border-color: var(--text-faint);
     }
 
     &:active {

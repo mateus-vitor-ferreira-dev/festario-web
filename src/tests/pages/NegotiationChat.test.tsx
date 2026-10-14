@@ -125,7 +125,7 @@ describe("NegotiationChat page", () => {
             expect(screen.getByPlaceholderText(/digite uma mensagem/i)).toBeInTheDocument()
         );
         await user.type(screen.getByPlaceholderText(/digite uma mensagem/i), "Oi!");
-        await user.click(screen.getByRole("button", { name: "" }));
+        await user.click(screen.getByRole("button", { name: /enviar mensagem/i }));
         await waitFor(() =>
             expect(screen.getByText("Oi!")).toBeInTheDocument()
         );
@@ -162,7 +162,7 @@ describe("NegotiationChat page", () => {
             expect(screen.getByPlaceholderText(/digite uma mensagem/i)).toBeInTheDocument()
         );
         await user.type(screen.getByPlaceholderText(/digite uma mensagem/i), "Oi!");
-        await user.click(screen.getByRole("button", { name: "" }));
+        await user.click(screen.getByRole("button", { name: /enviar mensagem/i }));
         await waitFor(() =>
             expect(screen.getByText(/erro ao enviar mensagem/i)).toBeInTheDocument()
         );

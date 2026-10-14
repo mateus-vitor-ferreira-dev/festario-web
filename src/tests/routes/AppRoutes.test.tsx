@@ -51,7 +51,8 @@ describe("AppRoutes", () => {
             JSON.stringify({ token: "t", user: { id: "u-1", role: "USER" } })
         );
         renderRoutes("/home");
-        expect(await screen.findByText(/carregando seu painel/i)).toBeInTheDocument();
+        // espera o conteúdo estável da Home (o "Carregando seu painel" é transitório)
+        expect(await screen.findByText(/total de reservas/i, {}, LAZY_TIMEOUT)).toBeInTheDocument();
     });
 
     it("redirects non-admin from /admin to /home", async () => {
@@ -60,6 +61,7 @@ describe("AppRoutes", () => {
             JSON.stringify({ token: "t", user: { id: "u-1", role: "USER" } })
         );
         renderRoutes("/admin");
-        expect(await screen.findByText(/carregando seu painel/i)).toBeInTheDocument();
+        expect(await screen.findByText(/total de reservas/i, {}, LAZY_TIMEOUT)).toBeInTheDocument();
+        expect(screen.queryByText(/painel administrativo/i)).not.toBeInTheDocument();
     });
 });

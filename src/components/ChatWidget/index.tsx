@@ -5,8 +5,25 @@ import * as S from "./styles";
 
 const INITIAL_MESSAGE = {
     role: "assistant",
-    content: "Olá! Sou o assistente do Recanto Vila Rica. Como posso te ajudar? 😊",
+    content: "Olá! Sou o assistente do Recanto Vila Rica. Como posso te ajudar?",
 };
+
+function ChatIcon() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+    );
+}
+
+function CloseIcon() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+    );
+}
 
 /**
  * Widget de chat flutuante com o assistente de IA do Recanto Vila Rica.
@@ -26,6 +43,7 @@ export default function ChatWidget() {
     const [loading, setLoading] = useState(false);
     const bottomRef = useRef<HTMLDivElement | null>(null);
     const inputRef = useRef<HTMLInputElement | null>(null);
+    const fabRef = useRef<HTMLButtonElement | null>(null);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -34,6 +52,24 @@ export default function ChatWidget() {
     useEffect(() => {
         if (open) inputRef.current?.focus();
     }, [open]);
+
+    // Esc fecha o painel e devolve o foco ao botão flutuante.
+    useEffect(() => {
+        if (!open) return;
+        function handleEsc(e: KeyboardEvent) {
+            if (e.key === "Escape") {
+                setOpen(false);
+                fabRef.current?.focus();
+            }
+        }
+        window.addEventListener("keydown", handleEsc);
+        return () => window.removeEventListener("keydown", handleEsc);
+    }, [open]);
+
+    function closeWindow() {
+        setOpen(false);
+        fabRef.current?.focus();
+    }
 
     async function sendMessage() {
         if (!input.trim() || loading) return;
@@ -103,7 +139,7 @@ export default function ChatWidget() {
                 const updated = [...prev];
                 updated[updated.length - 1] = {
                     role: "assistant",
-                    content: "Desculpe, ocorreu um erro. Tente novamente em instantes.",
+                    content: "Não consegui responder agora. Tente novamente em instantes.",
                 };
                 return updated;
             });
@@ -122,12 +158,13 @@ export default function ChatWidget() {
     return (
         <>
             <S.Fab
+                ref={fabRef}
                 onClick={() => setOpen((o) => !o)}
                 aria-label={open ? "Fechar chat" : "Abrir chat"}
                 aria-expanded={open}
                 aria-controls="chat-widget-window"
             >
-                {open ? "✕" : "💬"}
+                {open ? <CloseIcon /> : <ChatIcon />}
             </S.Fab>
 
             {open && (
@@ -137,7 +174,12 @@ export default function ChatWidget() {
                     aria-modal="false"
                     aria-label="Chat — Assistente Recanto Vila Rica"
                 >
-                    <S.Header>Assistente Recanto Vila Rica</S.Header>
+                    <S.Header>
+                        <S.HeaderTitle>Assistente Recanto Vila Rica</S.HeaderTitle>
+                        <S.CloseBtn type="button" onClick={closeWindow} aria-label="Fechar assistente">
+                            <CloseIcon />
+                        </S.CloseBtn>
+                    </S.Header>
 
                     <S.Messages aria-live="polite" aria-atomic="false">
                         {messages.map((msg, i) => (

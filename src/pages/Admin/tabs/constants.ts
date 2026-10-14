@@ -9,7 +9,7 @@ export const TABS = [
     { key: "negotiations", label: "Negociações" },
     { key: "campaigns", label: "Campanhas" },
     { key: "holidays", label: "Feriados" },
-    { key: "blockedDates", label: "Datas Bloqueadas" },
+    { key: "blockedDates", label: "Datas bloqueadas" },
     { key: "plans", label: "Planos" },
     { key: "venues", label: "Espaços" },
 ];
@@ -54,9 +54,9 @@ export const CAMPAIGN_TYPE_LABELS = {
 };
 
 export const CAMPAIGN_TYPE_OPTIONS = [
-    { value: "REFERRAL_NEXT_BOOKING", label: "Indicação (REFERRAL_NEXT_BOOKING)" },
-    { value: "LOYALTY_ALWAYS_HERE", label: "Fidelidade (LOYALTY_ALWAYS_HERE)" },
-    { value: "RAFFLE_VIP", label: "Sorteio VIP (RAFFLE_VIP)" },
+    { value: "REFERRAL_NEXT_BOOKING", label: "Indicação" },
+    { value: "LOYALTY_ALWAYS_HERE", label: "Fidelidade" },
+    { value: "RAFFLE_VIP", label: "Sorteio VIP" },
 ];
 
 export const CAMPAIGN_STATUS_LABELS = {

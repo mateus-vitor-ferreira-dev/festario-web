@@ -8,7 +8,7 @@ import { createCheckoutSession, getPaymentStatus } from "../../services/payment"
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { isAbortError, getHttpStatus } from "../../utils/errors";
 import { PLAN_LABELS, formatDateFull, formatTime, formatCurrency, calcDuration } from "../../utils/reservationFormat";
-import { animateFadeInUp, animateStagger } from "../../utils/animations";
+import { animateFadeInUp } from "../../utils/animations";
 import type { Reservation, PixChargeResult } from "../../types";
 import * as S from "./styles";
 
@@ -172,7 +172,6 @@ export default function Checkout() {
         if (isLoading || !reservation || !containerRef.current) return;
         const el = containerRef.current;
         animateFadeInUp(el.querySelector(".anim-header"));
-        animateStagger(el.querySelectorAll(".anim-card"), { delay: 0.15 });
     }, { scope: containerRef, dependencies: [isLoading, reservation] });
 
     if (isLoading) {
@@ -203,7 +202,7 @@ export default function Checkout() {
             </S.PageHeader>
 
             <S.Grid>
-                <S.SummaryCard className="anim-card">
+                <S.SummaryCard>
                     <S.SummaryHeader>
                         <S.VenueName>{reservation.venue?.name}</S.VenueName>
                         <S.StatusBadge status={reservation.status}>
@@ -250,23 +249,23 @@ export default function Checkout() {
                     </S.TotalRow>
                 </S.SummaryCard>
 
-                <S.PaymentCard className="anim-card">
+                <S.PaymentCard>
                     <S.PaymentTitle>Pagamento seguro</S.PaymentTitle>
 
                     {isPendingPayment && pixStep === "select" && (
                         <>
-                            <S.PaymentDescription>
-                                Pague com segurança via cartão de crédito.
-                            </S.PaymentDescription>
+                            <S.MethodOption>
+                                <S.MethodRadio aria-hidden="true" />
+                                <S.MethodText>
+                                    <strong>Cartão de crédito</strong>
+                                    <span>Você conclui o pagamento na página segura do Stripe.</span>
+                                </S.MethodText>
+                            </S.MethodOption>
 
                             <S.SecurityBadges>
                                 <S.SecurityItem>
                                     <S.SecurityDot />
                                     Criptografia SSL de ponta a ponta
-                                </S.SecurityItem>
-                                <S.SecurityItem>
-                                    <S.SecurityDot />
-                                    Pagamento processado pelo Stripe
                                 </S.SecurityItem>
                             </S.SecurityBadges>
 
@@ -324,10 +323,6 @@ export default function Checkout() {
                     <S.CancelLink onClick={() => navigate("/reservations")}>
                         Voltar para minhas reservas
                     </S.CancelLink>
-
-                    <S.StripeBadge>
-                        Pagamento processado com segurança
-                    </S.StripeBadge>
                 </S.PaymentCard>
             </S.Grid>
         </S.Container>

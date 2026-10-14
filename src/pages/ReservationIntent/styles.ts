@@ -1,156 +1,239 @@
 import styled from "styled-components";
+import { media } from "../../styles/breakpoints";
+
+/* ─── Page shell ─── */
 
 export const Container = styled.div``;
 
 export const Content = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 32px;
+
+  /* respiro para o botão de chat flutuante não cobrir o CTA final */
+  ${media.lg} {
+    gap: 24px;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
 `;
 
 export const TopSection = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 20px;
+  align-items: flex-end;
+  gap: 24px;
 
-  @media (max-width: 768px) {
+  & > div:first-child {
+    min-width: 0;
+  }
+
+  ${media.md} {
     flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
   }
 `;
 
 export const PageTitle = styled.h1`
-  font-size: 32px;
-  font-weight: 700;
+  font-size: var(--text-3xl);
   color: var(--text-primary);
-  margin-bottom: 8px;
+  line-height: 1.1;
+  margin-bottom: 6px;
+
+  ${media.sm} {
+    font-size: var(--text-2xl);
+  }
 `;
 
 export const PageDescription = styled.p`
   color: var(--text-muted);
   max-width: 600px;
   line-height: 1.6;
-  font-size: 14px;
+  font-size: var(--text-base);
 `;
 
+/* Valor estimado — bloco quieto, número em display */
 export const EstimatedCard = styled.div`
   background: var(--bg-surface);
-  border: 1px solid var(--brand-border);
-  border-radius: 16px;
-  padding: 20px 24px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
   min-width: 220px;
-  box-shadow: 0 4px 16px rgba(31, 79, 65, 0.1);
   flex-shrink: 0;
 
   span {
     display: block;
     color: var(--text-muted);
-    font-size: 13px;
+    font-size: var(--text-sm);
     font-weight: 500;
   }
 
   strong {
     display: block;
-    font-size: 24px;
-    font-weight: 800;
-    color: var(--brand);
-    margin: 6px 0 4px;
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--text-primary);
+    font-variant-numeric: lining-nums tabular-nums;
+    margin: 4px 0 2px;
   }
 
   small {
-    color: var(--text-faint);
-    font-size: 13px;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+
+  /* no mobile vira uma linha compacta: rótulo · plano ··· valor */
+  ${media.md} {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "label value"
+      "plan  value";
+    align-items: center;
+    column-gap: 12px;
+    min-width: 0;
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+
+    span { grid-area: label; }
+    small { grid-area: plan; }
+
+    strong {
+      grid-area: value;
+      font-size: var(--text-xl);
+      margin: 0;
+      white-space: nowrap;
+    }
   }
 `;
 
 export const Grid = styled.div`
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: 24px;
+  align-items: start;
 
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
+  ${media.lg} {
+    grid-template-columns: minmax(0, 1fr);
   }
 `;
 
 export const LeftColumn = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
+  min-width: 0;
 `;
 
 export const RightColumn = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
+  min-width: 0;
+  /* resumo + confirmar acompanham a rolagem no desktop (header = 64px) */
+  position: sticky;
+  top: 88px;
+
+  ${media.lg} {
+    position: static;
+  }
 `;
+
+/* ─── Panels ─── */
 
 export const Card = styled.div`
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   padding: 24px;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+  min-width: 0;
+
+  ${media.sm} {
+    padding: 16px;
+  }
 `;
 
 export const CardTitle = styled.h2`
-  font-size: 18px;
-  font-weight: 700;
+  font-size: var(--text-xl);
   color: var(--text-primary);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 `;
 
 export const CardDescription = styled.p`
   color: var(--text-muted);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: var(--text-sm);
+  line-height: 1.55;
   margin-bottom: 20px;
 `;
 
+/* Fatos do espaço com divisórias finas */
 export const InfoGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  border-top: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-default);
   margin-bottom: 20px;
+
+  ${media.sm} {
+    grid-template-columns: minmax(0, 1fr);
+  }
 `;
 
 export const InfoBox = styled.div`
-  background: var(--bg-page);
-  border: 1px solid var(--border-default);
-  padding: 14px;
-  border-radius: 12px;
+  padding: 12px 16px 12px 0;
+  min-width: 0;
+
+  & + & {
+    padding-left: 16px;
+    border-left: 1px solid var(--border-default);
+  }
+
+  ${media.sm} {
+    padding: 10px 0;
+
+    & + & {
+      padding-left: 0;
+      border-left: none;
+      border-top: 1px solid var(--border-default);
+    }
+  }
 
   span {
     display: block;
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: var(--text-xs);
     font-weight: 500;
-    margin-bottom: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    margin-bottom: 2px;
   }
 
   strong {
     color: var(--text-primary);
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--text-base);
+    font-weight: 500;
+    overflow-wrap: anywhere;
   }
 `;
 
 export const RouteButton = styled.button`
-  width: 100%;
-  background: var(--bg-surface);
-  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 20px;
+  background: transparent;
+  color: var(--brand);
   border: 1px solid var(--border-medium);
-  padding: 12px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 14px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: var(--text-base);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
 
   &:hover {
-    background: var(--bg-page);
+    background: var(--brand-subtle);
+    border-color: var(--brand-border);
   }
 `;
 
@@ -158,121 +241,193 @@ export const FormRow = styled.div`
   display: flex;
   gap: 16px;
 
-  @media (max-width: 600px) {
+  & > * {
+    flex: 1;
+    min-width: 0;
+  }
+
+  ${media.md} {
     flex-direction: column;
   }
 `;
 
-export const RangeValue = styled.div`
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--brand);
-  margin-bottom: 12px;
-`;
-
-export const StyledRange = styled.input`
-  width: 100%;
-  appearance: none;
-  height: 6px;
-  border-radius: 4px;
-  background: var(--border-default);
-  outline: none;
-  margin-bottom: 8px;
-  cursor: pointer;
-
-  &::-webkit-slider-thumb {
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    background: var(--brand);
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 0 0 4px rgba(31, 79, 65, 0.15);
-    transition: box-shadow 0.15s ease;
-  }
-
-  &::-webkit-slider-thumb:hover {
-    box-shadow: 0 0 0 6px rgba(31, 79, 65, 0.2);
-  }
-`;
-
-export const RangeLabels = styled.div`
-  display: flex;
-  justify-content: space-between;
-  color: var(--text-faint);
-  font-size: 12px;
-`;
-
-export const OptionsList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-`;
+/* ─── Kids monitor ─── */
 
 export const OptionItem = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
   background: var(--bg-page);
   border: 1px solid var(--border-default);
   padding: 14px 16px;
-  border-radius: 12px;
-  transition: border-color 0.15s ease, background 0.15s ease;
-
-  &:has(input:checked:not(:disabled)) {
-    border-color: var(--brand-border);
-    background: var(--brand-subtle);
-  }
+  border-radius: var(--radius-md);
 
   div {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    min-width: 0;
   }
 
   strong {
     color: var(--text-primary);
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--text-base);
+    font-weight: 700;
   }
 
   span {
     color: var(--text-muted);
-    font-size: 13px;
-  }
-
-  input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: var(--brand);
-    flex-shrink: 0;
+    font-size: var(--text-sm);
   }
 `;
+
+export const KidsInput = styled.input`
+  width: 80px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  font-variant-numeric: lining-nums tabular-nums;
+  text-align: center;
+  outline: none;
+  flex-shrink: 0;
+
+  &:focus {
+    border-color: var(--brand);
+    box-shadow: var(--focus-ring);
+  }
+`;
+
+/* ─── Plan selector — lista de opções, o selecionado ganha marca ─── */
+
+export const PlanGrid = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+export const PlanCard = styled.div<{ $selected?: boolean; $disabled?: boolean }>`
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "radio label price"
+    "radio days  price";
+  column-gap: 14px;
+  row-gap: 2px;
+  align-items: center;
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid ${({ $selected, $disabled }) =>
+    $disabled ? "var(--border-default)" : $selected ? "var(--brand)" : "var(--border-default)"};
+  box-shadow: ${({ $selected, $disabled }) =>
+    $selected && !$disabled ? "inset 0 0 0 1px var(--brand)" : "none"};
+  background: ${({ $selected, $disabled }) =>
+    $disabled ? "var(--bg-muted)" : $selected ? "var(--brand-subtle)" : "var(--bg-surface)"};
+  cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "pointer")};
+  opacity: ${({ $disabled }) => ($disabled ? "0.55" : "1")};
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  /* indicador tipo rádio */
+  &::before {
+    content: "";
+    grid-area: radio;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    box-sizing: border-box;
+    border: ${({ $selected, $disabled }) =>
+      $selected && !$disabled ? "6px solid var(--brand)" : "1.5px solid var(--border-medium)"};
+    background: var(--bg-surface);
+    transition: border 0.15s ease;
+  }
+
+  &:hover {
+    border-color: ${({ $selected, $disabled }) =>
+      $disabled ? "var(--border-default)" : $selected ? "var(--brand)" : "var(--brand-border)"};
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  ${media.sm} {
+    padding: 12px 14px;
+    column-gap: 12px;
+  }
+`;
+
+export const PlanLabel = styled.div`
+  grid-area: label;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-primary);
+`;
+
+export const PlanDays = styled.div`
+  grid-area: days;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.4;
+`;
+
+export const PlanPrice = styled.div`
+  grid-area: price;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: lining-nums tabular-nums;
+  white-space: nowrap;
+  text-align: right;
+
+  ${media.sm} {
+    font-size: var(--text-lg);
+  }
+`;
+
+/* ─── Summary ─── */
 
 export const SummaryList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  margin-top: 16px;
 `;
 
 export const SummaryItem = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 8px;
+  align-items: baseline;
+  gap: 12px;
 
   span {
-    font-size: 14px;
+    font-size: var(--text-sm);
     color: var(--text-muted);
   }
 
   strong {
-    font-size: 14px;
+    font-size: var(--text-sm);
     color: var(--text-primary);
-    font-weight: 600;
+    font-weight: 700;
     text-align: right;
+    font-variant-numeric: lining-nums tabular-nums;
   }
+`;
+
+export const QuoteList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
 `;
 
 export const Divider = styled.div`
@@ -284,43 +439,62 @@ export const Divider = styled.div`
 export const TotalRow = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-default);
 
   span {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--text-base);
+    font-weight: 500;
     color: var(--text-secondary);
   }
 
   strong {
-    color: var(--brand);
-    font-size: 20px;
-    font-weight: 800;
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--text-primary);
+    font-variant-numeric: lining-nums tabular-nums;
+    white-space: nowrap;
   }
 `;
+
+export const QuoteLoading = styled.p`
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  padding: 8px 0;
+`;
+
+/* ─── Confirm + contract ─── */
 
 export const ActionCard = styled.div`
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   padding: 24px;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+
+  ${media.sm} {
+    padding: 16px;
+  }
 `;
 
 export const ConfirmButton = styled.button`
   width: 100%;
-  padding: 14px;
-  border-radius: 12px;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: var(--radius-md);
   border: none;
   background: var(--brand);
-  color: #ffffff;
-  font-size: 14px;
+  color: var(--on-brand);
+  font-size: var(--text-base);
   font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: background 0.15s ease;
 
   &:hover:not(:disabled) {
-    opacity: 0.92;
+    background: var(--brand-dark);
   }
 
   &:disabled {
@@ -339,55 +513,39 @@ export const ContractCard = styled.div`
 `;
 
 export const ContractTitle = styled.h3`
-  font-size: 14px;
-  font-weight: 700;
+  font-size: var(--text-lg);
   color: var(--text-primary);
 `;
 
 export const ContractDescription = styled.p`
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: var(--text-sm);
+  line-height: 1.55;
   color: var(--text-muted);
 `;
 
-export const ContractLink = styled.a`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: var(--bg-muted);
-  border: 1px solid var(--border-default);
-  color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: background 0.15s ease;
-
-  &:hover {
-    background: var(--border-default);
-  }
-`;
-
 export const ContractDownloadWrapper = styled.div`
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+
   & > a {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: fit-content;
-    padding: 10px 14px;
-    border-radius: 10px;
-    background: var(--bg-muted);
-    border: 1px solid var(--border-default);
-    color: var(--text-secondary);
-    font-size: 13px;
-    font-weight: 600;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: var(--radius-md);
+    background: transparent;
+    border: 1px solid var(--border-medium);
+    color: var(--brand);
+    font-size: var(--text-sm);
+    font-weight: 700;
     text-decoration: none;
-    transition: background 0.15s ease;
+    transition: background 0.15s ease, border-color 0.15s ease;
 
     &:hover {
-      background: var(--border-default);
+      background: var(--brand-subtle);
+      border-color: var(--brand-border);
     }
   }
 `;
@@ -395,154 +553,45 @@ export const ContractDownloadWrapper = styled.div`
 export const ContractCheckboxWrapper = styled.div`
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 10px;
 
   input {
-    margin-top: 2px;
-    width: 16px;
-    height: 16px;
+    margin-top: 3px;
+    width: 18px;
+    height: 18px;
     cursor: pointer;
     accent-color: var(--brand);
     flex-shrink: 0;
   }
 
   label {
-    font-size: 13px;
+    font-size: var(--text-sm);
     line-height: 1.5;
     color: var(--text-secondary);
     cursor: pointer;
   }
 `;
 
-export const PlanGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-export const PlanCard = styled.div<{ $selected?: boolean; $disabled?: boolean }>`
-  border: 2px solid ${({ $selected, $disabled }) =>
-    $disabled ? "var(--border-default)" : $selected ? "var(--brand)" : "var(--border-default)"};
-  border-radius: 16px;
-  padding: 16px;
-  cursor: ${({ $disabled }) => ($disabled ? "no-drop" : "pointer")};
-  background: ${({ $selected, $disabled }) =>
-    $disabled ? "var(--bg-muted)" : $selected ? "var(--brand-subtle)" : "var(--bg-surface)"};
-  opacity: ${({ $disabled }) => ($disabled ? "0.5" : "1")};
-  transition: border-color 0.15s ease, background 0.15s ease, opacity 0.15s ease;
-
-  &:hover {
-    border-color: ${({ $disabled }) => ($disabled ? "var(--border-default)" : "var(--brand-border)")};
-    background: ${({ $disabled }) => ($disabled ? "var(--bg-muted)" : "var(--brand-subtle)")};
-  }
-`;
-
-export const PlanLabel = styled.div`
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-`;
-
-export const PlanDays = styled.div`
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-bottom: 10px;
-  line-height: 1.4;
-`;
-
-export const PlanPrice = styled.div`
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--brand);
-`;
-
-export const QuoteLoading = styled.p`
-  font-size: 13px;
-  color: var(--text-faint);
-  text-align: center;
-  padding: 8px 0;
-`;
-
-export const DiscountItem = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-
-  span {
-    font-size: 14px;
-    color: var(--status-success-text);
-  }
-
-  strong {
-    font-size: 14px;
-    color: var(--status-success-text);
-    font-weight: 600;
-    text-align: right;
-  }
-`;
-
-export const PlanWarning = styled.div`
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  background: var(--status-pending-bg);
-  border: 1px solid var(--status-pending-border);
-  border-radius: 12px;
-  padding: 12px 14px;
-  margin-top: 12px;
-  font-size: 13px;
-  color: var(--status-pending-text-deep);
-  line-height: 1.5;
-
-  &::before {
-    content: "⚠";
-    font-size: 14px;
-    flex-shrink: 0;
-    margin-top: 1px;
-  }
-`;
-
-export const KidsInput = styled.input`
-  width: 72px;
-  padding: 8px 10px;
-  border: 1px solid var(--border-medium);
-  border-radius: 10px;
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  font-size: 14px;
-  font-weight: 600;
-  text-align: center;
-  outline: none;
-
-  &:focus {
-    border-color: var(--brand);
-    box-shadow: 0 0 0 3px rgba(31, 79, 65, 0.1);
-  }
-`;
+/* ─── Notes ─── */
 
 export const NotesField = styled.textarea`
   width: 100%;
   padding: 12px 14px;
-  border: 1px solid var(--border-default);
-  border-radius: 12px;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
   background: var(--bg-surface);
-  color: var(--text-secondary);
-  font-size: 14px;
+  color: var(--text-primary);
+  font-size: var(--text-base);
   resize: vertical;
   outline: none;
   font-family: inherit;
   line-height: 1.5;
   box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
   &:focus {
     border-color: var(--brand);
-    box-shadow: 0 0 0 3px rgba(31, 79, 65, 0.1);
+    box-shadow: var(--focus-ring);
   }
 
   &::placeholder {

@@ -1,48 +1,68 @@
 import styled, { keyframes } from "styled-components";
+import { media } from "../../styles/breakpoints";
 
 const spin = keyframes`
   to { transform: rotate(360deg); }
 `;
 
+/* ─── Page shell ─── */
+
 export const Container = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 28px;
+
+  /* espaço para o botão de chat flutuante não cobrir a última ação */
+  ${media.md} {
+    gap: 20px;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
 `;
 
 export const Header = styled.section`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 `;
 
 export const Title = styled.h1`
-  font-size: 32px;
-  font-weight: 700;
+  font-size: var(--text-3xl);
   color: var(--text-primary);
+  line-height: 1.1;
+
+  ${media.sm} {
+    font-size: var(--text-2xl);
+  }
 `;
 
 export const Description = styled.p`
   color: var(--text-muted);
   line-height: 1.6;
-  font-size: 14px;
+  font-size: var(--text-base);
+  max-width: 640px;
 `;
+
+/* ─── Reservation cards ─── */
 
 export const List = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 `;
 
 export const Card = styled.article`
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: 18px;
-  padding: 20px;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
+  min-width: 0;
+
+  ${media.sm} {
+    padding: 16px;
+  }
 `;
 
 export const CardHeader = styled.div`
@@ -52,50 +72,82 @@ export const CardHeader = styled.div`
   gap: 16px;
   flex-wrap: wrap;
 
-  strong {
-    display: block;
-    font-size: 18px;
-    color: var(--text-primary);
-    margin-bottom: 4px;
+  & > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
-  span {
-    font-size: 14px;
+  strong {
+    display: block;
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+
+  & > div > span {
+    font-size: var(--text-sm);
     color: var(--text-muted);
+    font-variant-numeric: lining-nums tabular-nums;
   }
 `;
 
+/* Linha quieta de fatos, divididos por hairlines */
 export const CardBody = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-default);
 
-  @media (max-width: 700px) {
-    grid-template-columns: 1fr;
+  /* card sem ações: a linha de fatos fecha o card, sem divisória sobrando */
+  &:last-child {
+    border-bottom: none;
+  }
+
+  ${media.md} {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   div {
-    background: var(--bg-page);
-    border: 1px solid var(--border-default);
-    border-radius: 12px;
-    padding: 14px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
+    padding: 12px 16px 12px 0;
+    min-width: 0;
+
+    & + div {
+      padding-left: 16px;
+      border-left: 1px solid var(--border-default);
+    }
+
+    ${media.md} {
+      flex-direction: row;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 10px 0;
+
+      & + div {
+        padding-left: 0;
+        border-left: none;
+        border-top: 1px solid var(--border-default);
+      }
+    }
   }
 
   span {
-    font-size: 12px;
+    font-size: var(--text-xs);
     font-weight: 500;
-    color: var(--text-faint);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    color: var(--text-muted);
   }
 
   strong {
-    font-size: 16px;
-    font-weight: 700;
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 600;
     color: var(--text-primary);
+    font-variant-numeric: lining-nums tabular-nums;
   }
 `;
 
@@ -104,39 +156,60 @@ export const CardFooter = styled.div`
   justify-content: flex-end;
   gap: 8px;
   flex-wrap: wrap;
+
+  /* mobile: botões com larguras iguais */
+  ${media.md} {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: 8px;
+
+    & > * {
+      width: 100%;
+    }
+  }
+
+  ${media.sm} {
+    grid-template-columns: minmax(0, 1fr);
+  }
 `;
 
+/* ─── Buttons ─── */
+
 export const PayButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: var(--brand);
-  color: #ffffff;
+  color: var(--on-brand);
   border: none;
-  height: 44px;
+  min-height: 44px;
   padding: 0 20px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   font-weight: 700;
-  font-size: 14px;
+  font-size: var(--text-base);
+  text-decoration: none;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: background 0.15s ease;
 
   &:hover {
-    opacity: 0.9;
+    background: var(--brand-dark);
   }
 `;
 
 export const CancelButton = styled.button`
-  background: var(--status-error-bg);
+  background: transparent;
   color: var(--status-error-text);
   border: 1px solid var(--status-error-border);
-  height: 44px;
+  min-height: 44px;
   padding: 0 20px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   font-weight: 700;
-  font-size: 14px;
+  font-size: var(--text-base);
   cursor: pointer;
   transition: background 0.15s ease;
 
   &:hover:not(:disabled) {
-    background: var(--status-error-hover);
+    background: var(--status-error-bg);
   }
 
   &:disabled {
@@ -148,12 +221,11 @@ export const CancelButton = styled.button`
 export const Status = styled.span<{ status?: string }>`
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-width: 110px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  font-size: 13px;
+  padding: 3px 12px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
   font-weight: 700;
+  white-space: nowrap;
   border: 1px solid;
 
   ${({ status }) => {
@@ -182,74 +254,110 @@ export const Status = styled.span<{ status?: string }>`
   }}
 `;
 
-export const LoadingCard = styled.div`
+/* ─── Loading / empty ─── */
+
+const statePanel = `
   background: var(--bg-surface);
-  border-radius: 20px;
-  padding: 56px 32px;
   border: 1px solid var(--border-default);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  border-radius: var(--radius-lg);
+  padding: 48px 32px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 16px;
-
-  &::before {
-    content: '';
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 3px solid var(--border-default);
-    border-top-color: var(--brand);
-    animation: ${spin} 0.8s linear infinite;
-  }
 
   h2 {
-    font-size: 18px;
+    font-size: var(--text-xl);
     color: var(--text-primary);
   }
 
   p {
     color: var(--text-muted);
-    font-size: 14px;
-    max-width: 300px;
+    font-size: var(--text-base);
+    max-width: 420px;
     line-height: 1.6;
   }
 `;
 
+export const LoadingCard = styled.div`
+  ${statePanel}
+  gap: 12px;
+
+  &::before {
+    content: '';
+    width: 36px;
+    height: 36px;
+    margin-bottom: 4px;
+    border-radius: 50%;
+    border: 3px solid var(--border-default);
+    border-top-color: var(--brand);
+    animation: ${spin} 0.8s linear infinite;
+  }
+`;
+
+export const EmptyState = styled.div`
+  ${statePanel}
+  gap: 8px;
+
+  & > a,
+  & > button {
+    margin-top: 12px;
+  }
+`;
+
+/* ─── Cancel modal ─── */
+
 export const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(10, 18, 14, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  /* acima do ChatWidget (1000/1001) para o chat não cobrir as ações do modal */
+  z-index: 1100;
   padding: 16px;
   overflow-y: auto;
+
+  /* ≤sm: folha inferior de largura total */
+  ${media.sm} {
+    align-items: flex-end;
+    padding: 0;
+  }
 `;
 
 export const ModalBox = styled.div`
   background: var(--bg-surface);
-  border-radius: 20px;
-  padding: 32px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 28px;
   max-width: 520px;
   width: 100%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
   gap: 20px;
   margin: auto;
+
+  ${media.sm} {
+    margin: 0;
+    max-width: none;
+    max-height: 100vh;
+    max-height: 100dvh;
+    overflow-y: auto;
+    padding: 20px 16px calc(16px + env(safe-area-inset-bottom));
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border-bottom: none;
+  }
 `;
 
 export const ModalTitle = styled.h2`
-  font-size: 20px;
-  font-weight: 700;
+  font-size: var(--text-xl);
   color: var(--text-primary);
 `;
 
 export const ModalBody = styled.p`
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   line-height: 1.6;
 `;
@@ -263,10 +371,9 @@ export const PolicySection = styled.div`
 `;
 
 export const PolicyTitle = styled.h3`
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
   color: var(--text-muted);
 `;
 
@@ -276,7 +383,7 @@ export const PolicyList = styled.ul`
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  border-top: 1px solid var(--border-default);
 `;
 
 export const PolicyTier = styled.li<{ $highlighted?: boolean }>`
@@ -284,47 +391,46 @@ export const PolicyTier = styled.li<{ $highlighted?: boolean }>`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 14px;
-  border-radius: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-default);
   background: ${({ $highlighted }) =>
-    $highlighted ? "var(--status-pending-bg)" : "var(--bg-page)"};
-  border: 1px solid ${({ $highlighted }) =>
-    $highlighted ? "var(--status-pending-border)" : "var(--border-default)"};
-  transition: background 0.15s ease;
+    $highlighted ? "var(--status-pending-bg)" : "transparent"};
+  box-shadow: ${({ $highlighted }) =>
+    $highlighted ? "inset 0 0 0 1px var(--status-pending-border)" : "none"};
+  border-radius: ${({ $highlighted }) => ($highlighted ? "var(--radius-sm)" : "0")};
 
   span {
-    font-size: 13px;
+    font-size: var(--text-sm);
     color: var(--text-secondary);
     flex: 1;
   }
 
   strong {
-    font-size: 13px;
+    font-size: var(--text-sm);
     font-weight: 700;
     color: ${({ $highlighted }) =>
-      $highlighted ? "var(--status-pending-text)" : "var(--text-primary)"};
+      $highlighted ? "var(--status-pending-text-deep)" : "var(--text-primary)"};
     white-space: nowrap;
+    font-variant-numeric: lining-nums tabular-nums;
   }
 `;
 
 /* ── Refund estimate card ── */
 
 export const RefundCard = styled.div<{ $neutral?: boolean }>`
-  background: ${({ $neutral }) => ($neutral ? "var(--bg-page)" : "var(--bg-page)")};
-  border: 1px solid ${({ $neutral }) =>
-    $neutral ? "var(--border-default)" : "var(--border-medium)"};
-  border-radius: 14px;
-  padding: 18px;
+  background: var(--bg-page);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 `;
 
 export const RefundCardTitle = styled.h3`
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
   color: var(--text-muted);
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border-default);
@@ -332,19 +438,22 @@ export const RefundCardTitle = styled.h3`
 
 export const RefundRow = styled.div<{ $accent?: boolean }>`
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   gap: 12px;
 
   span {
-    font-size: 14px;
+    font-size: var(--text-sm);
     color: var(--text-muted);
   }
 
   strong {
-    font-size: 14px;
-    font-weight: 700;
-    color: ${({ $accent }) => ($accent ? "var(--brand)" : "var(--text-primary)")};
+    font-size: ${({ $accent }) => ($accent ? "var(--text-lg)" : "var(--text-sm)")};
+    font-family: ${({ $accent }) => ($accent ? "var(--font-display)" : "inherit")};
+    font-weight: ${({ $accent }) => ($accent ? 600 : 700)};
+    color: var(--text-primary);
+    text-align: right;
+    font-variant-numeric: lining-nums tabular-nums;
   }
 `;
 
@@ -354,40 +463,46 @@ export const ModalActions = styled.div`
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+  flex-wrap: wrap;
   padding-top: 4px;
+
+  ${media.sm} {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
 `;
 
 export const ModalCancelBtn = styled.button`
-  height: 42px;
+  min-height: 44px;
   padding: 0 20px;
-  border-radius: 12px;
-  border: 1px solid var(--border-default);
-  background: var(--bg-surface);
-  color: var(--text-secondary);
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-medium);
+  background: transparent;
+  color: var(--brand);
+  font-size: var(--text-base);
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.15s ease;
 
   &:hover {
-    background: var(--bg-page);
+    background: var(--brand-subtle);
   }
 `;
 
 export const ModalConfirmBtn = styled.button`
-  height: 42px;
+  min-height: 44px;
   padding: 0 20px;
-  border-radius: 12px;
-  border: none;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--status-error-text);
   background: var(--status-error-text);
-  color: #ffffff;
-  font-size: 14px;
+  color: var(--bg-surface);
+  font-size: var(--text-base);
   font-weight: 700;
   cursor: pointer;
   transition: opacity 0.15s ease;
 
   &:hover:not(:disabled) {
-    opacity: 0.88;
+    opacity: 0.9;
   }
 
   &:disabled {
@@ -396,69 +511,48 @@ export const ModalConfirmBtn = styled.button`
   }
 `;
 
-export const EmptyState = styled.div`
-  background: var(--bg-surface);
-  border-radius: 20px;
-  padding: 56px 32px;
-  border: 1px solid var(--border-default);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 12px;
-
-  &::before {
-    content: '';
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: var(--bg-muted);
-    border: 2px dashed var(--border-medium);
-  }
-
-  h2 {
-    font-size: 18px;
-    color: var(--text-primary);
-  }
-
-  p {
-    color: var(--text-muted);
-    font-size: 14px;
-    max-width: 300px;
-    line-height: 1.6;
-  }
-`;
+/* ─── Pagination ─── */
 
 export const Pagination = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 16px;
-  margin-top: 32px;
+  margin-top: 8px;
   padding-bottom: 8px;
+
+  ${media.sm} {
+    gap: 8px;
+  }
 `;
 
 export const PageInfo = styled.span`
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   min-width: 100px;
   text-align: center;
+  font-variant-numeric: lining-nums tabular-nums;
+
+  ${media.sm} {
+    min-width: 0;
+  }
 `;
 
 export const PageButton = styled.button`
-  padding: 8px 20px;
-  border-radius: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-medium);
-  background: var(--bg-card);
+  background: var(--bg-surface);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: var(--text-sm);
+  font-weight: 500;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 
   &:hover:not(:disabled) {
     background: var(--bg-muted);
-    border-color: var(--brand);
+    border-color: var(--brand-border);
   }
 
   &:disabled {

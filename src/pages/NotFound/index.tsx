@@ -9,9 +9,7 @@ export default function NotFound() {
     return (
         <S.Container>
             <S.Card>
-                <S.IconWrapper>
-                    <S.Code>404</S.Code>
-                </S.IconWrapper>
+                <S.Code>404</S.Code>
 
                 <S.Title>Página não encontrada</S.Title>
 

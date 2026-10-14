@@ -8,8 +8,8 @@ export const Container = styled.div`
 `;
 
 export const Label = styled.label`
-    font-size: 13px;
-    font-weight: 600;
+    font-size: var(--text-sm);
+    font-weight: 500;
     color: var(--text-secondary);
 `;
 
@@ -21,7 +21,7 @@ export const Input = styled.input<{ $error?: boolean }>`
     border: 1px solid ${({ $error }) => ($error ? "var(--color-error)" : "var(--border-medium)")};
     background: var(--bg-surface);
     color: var(--text-primary);
-    font-size: 14px;
+    font-size: var(--text-base);
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
 
@@ -30,13 +30,12 @@ export const Input = styled.input<{ $error?: boolean }>`
     }
 
     &:hover:not(:focus) {
-        border-color: var(--border-medium);
-        background: var(--bg-muted);
+        border-color: var(--text-faint);
     }
 
     &:focus {
         border-color: ${({ $error }) => ($error ? "var(--color-error)" : "var(--brand)")};
-        box-shadow: 0 0 0 4px rgba(31, 79, 65, 0.12);
+        box-shadow: var(--focus-ring);
         background: var(--bg-surface);
     }
 
@@ -63,7 +62,7 @@ export const InputWrapper = styled.div<{ $error?: boolean }>`
 
     &:focus-within {
         border-color: ${({ $error }) => ($error ? "var(--color-error)" : "var(--brand)")};
-        box-shadow: 0 0 0 4px rgba(31, 79, 65, 0.12);
+        box-shadow: var(--focus-ring);
     }
 `;
 
@@ -86,7 +85,7 @@ export const InnerInput = styled.input`
     height: 100%;
     border: none;
     outline: none;
-    font-size: 14px;
+    font-size: var(--text-base);
     background: transparent;
     color: var(--text-primary);
     padding: 0;
@@ -123,6 +122,6 @@ export const ToggleButton = styled.button`
 `;
 
 export const Error = styled.span`
-    font-size: 12px;
+    font-size: var(--text-xs);
     color: var(--color-error);
 `;

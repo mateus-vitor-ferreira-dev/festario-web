@@ -6,6 +6,7 @@ import { getErrorMessage } from "../../../utils/getErrorMessage";
 import { isAbortError } from "../../../utils/errors";
 import type { ReservationPlan, Venue } from "../../../types";
 import { EMPTY_PLAN_FORM, formatCurrency, PLAN_CODES } from "./constants";
+import { ModalHeader } from "../ModalHeader";
 import * as S from "../styles";
 
 interface PlanForm {
@@ -54,7 +55,6 @@ export function PlansTab() {
         const controller = new AbortController();
         loadAll(controller.signal);
         return () => controller.abort();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     function openCreate() {
@@ -149,8 +149,8 @@ export function PlansTab() {
                                 <S.Th>Código</S.Th>
                                 <S.Th>Nome</S.Th>
                                 <S.Th>Espaço</S.Th>
-                                <S.Th>Preço base</S.Th>
-                                <S.Th>Duração (h)</S.Th>
+                                <S.Th $num>Preço base</S.Th>
+                                <S.Th $num>Duração</S.Th>
                                 <S.Th>Piscina</S.Th>
                                 <S.Th>Limpeza</S.Th>
                                 <S.Th></S.Th>
@@ -162,17 +162,17 @@ export function PlansTab() {
                                     <S.Td><strong>{p.code}</strong></S.Td>
                                     <S.Td>{p.name}</S.Td>
                                     <S.Td>{p.venue?.name ?? "Global"}</S.Td>
-                                    <S.Td>{formatCurrency(Number(p.basePriceAmount ?? 0))}</S.Td>
-                                    <S.Td>{p.partyDurationHours}h</S.Td>
+                                    <S.Td $num>{formatCurrency(Number(p.basePriceAmount ?? 0))}</S.Td>
+                                    <S.Td $num>{p.partyDurationHours}h</S.Td>
                                     <S.Td>{p.includesPool ? "Sim" : "Não"}</S.Td>
                                     <S.Td>{p.includesCleaning ? "Sim" : "Não"}</S.Td>
                                     <S.Td>
-                                        <div style={{ display: "flex", gap: 6 }}>
-                                            <S.SecondaryButton style={{ height: "30px", padding: "0 10px", fontSize: "12px" }} onClick={() => openEdit(p)}>Editar</S.SecondaryButton>
-                                            <S.DangerButton style={{ height: "30px", padding: "0 10px", fontSize: "12px" }} onClick={() => handleDelete(p.id)} disabled={deletingId === p.id}>
+                                        <S.InlineGroup style={{ flexWrap: "nowrap", justifyContent: "flex-end" }}>
+                                            <S.SecondaryButton $size="sm" onClick={() => openEdit(p)}>Editar</S.SecondaryButton>
+                                            <S.DangerButton $size="sm" onClick={() => handleDelete(p.id)} disabled={deletingId === p.id}>
                                                 {deletingId === p.id ? "..." : "Remover"}
                                             </S.DangerButton>
-                                        </div>
+                                        </S.InlineGroup>
                                     </S.Td>
                                 </S.Tr>
                             ))}
@@ -183,65 +183,79 @@ export function PlansTab() {
 
             {showModal && (
                 <S.ModalOverlay onClick={() => setShowModal(false)}>
-                    <S.ModalBox onClick={(e: React.MouseEvent) => e.stopPropagation()} style={{ maxWidth: 560, maxHeight: "90vh", overflowY: "auto" }}>
-                        <S.ModalTitle>{editingPlan ? "Editar plano" : "Novo plano"}</S.ModalTitle>
-                        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                    <S.ModalBox onClick={(e: React.MouseEvent) => e.stopPropagation()} $maxWidth={560}>
+                        <ModalHeader onClose={() => setShowModal(false)} disabled={isSaving}>{editingPlan ? "Editar plano" : "Novo plano"}</ModalHeader>
+                        <S.Form onSubmit={handleSubmit}>
                             <S.FormGroup>
-                                <label>Espaço (opcional)</label>
-                                <S.Select value={form.venueId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setForm((f) => ({ ...f, venueId: e.target.value }))} style={{ height: 42 }}>
+                                <label>Espaço</label>
+                                <S.Select value={form.venueId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setForm((f) => ({ ...f, venueId: e.target.value }))}>
                                     <option value="">Global (todos os espaços)</option>
                                     {venues.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
                                 </S.Select>
                             </S.FormGroup>
-                            <S.FormGroup>
-                                <label>Código</label>
-                                <S.Select {...field("code")} style={{ height: 42 }} disabled={!!editingPlan}>
-                                    {PLAN_CODES.map((c) => <option key={c} value={c}>{c}</option>)}
-                                </S.Select>
-                            </S.FormGroup>
-                            <S.FormGroup>
-                                <label>Nome</label>
-                                <S.TextInput required {...field("name")} placeholder="Ex: Pacote Essencial" />
-                            </S.FormGroup>
-                            <S.FormGroup>
-                                <label>Preço base (R$)</label>
-                                <S.TextInput required type="number" min="0" step="0.01" {...field("basePriceAmount")} placeholder="Ex: 2500.00" />
-                            </S.FormGroup>
-                            <S.FormGroup>
-                                <label>Duração da festa (horas)</label>
-                                <S.TextInput required type="number" min="1" {...field("partyDurationHours")} placeholder="Ex: 6" />
-                            </S.FormGroup>
-                            <S.FormGroup>
-                                <label>Hora de encerramento</label>
-                                <S.TextInput type="number" min="0" max="23" {...field("endsAtHour")} placeholder="Ex: 23 (opcional)" />
-                            </S.FormGroup>
-                            <S.FormGroup>
-                                <label>Antecedência para entrega de chaves (horas)</label>
-                                <S.TextInput type="number" min="0" {...field("keyDeliveryOffsetHours")} placeholder="Ex: 2 (opcional)" />
-                            </S.FormGroup>
-                            <S.FormGroup>
-                                <label>Horas de monitor de crianças incluídas</label>
-                                <S.TextInput type="number" min="0" {...field("includedKidsMonitorHours")} placeholder="Ex: 4 (opcional)" />
-                            </S.FormGroup>
-                            <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-                                {[
-                                    { key: "includesPool", label: "Inclui piscina" },
-                                    { key: "includesCleaning", label: "Inclui limpeza" },
-                                    { key: "validOnHolidays", label: "Válido em feriados" },
-                                ].map(({ key, label }) => (
-                                    <label key={key} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, cursor: "pointer" }}>
-                                        <input type="checkbox" checked={!!form[key as keyof PlanForm]} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [key]: e.target.checked }))} />
-                                        {label}
-                                    </label>
-                                ))}
-                            </div>
+                            <S.FormRow $cols="1fr 2fr">
+                                <S.FormGroup>
+                                    <label>Código</label>
+                                    <S.Select {...field("code")} disabled={!!editingPlan}>
+                                        {PLAN_CODES.map((c) => <option key={c} value={c}>{c}</option>)}
+                                    </S.Select>
+                                </S.FormGroup>
+                                <S.FormGroup>
+                                    <label>Nome</label>
+                                    <S.TextInput required {...field("name")} placeholder="Ex: Pacote Essencial" />
+                                </S.FormGroup>
+                            </S.FormRow>
+
+                            <S.FormSection>
+                                <legend>Preço e horários</legend>
+                                <S.FormRow>
+                                    <S.FormGroup>
+                                        <label>Preço base (R$)</label>
+                                        <S.TextInput required type="number" min="0" step="0.01" {...field("basePriceAmount")} placeholder="Ex: 2500.00" />
+                                    </S.FormGroup>
+                                    <S.FormGroup>
+                                        <label>Duração da festa (horas)</label>
+                                        <S.TextInput required type="number" min="1" {...field("partyDurationHours")} placeholder="Ex: 6" />
+                                    </S.FormGroup>
+                                </S.FormRow>
+                                <S.FormRow>
+                                    <S.FormGroup>
+                                        <label>Hora de encerramento</label>
+                                        <S.TextInput type="number" min="0" max="23" {...field("endsAtHour")} placeholder="Ex: 23 (opcional)" />
+                                    </S.FormGroup>
+                                    <S.FormGroup>
+                                        <label>Entrega das chaves (horas antes)</label>
+                                        <S.TextInput type="number" min="0" {...field("keyDeliveryOffsetHours")} placeholder="Ex: 2 (opcional)" />
+                                    </S.FormGroup>
+                                </S.FormRow>
+                                <S.FormGroup>
+                                    <label>Horas de monitor de crianças incluídas</label>
+                                    <S.TextInput type="number" min="0" {...field("includedKidsMonitorHours")} placeholder="Ex: 4 (opcional)" />
+                                </S.FormGroup>
+                            </S.FormSection>
+
+                            <S.FormSection>
+                                <legend>O que está incluído</legend>
+                                <S.CheckboxGroup>
+                                    {[
+                                        { key: "includesPool", label: "Inclui piscina" },
+                                        { key: "includesCleaning", label: "Inclui limpeza" },
+                                        { key: "validOnHolidays", label: "Válido em feriados" },
+                                    ].map(({ key, label }) => (
+                                        <S.CheckboxLabel key={key}>
+                                            <input type="checkbox" checked={!!form[key as keyof PlanForm]} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [key]: e.target.checked }))} />
+                                            {label}
+                                        </S.CheckboxLabel>
+                                    ))}
+                                </S.CheckboxGroup>
+                            </S.FormSection>
                             <S.ModalActions>
                                 <S.SecondaryButton type="button" onClick={() => setShowModal(false)} disabled={isSaving}>Cancelar</S.SecondaryButton>
                                 <S.PrimaryButton type="submit" disabled={isSaving}>
                                     {isSaving ? "Salvando..." : editingPlan ? "Salvar alterações" : "Criar plano"}
                                 </S.PrimaryButton>
                             </S.ModalActions>
-                        </form>
+                        </S.Form>
                     </S.ModalBox>
                 </S.ModalOverlay>
             )}
