@@ -8,7 +8,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { getErrorMessage } from "../utils/getErrorMessage";
+import { getLoadErrorMessage } from "../utils/getErrorMessage";
 import { isAbortError } from "../utils/errors";
 
 interface ApiError {
@@ -17,11 +17,7 @@ interface ApiError {
     message?: string;
 }
 
-function resolveErrorMessage(err: ApiError, fallback: string): string {
-    if (!err.response) return "Sem conexão com o servidor. Verifique sua internet.";
-    if (err.response.status >= 500) return "Erro interno do servidor. Tente novamente em instantes.";
-    return getErrorMessage(err, fallback);
-}
+const resolveErrorMessage = (err: ApiError, fallback: string) => getLoadErrorMessage(err, fallback);
 
 interface UseApiDataOptions<T> {
     initialData?: T | null;

@@ -226,16 +226,30 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+/**
+ * Metadados de paginação no formato do contrato da API
+ * (`{ data, pagination: { page, limit, total, totalPages } }`).
+ * `total`/`totalPages` ficam opcionais para tolerar respostas antigas sem total;
+ * nesse caso `hasNext` indica se há uma próxima página.
+ */
 export interface PaginationMeta {
   page: number;
   limit: number;
   total?: number;
   totalPages?: number;
+  hasNext?: boolean;
 }
 
 export interface PaginatedResult<T> {
   data: T[];
   meta: PaginationMeta;
+}
+
+/** Parâmetros de consulta comuns a toda listagem paginada. */
+export interface ListParams {
+  page?: number;
+  limit?: number;
+  [key: string]: string | number | undefined;
 }
 
 // ─── Payloads de request ──────────────────────────────────────────────────────

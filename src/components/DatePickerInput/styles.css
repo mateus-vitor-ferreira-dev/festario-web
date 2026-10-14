@@ -129,3 +129,9 @@
   cursor: not-allowed;
   background: none !important;
 }
+
+/* O container padrão é inline-block: a linha de base somava alguns pixels
+   abaixo do campo e deixava o DatePickerInput mais alto que selects e inputs. */
+.react-datepicker__input-container {
+  display: block;
+}

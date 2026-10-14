@@ -9,12 +9,14 @@
  *   4. `cancelReservation` — cancelamento com reembolso proporcional
  */
 import api from "./api";
+import { cleanParams, toPaginated } from "./pagination";
 import type {
     QuotePayload,
     QuoteResult,
     CreateReservationPayload,
     Reservation,
     PaginatedResult,
+    ListParams,
 } from "../types";
 
 /**
@@ -56,16 +58,16 @@ export async function listReservations(
 }
 
 /**
- * Lista as reservas do usuário com suporte a paginação.
+ * Lista as reservas do usuário com paginação e filtro de `status`.
  *
- * @see GET /reservations
+ * @see GET /reservations?page=&limit=&status=
  */
 export async function listReservationsPaginated(
+    params: ListParams = {},
     signal?: AbortSignal,
-    { page = 1, limit = 10 }: { page?: number; limit?: number } = {},
 ): Promise<PaginatedResult<Reservation>> {
-    const { data } = await api.get("/reservations", { signal, params: { page, limit } });
-    return { data: data.data || [], meta: data.meta };
+    const { data } = await api.get("/reservations", { signal, params: cleanParams(params) });
+    return toPaginated<Reservation>(data, params);
 }
 
 /**
