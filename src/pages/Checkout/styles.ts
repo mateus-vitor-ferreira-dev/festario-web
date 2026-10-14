@@ -1,19 +1,19 @@
 import styled, { keyframes } from "styled-components";
+import { media } from "../../styles/breakpoints";
 
 const spinAnim = keyframes`
   to { transform: rotate(360deg); }
 `;
 
-const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-`;
-
 export const Container = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 28px;
-  animation: ${fadeIn} 0.3s ease;
+  gap: 32px;
+
+  /* Folga para o botão flutuante do chat (56px + 28px) não cobrir o fim do conteúdo */
+  ${media.md} {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
 `;
 
 export const LoadingState = styled.div`
@@ -27,13 +27,13 @@ export const LoadingState = styled.div`
 
   p {
     color: var(--text-muted);
-    font-size: 15px;
+    font-size: var(--text-sm);
   }
 `;
 
 export const Spinner = styled.div`
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: 3px solid var(--border-default);
   border-top-color: var(--brand);
@@ -47,39 +47,49 @@ export const PageHeader = styled.div`
 `;
 
 export const PageTitle = styled.h1`
-  font-size: 32px;
-  font-weight: 700;
+  font-size: var(--text-3xl);
   color: var(--text-primary);
+  line-height: 1.1;
+
+  ${media.sm} {
+    font-size: var(--text-2xl);
+  }
 `;
 
 export const PageDescription = styled.p`
   color: var(--text-muted);
-  font-size: 15px;
+  font-size: var(--text-base);
   line-height: 1.6;
+  max-width: 640px;
 `;
 
 export const Grid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 420px;
+  grid-template-columns: minmax(0, 1fr) 400px;
   gap: 24px;
-  align-items: stretch;
+  align-items: start;
 
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
+  /* ≤lg: resumo primeiro, pagamento logo abaixo, numa coluna de leitura */
+  ${media.lg} {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 720px;
   }
 `;
 
-/* ─── Reservation Summary Card ─── */
+/* ─── Resumo do pedido ─── */
 
 export const SummaryCard = styled.article`
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: 24px;
-  padding: 32px;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
+
+  ${media.md} {
+    padding: 24px 20px;
+  }
 `;
 
 export const SummaryHeader = styled.div`
@@ -91,17 +101,17 @@ export const SummaryHeader = styled.div`
 `;
 
 export const VenueName = styled.h2`
-  font-size: 26px;
-  font-weight: 700;
+  font-size: var(--text-xl);
   color: var(--text-primary);
+  line-height: 1.2;
 `;
 
 export const StatusBadge = styled.span<{ status?: string }>`
   display: inline-flex;
   align-items: center;
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 13px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
   font-weight: 600;
   border: 1px solid;
   white-space: nowrap;
@@ -121,111 +131,179 @@ export const StatusBadge = styled.span<{ status?: string }>`
 
 export const Divider = styled.div`
   height: 1px;
-  background: var(--bg-muted);
+  background: var(--border-default);
 `;
 
+/* Linhas rótulo / valor com divisórias finas */
 export const DetailList = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-  }
+  display: flex;
+  flex-direction: column;
+  margin: -8px 0;
 `;
 
 export const DetailItem = styled.div`
-  background: var(--bg-page);
-  border: 1px solid var(--border-default);
-  border-radius: 12px;
-  padding: 14px 16px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-default);
+
+  &:last-child {
+    border-bottom: none;
+  }
 `;
 
 export const DetailLabel = styled.span`
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-muted);
+  flex-shrink: 0;
 `;
 
 export const DetailValue = styled.strong`
-  font-size: 15px;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--text-primary);
+  text-align: right;
+  margin-left: auto;
+  min-width: 0;
+  font-variant-numeric: lining-nums tabular-nums;
 `;
 
 export const TotalRow = styled.div`
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 4px 12px;
 `;
 
 export const TotalLabel = styled.span`
-  font-size: 16px;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--text-secondary);
 `;
 
 export const TotalValue = styled.strong`
-  font-size: 30px;
-  font-weight: 800;
-  color: var(--brand);
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-primary);
+  text-align: right;
+  margin-left: auto;
+  font-variant-numeric: lining-nums tabular-nums;
+
+  ${media.sm} {
+    font-size: var(--text-2xl);
+  }
 `;
 
-/* ─── Payment Card ─── */
+/* ─── Pagamento ─── */
 
 export const PaymentCard = styled.article`
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: 24px;
-  padding: 32px;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+  border-radius: var(--radius-lg);
+  padding: 28px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+
+  /* >lg: coluna de pagamento acompanha a rolagem (64px do header + folga) */
+  @media (min-width: 1025px) {
+    position: sticky;
+    top: 88px;
+  }
+
+  ${media.md} {
+    padding: 24px 20px;
+  }
 `;
 
 export const PaymentTitle = styled.h3`
-  font-size: 20px;
-  font-weight: 700;
+  font-size: var(--text-xl);
   color: var(--text-primary);
+  line-height: 1.2;
 `;
 
 export const PaymentDescription = styled.p`
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   line-height: 1.6;
   margin-top: -8px;
 `;
 
-export const SecurityBadges = styled.ul`
-  list-style: none;
-  padding: 16px;
+/* Método escolhido — mostrado como opção selecionada */
+export const MethodOption = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--brand);
+  border-radius: var(--radius-md);
+  background: var(--brand-subtle);
+`;
+
+export const MethodRadio = styled.span`
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  border-radius: 50%;
+  border: 1.5px solid var(--brand);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &::after {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--brand);
+  }
+`;
+
+export const MethodText = styled.div`
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  background: var(--bg-page);
-  border: 1px solid var(--border-default);
-  border-radius: 14px;
+  gap: 2px;
+
+  strong {
+    font-size: var(--text-base);
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  span {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+`;
+
+export const SecurityBadges = styled.ul`
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 `;
 
 export const SecurityItem = styled.li`
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 13px;
-  color: var(--text-medium);
-  font-weight: 500;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
 `;
 
 export const SecurityDot = styled.span`
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--brand);
   flex-shrink: 0;
@@ -233,45 +311,42 @@ export const SecurityDot = styled.span`
 
 export const AmountSummary = styled.div`
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  padding: 16px 20px;
-  background: var(--brand-subtle);
-  border: 1px solid var(--brand-border);
-  border-radius: 14px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-default);
 
   span {
-    font-size: 15px;
+    font-size: var(--text-base);
     font-weight: 600;
     color: var(--text-secondary);
   }
 
   strong {
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--brand);
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: right;
+    font-variant-numeric: lining-nums tabular-nums;
   }
 `;
 
 export const PayButton = styled.button`
   width: 100%;
-  padding: 16px;
+  min-height: 48px;
+  padding: 0 20px;
   border: none;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: var(--brand);
-  color: #ffffff;
-  font-size: 16px;
+  color: var(--on-brand);
+  font-size: var(--text-base);
   font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.15s ease, transform 0.1s ease;
+  transition: background 0.15s ease;
 
   &:hover:not(:disabled) {
-    opacity: 0.92;
-    transform: translateY(-1px);
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(0);
+    background: var(--brand-dark);
   }
 
   &:disabled {
@@ -283,69 +358,60 @@ export const PayButton = styled.button`
 export const InfoBox = styled.div`
   background: var(--status-pending-bg);
   border: 1px solid var(--status-pending-border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 14px 16px;
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: var(--status-pending-text-deep);
   line-height: 1.5;
 `;
 
 export const CancelLink = styled.button`
+  align-self: center;
   background: none;
   border: none;
-  color: var(--text-muted);
-  font-size: 14px;
+  color: var(--brand);
+  font-size: var(--text-sm);
+  font-weight: 600;
   cursor: pointer;
-  text-align: center;
   text-decoration: underline;
+  text-decoration-color: var(--brand-border);
   text-underline-offset: 3px;
-  padding: 0;
+  min-height: 44px;
+  padding: 0 8px;
 
   &:hover {
-    color: var(--text-secondary);
+    text-decoration-color: currentColor;
   }
 `;
 
-export const StripeBadge = styled.p`
-  text-align: center;
-  font-size: 12px;
-  color: var(--text-faint);
-  border-top: 1px solid var(--bg-muted);
-  padding-top: 16px;
-  margin-top: -4px;
-
-  strong {
-    color: var(--text-muted);
-  }
-`;
-
-/* ─── Method Selector ─── */
+/* ─── Seletor de método (cartão / PIX) ─── */
 
 export const MethodSelector = styled.div`
   display: flex;
-  gap: 10px;
+  gap: 8px;
 `;
 
 export const MethodButton = styled.button<{ $active?: boolean }>`
   flex: 1;
-  padding: 12px;
-  border-radius: 12px;
-  font-size: 14px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 
   ${({ $active }) =>
     $active
       ? `
-    background: var(--brand);
-    color: #ffffff;
-    border: 2px solid var(--brand);
+    background: var(--brand-subtle);
+    color: var(--brand);
+    border: 1.5px solid var(--brand);
   `
       : `
     background: transparent;
     color: var(--text-secondary);
-    border: 2px solid var(--border-default);
+    border: 1.5px solid var(--border-medium);
 
     &:hover {
       border-color: var(--brand);
@@ -366,13 +432,14 @@ export const PixContainer = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  animation: ${fadeIn} 0.3s ease;
 `;
 
 export const PixQrImage = styled.img`
   width: 200px;
   height: 200px;
-  border-radius: 12px;
+  padding: 8px;
+  background: #ffffff; /* QR precisa de fundo claro para leitura, inclusive no tema escuro */
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-default);
 `;
 
@@ -380,7 +447,7 @@ export const PixCopyPasteBox = styled.div`
   width: 100%;
   background: var(--bg-page);
   border: 1px solid var(--border-default);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
@@ -388,38 +455,39 @@ export const PixCopyPasteBox = styled.div`
 `;
 
 export const PixCopyPasteLabel = styled.span`
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-muted);
 `;
 
 export const PixCopyPasteValue = styled.span`
-  font-size: 11px;
-  font-family: monospace;
+  font-size: var(--text-xs);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   color: var(--text-secondary);
-  word-break: break-all;
+  overflow-wrap: anywhere;
   line-height: 1.5;
 `;
 
 export const CopyButton = styled.button`
   align-self: flex-start;
-  background: none;
-  border: none;
+  min-height: 44px;
+  padding: 0 14px;
+  background: transparent;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-sm);
   color: var(--brand);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
-  padding: 0;
+  transition: background 0.15s ease;
 
   &:hover {
-    opacity: 0.8;
+    background: var(--brand-subtle);
   }
 `;
 
 export const PixStatus = styled.p`
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   display: flex;
   align-items: center;
@@ -438,6 +506,7 @@ export const PixStatus = styled.p`
 `;
 
 export const PixExpiry = styled.p`
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
 `;

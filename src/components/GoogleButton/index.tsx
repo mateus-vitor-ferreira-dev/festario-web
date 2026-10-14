@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import type { NavigateFunction } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import api from "../../services/api";
+import { getErrorMessage } from "../../utils/getErrorMessage";
 import * as S from "./styles";
 
 interface GoogleButtonProps {
@@ -27,12 +28,7 @@ export default function GoogleButton({ navigate }: GoogleButtonProps) {
                 toast.success(data.message || "Sucesso com Google.");
                 navigate("/home");
             } catch (error) {
-                const e = error as { response?: { data?: { message?: string; error?: { message?: string } } } };
-                const message =
-                    e?.response?.data?.message ||
-                    e?.response?.data?.error?.message ||
-                    "Erro ao autenticar com Google.";
-                toast.error(message);
+                toast.error(getErrorMessage(error, "Erro ao autenticar com Google."));
             }
         },
         [login, navigate]

@@ -8,10 +8,16 @@ import {
     syncMunicipalHolidays,
 } from "../../../services/admin";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
+import { isAbortError } from "../../../utils/errors";
 import { DatePickerInput } from "../../../components";
 import { formatDate, getMunicipalHolidaysSeed, HOLIDAY_TYPE_OPTIONS } from "./constants";
 import type { Holiday } from "../../../types";
+import { ModalHeader } from "../ModalHeader";
 import * as S from "../styles";
+
+const HOLIDAY_TYPE_LABELS: Record<string, string> = Object.fromEntries(
+    HOLIDAY_TYPE_OPTIONS.map((o) => [o.value, o.label]),
+);
 
 export function HolidaysTab() {
     const currentYear = new Date().getFullYear();
@@ -25,19 +31,26 @@ export function HolidaysTab() {
     const [form, setForm] = useState({ date: "", name: "", type: "national" });
     const [isSaving, setIsSaving] = useState(false);
 
-    async function load() {
+    async function load(signal?: AbortSignal) {
         try {
             setIsLoading(true);
-            const data = await listHolidays(year);
+            const data = await listHolidays(year, signal);
+            if (signal?.aborted) return;
             setHolidays(data ?? []);
         } catch (error) {
+            if (isAbortError(error)) return;
             toast.error(getErrorMessage(error, "Erro ao carregar feriados."));
         } finally {
-            setIsLoading(false);
+            if (!signal?.aborted) setIsLoading(false);
         }
     }
 
-    useEffect(() => { load(); }, [year]);
+    useEffect(() => {
+        const controller = new AbortController();
+        load(controller.signal);
+        return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [year]);
 
     async function handleSync() {
         try {
@@ -100,21 +113,21 @@ export function HolidaysTab() {
     return (
         <S.Section>
             <S.SectionHeader>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <S.InlineGroup style={{ gap: 12 }}>
                     <S.SectionTitle>Feriados</S.SectionTitle>
                     <S.Select value={year} onChange={(e) => setYear(Number(e.target.value))}>
                         {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
                     </S.Select>
-                </div>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                </S.InlineGroup>
+                <S.SectionActions>
+                    <S.PrimaryButton onClick={() => setShowModal(true)}>+ Novo feriado</S.PrimaryButton>
                     <S.SecondaryButton onClick={handleSync} disabled={isSyncing}>
                         {isSyncing ? "Sincronizando..." : "Sincronizar feriados nacionais"}
                     </S.SecondaryButton>
                     <S.SecondaryButton onClick={handleSyncMunicipal} disabled={isSyncingMunicipal}>
                         {isSyncingMunicipal ? "Sincronizando..." : "Sincronizar feriados municipais"}
                     </S.SecondaryButton>
-                    <S.PrimaryButton onClick={() => setShowModal(true)}>+ Novo feriado</S.PrimaryButton>
-                </div>
+                </S.SectionActions>
             </S.SectionHeader>
 
             {isLoading ? (
@@ -122,7 +135,7 @@ export function HolidaysTab() {
             ) : holidays.length === 0 ? (
                 <S.EmptyState>
                     <h3>Nenhum feriado cadastrado para {year}</h3>
-                    <p>Sincronize com a BrasilAPI ou adicione manualmente.</p>
+                    <p>Use “Sincronizar feriados nacionais” ou adicione um feriado manualmente.</p>
                 </S.EmptyState>
             ) : (
                 <S.CardList>
@@ -132,12 +145,12 @@ export function HolidaysTab() {
                                 <strong>{h.name}</strong>
                                 <span>{formatDate(h.date)}</span>
                             </S.HolidayInfo>
-                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                <S.HolidayType>{h.type}</S.HolidayType>
-                                <S.DangerButton onClick={() => handleDelete(h.id)} disabled={deletingId === h.id}>
+                            <S.InlineGroup>
+                                {h.type && <S.HolidayType>{HOLIDAY_TYPE_LABELS[h.type] ?? h.type}</S.HolidayType>}
+                                <S.DangerButton $size="sm" onClick={() => handleDelete(h.id)} disabled={deletingId === h.id}>
                                     {deletingId === h.id ? "Removendo..." : "Remover"}
                                 </S.DangerButton>
-                            </div>
+                            </S.InlineGroup>
                         </S.HolidayCard>
                     ))}
                 </S.CardList>
@@ -146,8 +159,8 @@ export function HolidaysTab() {
             {showModal && (
                 <S.ModalOverlay onClick={() => setShowModal(false)}>
                     <S.ModalBox onClick={(e) => e.stopPropagation()}>
-                        <S.ModalTitle>Novo feriado</S.ModalTitle>
-                        <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                        <ModalHeader onClose={() => setShowModal(false)} disabled={isSaving}>Novo feriado</ModalHeader>
+                        <S.Form onSubmit={handleCreate}>
                             <S.FormGroup>
                                 <label>Nome</label>
                                 <S.TextInput required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Ex: Consciência Negra" />
@@ -161,7 +174,7 @@ export function HolidaysTab() {
                             </S.FormGroup>
                             <S.FormGroup>
                                 <label>Tipo</label>
-                                <S.Select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))} style={{ height: 42 }}>
+                                <S.Select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}>
                                     {HOLIDAY_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                                 </S.Select>
                             </S.FormGroup>
@@ -169,7 +182,7 @@ export function HolidaysTab() {
                                 <S.SecondaryButton type="button" onClick={() => setShowModal(false)} disabled={isSaving}>Cancelar</S.SecondaryButton>
                                 <S.PrimaryButton type="submit" disabled={isSaving}>{isSaving ? "Criando..." : "Criar feriado"}</S.PrimaryButton>
                             </S.ModalActions>
-                        </form>
+                        </S.Form>
                     </S.ModalBox>
                 </S.ModalOverlay>
             )}

@@ -18,13 +18,29 @@ describe("api interceptor", () => {
     it("attaches Authorization header when token exists", async () => {
         localStorage.setItem(
             "recanto:userData",
-            JSON.stringify({ token: "abc123" })
+            JSON.stringify({
+                user: { id: "u1", name: "Test", email: "t@t.com", role: "USER" },
+                token: "abc123",
+                refreshToken: null,
+            })
         );
 
         const config = { headers: {} };
         const result = await requestFulfilled(config);
 
         expect(result.headers.Authorization).toBe("Bearer abc123");
+    });
+
+    it("attaches Authorization header from legacy session format", async () => {
+        localStorage.setItem(
+            "recanto:userData",
+            JSON.stringify({ id: "u1", name: "Test", email: "t@t.com", role: "USER", token: "legacy-token" })
+        );
+
+        const config = { headers: {} };
+        const result = await requestFulfilled(config);
+
+        expect(result.headers.Authorization).toBe("Bearer legacy-token");
     });
 
     it("does not attach Authorization header when token does not exist", async () => {
@@ -34,7 +50,7 @@ describe("api interceptor", () => {
         expect(result.headers.Authorization).toBeUndefined();
     });
 
-    it("does not attach Authorization header when stored JSON is empty", async () => {
+    it("does not attach Authorization header when stored JSON is unrecognized", async () => {
         localStorage.setItem("recanto:userData", "{}");
 
         const config = { headers: {} };

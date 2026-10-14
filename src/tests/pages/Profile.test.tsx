@@ -163,10 +163,10 @@ describe("Profile page", () => {
         );
     });
 
-    it("updates localStorage with flat structure when stored.user is absent", async () => {
+    it("updates localStorage via migrated legacy session", async () => {
         localStorage.setItem(
             "recanto:userData",
-            JSON.stringify({ token: "tk", name: "Mateus", email: "mateus@email.com" })
+            JSON.stringify({ id: "u1", name: "Mateus", email: "mateus@email.com", role: "USER", token: "tk" })
         );
         const user = userEvent.setup();
         renderPage();
@@ -178,7 +178,7 @@ describe("Profile page", () => {
             expect(screen.getByText(/perfil atualizado com sucesso/i)).toBeInTheDocument()
         );
         const stored = JSON.parse(localStorage.getItem("recanto:userData"));
-        expect(stored.user?.name ?? stored.name).toBe("Mateus Atualizado");
+        expect(stored.user.name).toBe("Mateus Atualizado");
     });
 
     it("shows '?' in avatar and handles null name/email in form", async () => {

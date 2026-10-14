@@ -1,19 +1,14 @@
 import styled, { keyframes } from "styled-components";
+import { media } from "../../styles/breakpoints";
 
 const spinAnim = keyframes`
   to { transform: rotate(360deg); }
 `;
 
-const fadeUp = keyframes`
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-`;
-
 export const Container = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 28px;
-  animation: ${fadeUp} 0.3s ease;
+  gap: 32px;
 `;
 
 export const LoadingState = styled.div`
@@ -26,13 +21,13 @@ export const LoadingState = styled.div`
 
   p {
     color: var(--text-muted);
-    font-size: 15px;
+    font-size: var(--text-sm);
   }
 `;
 
 export const Spinner = styled.div`
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: 3px solid var(--border-default);
   border-top-color: var(--brand);
@@ -49,17 +44,21 @@ export const PageHeader = styled.div`
 export const HeaderLeft = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 `;
 
 export const PageTitle = styled.h1`
-  font-size: 30px;
-  font-weight: 700;
+  font-size: var(--text-3xl);
   color: var(--text-primary);
+  line-height: 1.1;
+
+  ${media.sm} {
+    font-size: var(--text-2xl);
+  }
 `;
 
 export const PageSubtitle = styled.p`
-  font-size: 15px;
+  font-size: var(--text-base);
   color: var(--text-muted);
 `;
 
@@ -69,9 +68,16 @@ export const Layout = styled.div`
   gap: 24px;
   align-items: start;
 
-  @media (max-width: 800px) {
-    grid-template-columns: 1fr;
+  ${media.md} {
+    grid-template-columns: minmax(0, 1fr);
   }
+`;
+
+export const FormStack = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
 `;
 
 /* ─── Identity sidebar ─── */
@@ -79,54 +85,76 @@ export const Layout = styled.div`
 export const IdentityCard = styled.div`
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: 20px;
-  padding: 32px 24px;
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 10px;
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+
+  /* ≤md: cartão compacto em linha — avatar à esquerda, dados à direita */
+  ${media.md} {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 16px;
+    row-gap: 2px;
+    align-items: center;
+    padding: 20px;
+
+    & > :first-child {
+      grid-row: span 3;
+      margin-bottom: 0;
+    }
+
+    & > :not(:first-child) {
+      grid-column: 2;
+      justify-self: start;
+    }
+  }
 `;
 
 export const AvatarLarge = styled.div`
-  width: 72px;
-  height: 72px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  background: var(--brand);
-  color: #ffffff;
-  font-size: 24px;
-  font-weight: 700;
+  background: var(--brand-subtle);
+  color: var(--brand);
+  border: 1px solid var(--brand-border);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  letter-spacing: 0.03em;
-  margin-bottom: 4px;
+  margin-bottom: 10px;
 `;
 
 export const IdentityName = styled.strong`
-  font-size: 16px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
   color: var(--text-primary);
+  line-height: 1.2;
 `;
 
 export const IdentityEmail = styled.span`
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--text-muted);
-  word-break: break-all;
+  overflow-wrap: anywhere;
 `;
 
 export const RoleBadge = styled.span`
   display: inline-flex;
   align-items: center;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
   font-weight: 600;
-  background: var(--status-paid-bg);
+  background: var(--brand-subtle);
   color: var(--brand);
   border: 1px solid var(--brand-border);
-  margin-top: 4px;
+  margin-top: 8px;
 `;
 
 /* ─── Verification banner ─── */
@@ -137,34 +165,35 @@ export const VerificationBanner = styled.div`
   justify-content: space-between;
   gap: 16px;
   padding: 14px 20px;
-  border-radius: 14px;
-  background: var(--status-pending-bg, #fff7ed);
-  border: 1px solid var(--status-pending-border, #fed7aa);
+  border-radius: var(--radius-lg);
+  background: var(--status-pending-bg);
+  border: 1px solid var(--status-pending-border);
 
-  @media (max-width: 600px) {
+  ${media.md} {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
   }
 `;
 
 export const VerificationText = styled.p`
-  font-size: 14px;
-  color: var(--text-secondary);
+  font-size: var(--text-base);
+  color: var(--status-pending-text-deep);
   line-height: 1.5;
 
   strong {
-    color: var(--text-primary);
+    font-weight: 700;
   }
 `;
 
 export const ResendButton = styled.button`
   flex-shrink: 0;
-  padding: 8px 16px;
-  border: 1px solid var(--status-pending-border, #fed7aa);
-  border-radius: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--status-pending-border);
+  border-radius: var(--radius-md);
   background: var(--bg-surface);
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s ease;
@@ -185,18 +214,21 @@ export const ResendButton = styled.button`
 export const FormCard = styled.form`
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: 20px;
-  padding: 32px;
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
   display: flex;
   flex-direction: column;
   gap: 24px;
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+
+  ${media.md} {
+    padding: 24px 20px;
+  }
 `;
 
 export const SectionTitle = styled.h2`
-  font-size: 17px;
-  font-weight: 700;
+  font-size: var(--text-xl);
   color: var(--text-primary);
+  line-height: 1.2;
 `;
 
 export const FieldGrid = styled.div`
@@ -204,8 +236,12 @@ export const FieldGrid = styled.div`
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
+  ${media.md} {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  & > * {
+    min-width: 0;
   }
 `;
 
@@ -213,39 +249,50 @@ export const FormFooter = styled.div`
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding-top: 8px;
-  border-top: 1px solid var(--bg-muted);
+  padding-top: 20px;
+  border-top: 1px solid var(--border-default);
+
+  /* ≤sm: ações em largura total, primária em cima */
+  ${media.sm} {
+    flex-direction: column-reverse;
+
+    button {
+      width: 100%;
+    }
+  }
 `;
 
 export const CancelButton = styled.button`
-  padding: 10px 20px;
-  border: 1px solid var(--border-default);
-  border-radius: 10px;
-  background: var(--bg-surface);
-  color: var(--text-secondary);
-  font-size: 14px;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--brand);
+  font-size: var(--text-base);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s ease;
 
   &:hover {
-    background: var(--bg-page);
+    background: var(--brand-subtle);
   }
 `;
 
 export const SaveButton = styled.button`
-  padding: 10px 24px;
+  min-height: 44px;
+  padding: 0 24px;
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: var(--brand);
-  color: #ffffff;
-  font-size: 14px;
+  color: var(--on-brand);
+  font-size: var(--text-base);
   font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: background 0.15s ease;
 
   &:hover:not(:disabled) {
-    opacity: 0.92;
+    background: var(--brand-dark);
   }
 
   &:disabled {

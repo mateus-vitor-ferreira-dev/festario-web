@@ -5,37 +5,32 @@
  * localStorage nas páginas consumidoras.
  */
 import { ReactNode, createContext, useContext, useEffect, useState } from "react";
+import { env } from "../config/env";
+import { readSession, writeSession, clearSession } from "../config/authStorage";
 import { setUserContext } from "../config/sentry";
-import type { AuthContextValue, AuthSession, User } from "../types";
+import type { AuthContextValue, AuthSession, User, UserRole } from "../types";
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const STORAGE_KEY = "recanto:userData";
-
-function readStorage(): AuthSession | null {
-    try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-    } catch {
-        return null;
-    }
-}
-
-function normalizeUser(session: AuthSession | null): User | null {
-    if (!session) return null;
-    const raw = session as unknown as Record<string, Record<string, string> & { emailVerified?: boolean }>;
-    return {
-        id: session.user?.id ?? raw.id as unknown as string,
-        name: session.user?.name ?? raw.name as unknown as string,
-        email: session.user?.email ?? raw.email as unknown as string,
-        role: (session.user?.role ?? raw.role) as User["role"],
-        emailVerified: session.user?.emailVerified ?? true,
-    };
-}
-
 function normalizeSession(data: unknown): AuthSession {
+    if (!data || typeof data !== "object") throw new Error("Invalid session data");
     const d = data as Record<string, unknown>;
+    if (typeof d.user === "object" && d.user !== null) {
+        return {
+            user: d.user as User,
+            token: d.token as string,
+            refreshToken: (d.refreshToken ?? null) as string | null,
+        };
+    }
+    // Resposta da API em formato plano (legado)
     return {
-        user: (d.user ?? d) as User,
+        user: {
+            id: d.id as string,
+            name: d.name as string,
+            email: d.email as string,
+            role: d.role as UserRole,
+            emailVerified: (d.emailVerified as boolean | undefined) ?? true,
+        },
         token: d.token as string,
         refreshToken: (d.refreshToken ?? null) as string | null,
     };
@@ -52,42 +47,44 @@ interface AuthProviderProps {
  * @component
  */
 export function AuthProvider({ children }: AuthProviderProps) {
-    const [session, setSession] = useState<AuthSession | null>(readStorage);
+    const [session, setSession] = useState<AuthSession | null>(readSession);
 
-    const user = normalizeUser(session);
+    const user = session?.user ?? null;
     const token = session?.token ?? null;
     const isAuthenticated = !!session;
 
     useEffect(() => {
         setUserContext(user);
+    // intencional: reidentifica no Sentry só quando o usuário muda, não a cada novo objeto de sessão
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user?.id]);
 
     function login(data: unknown) {
         const normalized = normalizeSession(data);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+        writeSession(normalized);
         setSession(normalized);
     }
 
     function logout() {
-        const stored = readStorage();
+        const stored = readSession();
         if (stored?.refreshToken) {
             // Fire-and-forget: revoke on backend; local logout happens regardless
-            fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3000"}/auth/logout`, {
+            fetch(`${env.apiUrl}/auth/logout`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ refreshToken: stored.refreshToken }),
             }).catch(() => {});
         }
-        localStorage.removeItem(STORAGE_KEY);
+        clearSession();
         setSession(null);
     }
 
     function updateUser(updated: Partial<User>) {
-        const stored = readStorage();
+        const stored = readSession();
         if (!stored) return;
-        stored.user = { ...(stored.user ?? stored as unknown as User), ...updated };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
-        setSession({ ...stored });
+        const updated_ = { ...stored, user: { ...stored.user, ...updated } };
+        writeSession(updated_);
+        setSession(updated_);
     }
 
     const value: AuthContextValue = { user, token, isAuthenticated, login, logout, updateUser };

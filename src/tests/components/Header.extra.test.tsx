@@ -32,24 +32,19 @@ describe("Header extra coverage", () => {
         expect(screen.getByText(/usuário/i)).toBeInTheDocument();
     });
 
-    it("shows Admin link when role is stored at root level", () => {
+    it("shows Admin link for migrated legacy session with ADMIN role", () => {
         localStorage.setItem(
             "recanto:userData",
-            JSON.stringify({ name: "Admin Root", role: "ADMIN" })
+            JSON.stringify({ id: "u1", name: "Admin Root", email: "a@a.com", role: "ADMIN", token: "t" })
         );
         renderHeader();
         expect(screen.getByRole("link", { name: /^admin$/i })).toBeInTheDocument();
     });
 
-    it("does not show Admin link when nested user role is USER and root role is absent", () => {
+    it("does not show Admin link when nested user role is USER", () => {
         localStorage.setItem(
             "recanto:userData",
-            JSON.stringify({
-                user: {
-                    name: "Alex",
-                    role: "USER",
-                },
-            })
+            JSON.stringify({ token: "t", user: { name: "Alex", role: "USER" } })
         );
         renderHeader();
         expect(
@@ -57,27 +52,21 @@ describe("Header extra coverage", () => {
         ).not.toBeInTheDocument();
     });
 
-    it("falls back to root name when nested user exists without name", () => {
+    it("shows Usuário when format is unrecognized (no token or required fields)", () => {
         localStorage.setItem(
             "recanto:userData",
-            JSON.stringify({
-                name: "Alex Root",
-                user: { role: "USER" },
-            })
+            JSON.stringify({ name: "Alex Root", user: { role: "USER" } })
         );
         renderHeader();
-        expect(screen.getByText(/alex/i)).toBeInTheDocument();
+        expect(screen.getByText(/usuário/i)).toBeInTheDocument();
     });
 
-    it("uses root role when nested user exists without role", () => {
+    it("shows Usuário when format is unrecognized (partial nested user, no token)", () => {
         localStorage.setItem(
             "recanto:userData",
-            JSON.stringify({
-                role: "ADMIN",
-                user: { name: "Alex" },
-            })
+            JSON.stringify({ role: "ADMIN", user: { name: "Alex" } })
         );
         renderHeader();
-        expect(screen.getByRole("link", { name: /admin/i })).toBeInTheDocument();
+        expect(screen.queryByRole("link", { name: /admin/i })).not.toBeInTheDocument();
     });
 });

@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import { useGSAP } from "@gsap/react";
 import { getMonthlyRevenue, getReservationsSummary } from "../../../services/admin";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
-import { animateStagger } from "../../../utils/animations";
+import { animateFadeInUp } from "../../../utils/animations";
 import { formatCurrency, MONTH_NAMES } from "./constants";
 import type { ReservationSummary, MonthlyRevenue } from "../../../types";
 import * as S from "../styles";
@@ -31,11 +31,11 @@ export function DashboardTab() {
             }
         }
         load();
-    }, []);
+    }, [currentYear]);
 
     useGSAP(() => {
         if (isLoading || !sectionRef.current) return;
-        animateStagger(sectionRef.current.querySelectorAll(".anim-card"));
+        animateFadeInUp(sectionRef.current);
     }, { scope: sectionRef, dependencies: [isLoading] });
 
     if (isLoading) return <S.LoadingSpinner />;
@@ -44,94 +44,101 @@ export function DashboardTab() {
     const stripe = summary.revenueByMethod?.stripe;
     const pix = summary.revenueByMethod?.pix;
 
+    const paymentCount = (count?: number) => `${count ?? 0} pagamento${count !== 1 ? "s" : ""}`;
+
     return (
         <S.Section ref={sectionRef}>
             <S.SectionTitle>Visão geral</S.SectionTitle>
             <S.SummaryGrid>
-                <S.SummaryCard className="anim-card">
+                <S.SummaryCard>
                     <S.SummaryLabel>Total de reservas</S.SummaryLabel>
                     <S.SummaryValue>{summary.totalReservations ?? 0}</S.SummaryValue>
                 </S.SummaryCard>
 
-                <S.SummaryCard className="anim-card">
-                    <S.SummaryLabel>Receita confirmada</S.SummaryLabel>
-                    <S.SummaryValue $accent>{formatCurrency(summary.totalRevenue ?? 0)}</S.SummaryValue>
-                </S.SummaryCard>
-
-                <S.SummaryCard className="anim-card">
-                    <S.SummaryLabel>Pendentes</S.SummaryLabel>
-                    <S.SummaryValue>{summary.pendingReservations ?? 0}</S.SummaryValue>
-                    <S.SummarySubtitle>aguardando pagamento</S.SummarySubtitle>
-                </S.SummaryCard>
-
-                <S.SummaryCard className="anim-card">
+                <S.SummaryCard>
                     <S.SummaryLabel>Pagas</S.SummaryLabel>
                     <S.SummaryValue>{summary.paidReservations ?? 0}</S.SummaryValue>
                     <S.SummarySubtitle>confirmadas</S.SummarySubtitle>
                 </S.SummaryCard>
 
-                <S.SummaryCard className="anim-card">
+                <S.SummaryCard>
+                    <S.SummaryLabel>Pendentes</S.SummaryLabel>
+                    <S.SummaryValue>{summary.pendingReservations ?? 0}</S.SummaryValue>
+                    <S.SummarySubtitle>aguardando pagamento</S.SummarySubtitle>
+                </S.SummaryCard>
+
+                <S.SummaryCard>
                     <S.SummaryLabel>Canceladas</S.SummaryLabel>
                     <S.SummaryValue>{summary.cancelledReservations ?? 0}</S.SummaryValue>
                 </S.SummaryCard>
 
-                <S.SummaryCard className="anim-card">
+                <S.SummaryCard>
                     <S.SummaryLabel>Expiradas</S.SummaryLabel>
                     <S.SummaryValue>{summary.expiredReservations ?? 0}</S.SummaryValue>
                 </S.SummaryCard>
             </S.SummaryGrid>
 
-            <S.SectionTitle style={{ marginTop: "32px" }}>Receita por método</S.SectionTitle>
+            <S.SectionTitle style={{ marginTop: 16 }}>Receita</S.SectionTitle>
             <S.RevenueBreakdown>
-                <S.RevenueMethodCard className="anim-card">
-                    <S.RevenueMethodIcon>💳</S.RevenueMethodIcon>
-                    <S.RevenueMethodInfo>
-                        <S.SummaryLabel>Cartão de Crédito</S.SummaryLabel>
-                        <S.SummaryValue $accent>{formatCurrency(stripe?.amount ?? 0)}</S.SummaryValue>
-                        <S.SummarySubtitle>{stripe?.count ?? 0} pagamento{stripe?.count !== 1 ? "s" : ""}</S.SummarySubtitle>
-                    </S.RevenueMethodInfo>
-                </S.RevenueMethodCard>
+                <S.SummaryCard>
+                    <S.SummaryLabel>Receita confirmada</S.SummaryLabel>
+                    <S.SummaryValue>{formatCurrency(summary.totalRevenue ?? 0)}</S.SummaryValue>
+                    <S.SummarySubtitle>reservas pagas</S.SummarySubtitle>
+                </S.SummaryCard>
 
-                <S.RevenueMethodCard className="anim-card">
-                    <S.RevenueMethodIcon>⚡</S.RevenueMethodIcon>
-                    <S.RevenueMethodInfo>
-                        <S.SummaryLabel>PIX</S.SummaryLabel>
-                        <S.SummaryValue $accent>{formatCurrency(pix?.amount ?? 0)}</S.SummaryValue>
-                        <S.SummarySubtitle>{pix?.count ?? 0} pagamento{pix?.count !== 1 ? "s" : ""}</S.SummarySubtitle>
-                    </S.RevenueMethodInfo>
-                </S.RevenueMethodCard>
+                <S.SummaryCard>
+                    <S.SummaryLabel>Cartão de crédito</S.SummaryLabel>
+                    <S.SummaryValue>{formatCurrency(stripe?.amount ?? 0)}</S.SummaryValue>
+                    <S.SummarySubtitle>{paymentCount(stripe?.count)}</S.SummarySubtitle>
+                </S.SummaryCard>
+
+                <S.SummaryCard>
+                    <S.SummaryLabel>PIX</S.SummaryLabel>
+                    <S.SummaryValue>{formatCurrency(pix?.amount ?? 0)}</S.SummaryValue>
+                    <S.SummarySubtitle>{paymentCount(pix?.count)}</S.SummarySubtitle>
+                </S.SummaryCard>
             </S.RevenueBreakdown>
 
             {monthly && (
                 <>
-                    <S.SectionTitle style={{ marginTop: "32px" }}>Receita mensal — {monthly.year}</S.SectionTitle>
+                    <S.SectionTitle style={{ marginTop: 16 }}>Receita mensal de {monthly.year}</S.SectionTitle>
                     <S.TableWrapper>
                         <S.MonthlyTable>
                             <thead>
                                 <tr>
                                     <S.MonthlyTh>Mês</S.MonthlyTh>
-                                    <S.MonthlyTh>Receita</S.MonthlyTh>
-                                    <S.MonthlyTh>Reservas</S.MonthlyTh>
-                                    <S.MonthlyTh>Cartão</S.MonthlyTh>
-                                    <S.MonthlyTh>PIX</S.MonthlyTh>
-                                    <S.MonthlyTh style={{ width: "160px" }}></S.MonthlyTh>
+                                    <S.MonthlyTh $num $hideSm>Reservas</S.MonthlyTh>
+                                    <S.MonthlyTh $num $hideSm>Cartão</S.MonthlyTh>
+                                    <S.MonthlyTh $num $hideSm>PIX</S.MonthlyTh>
+                                    <S.MonthlyTh $num>Receita</S.MonthlyTh>
+                                    <S.MonthlyTh style={{ width: "28%" }}>
+                                        <S.VisuallyHidden>Proporção da receita</S.VisuallyHidden>
+                                    </S.MonthlyTh>
                                 </tr>
                             </thead>
                             <tbody>
                                 {(() => {
                                     const maxRevenue = Math.max(...monthly.months.map((m) => m.revenue), 1);
-                                    return monthly.months.map((m) => (
-                                        <S.MonthlyTr key={m.month}>
-                                            <S.MonthlyTd>{MONTH_NAMES[m.month - 1]}</S.MonthlyTd>
-                                            <S.MonthlyTd>{formatCurrency(m.revenue)}</S.MonthlyTd>
-                                            <S.MonthlyTd>{m.count}</S.MonthlyTd>
-                                            <S.MonthlyTd>{formatCurrency(m.stripe)}</S.MonthlyTd>
-                                            <S.MonthlyTd>{formatCurrency(m.pix)}</S.MonthlyTd>
-                                            <S.MonthlyTd>
-                                                <S.RevenueBar $pct={Math.round((m.revenue / maxRevenue) * 100)} />
-                                            </S.MonthlyTd>
-                                        </S.MonthlyTr>
-                                    ));
+                                    return monthly.months.map((m) => {
+                                        const empty = m.revenue === 0 && m.count === 0;
+                                        return (
+                                            <S.MonthlyTr key={m.month}>
+                                                <S.MonthlyTd>{MONTH_NAMES[m.month - 1]}</S.MonthlyTd>
+                                                <S.MonthlyTd $num $hideSm $muted={empty}>{m.count}</S.MonthlyTd>
+                                                <S.MonthlyTd $num $hideSm $muted={empty}>{formatCurrency(m.stripe)}</S.MonthlyTd>
+                                                <S.MonthlyTd $num $hideSm $muted={empty}>{formatCurrency(m.pix)}</S.MonthlyTd>
+                                                <S.MonthlyTd $num $muted={empty}>
+                                                    {formatCurrency(m.revenue)}
+                                                    <S.MonthlyCount aria-hidden="true">
+                                                        {m.count} reserva{m.count !== 1 ? "s" : ""}
+                                                    </S.MonthlyCount>
+                                                </S.MonthlyTd>
+                                                <S.MonthlyTd>
+                                                    <S.RevenueBar $pct={Math.round((m.revenue / maxRevenue) * 100)} />
+                                                </S.MonthlyTd>
+                                            </S.MonthlyTr>
+                                        );
+                                    });
                                 })()}
                             </tbody>
                         </S.MonthlyTable>

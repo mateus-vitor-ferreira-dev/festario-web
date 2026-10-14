@@ -67,6 +67,8 @@ export default function ForgotPassword({ introFinished = true }) {
                         placeholder="Digite seu e-mail cadastrado"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        maxLength={254}
+                        autoComplete="email"
                     />
 
                     <Button type="submit" disabled={loading}>

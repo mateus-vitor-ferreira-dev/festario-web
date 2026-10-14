@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import ErrorBoundary from "../../../components/ErrorBoundary";
+import type { ContratoRVRProps } from "../../../components/ContratoRVR";
 import * as S from "../styles";
 
 const ContratoDownloadLink = lazy(() => import("../../../components/ContratoRVR/DownloadLink"));
@@ -7,7 +8,7 @@ const ContratoDownloadLink = lazy(() => import("../../../components/ContratoRVR/
 interface ContractSectionProps {
     planCode: string;
     eventDate: string;
-    contratoProps: Record<string, unknown>;
+    contratoProps: ContratoRVRProps;
     acceptedContract: boolean;
     onAcceptedChange: (value: boolean) => void;
 }

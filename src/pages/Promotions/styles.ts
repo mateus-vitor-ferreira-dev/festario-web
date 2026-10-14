@@ -1,11 +1,17 @@
 import styled, { keyframes } from "styled-components";
+import { media } from "../../styles/breakpoints";
 
 const spin = keyframes`to { transform: rotate(360deg); }`;
 
 export const Container = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 40px;
+
+  /* Folga para o botão flutuante do chat (56px + 28px) não cobrir o fim do conteúdo */
+  ${media.md} {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
 `;
 
 export const Header = styled.section`
@@ -15,48 +21,57 @@ export const Header = styled.section`
 `;
 
 export const Title = styled.h1`
-  font-size: 32px;
-  font-weight: 700;
+  font-size: var(--text-3xl);
   color: var(--text-primary);
+  line-height: 1.1;
+
+  ${media.sm} {
+    font-size: var(--text-2xl);
+  }
 `;
 
 export const Description = styled.p`
   color: var(--text-muted);
   line-height: 1.6;
-  font-size: 15px;
+  font-size: var(--text-base);
+  max-width: 640px;
 `;
 
-export const SectionTitle = styled.h2`
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 4px;
-`;
-
-export const CampaignGrid = styled.div`
+export const Section = styled.section`
   display: flex;
   flex-direction: column;
   gap: 16px;
 `;
 
+export const SectionTitle = styled.h2`
+  font-size: var(--text-xl);
+  color: var(--text-primary);
+`;
+
+export const CampaignGrid = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
 export const CampaignCard = styled.div<{ $inactive?: boolean }>`
-  background: var(--bg-surface);
+  background: ${({ $inactive }) => ($inactive ? "transparent" : "var(--bg-surface)")};
   border: 1px solid var(--border-default);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   padding: 24px 28px;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
   display: flex;
   flex-direction: column;
   gap: 14px;
-  opacity: ${({ $inactive }) => ($inactive ? 0.65 : 1)};
   cursor: ${({ $inactive }) => ($inactive ? "pointer" : "default")};
   transition: border-color 0.15s;
 
   ${({ $inactive }) => $inactive && `
     &:hover { border-color: var(--border-medium); }
   `}
+
+  ${media.md} {
+    padding: 20px;
+  }
 `;
 
 export const UnavailableReason = styled.div<{ $open: boolean }>`
@@ -64,59 +79,71 @@ export const UnavailableReason = styled.div<{ $open: boolean }>`
   max-height: ${({ $open }) => ($open ? "120px" : "0")};
   opacity: ${({ $open }) => ($open ? 1 : 0)};
   transition: max-height 0.28s ease, opacity 0.2s ease;
-  padding-top: ${({ $open }) => ($open ? "4px" : "0")};
   border-top: ${({ $open }) => ($open ? "1px solid var(--border-default)" : "none")};
 `;
 
 export const UnavailableText = styled.p`
-  font-size: 13px;
-  color: var(--text-muted);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
   line-height: 1.6;
-  padding-top: 10px;
+  padding-top: 12px;
 `;
 
-export const ExpandHint = styled.span`
-  font-size: 12px;
-  color: var(--text-faint);
-  display: flex;
+export const ExpandHint = styled.span<{ $open?: boolean }>`
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  margin-top: -6px;
+  gap: 8px;
+  align-self: flex-start;
+  min-height: 32px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--brand);
+  margin-top: -8px;
+
+  &::after {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: ${({ $open }) => ($open ? "translateY(2px) rotate(-135deg)" : "translateY(-2px) rotate(45deg)")};
+    transition: transform 0.2s ease;
+  }
 `;
 
 export const CampaignTop = styled.div`
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 8px 16px;
+
+  ${media.sm} {
+    flex-wrap: wrap;
+  }
 `;
 
 export const CampaignLeft = styled.div`
   display: flex;
   align-items: center;
   gap: 14px;
-`;
-
-export const CampaignIcon = styled.div`
-  font-size: 28px;
-  line-height: 1;
-  flex-shrink: 0;
+  min-width: 0;
 `;
 
 export const CampaignMeta = styled.div`
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
 `;
 
-export const CampaignName = styled.strong`
-  font-size: 17px;
-  font-weight: 700;
+export const CampaignName = styled.h3`
+  font-size: var(--text-lg);
   color: var(--text-primary);
+  line-height: 1.2;
 `;
 
 export const CampaignType = styled.span`
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   font-weight: 500;
 `;
@@ -124,11 +151,11 @@ export const CampaignType = styled.span`
 export const StatusBadge = styled.span<{ $active?: boolean }>`
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 600;
   white-space: nowrap;
   flex-shrink: 0;
 
@@ -148,65 +175,84 @@ export const StatusBadge = styled.span<{ $active?: boolean }>`
 `;
 
 export const CampaignDesc = styled.p`
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--text-secondary);
   line-height: 1.6;
+  max-width: 680px;
 `;
 
 export const CampaignDates = styled.span`
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 `;
 
 export const InviteForm = styled.form`
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  padding-top: 4px;
+  padding-top: 16px;
   border-top: 1px solid var(--border-default);
+
+  ${media.sm} {
+    flex-direction: column;
+  }
 `;
 
 export const InviteInput = styled.input`
   flex: 1;
   min-width: 200px;
-  height: 42px;
+  height: 44px;
+
+  ${media.sm} {
+    min-width: 0;
+    width: 100%;
+    flex: none;
+  }
   padding: 0 14px;
   border: 1px solid var(--border-medium);
-  border-radius: 10px;
-  background: var(--bg-page);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: var(--text-base);
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 
-  &:focus { border-color: var(--brand); }
+  &:focus {
+    border-color: var(--brand);
+    box-shadow: var(--focus-ring);
+  }
   &::placeholder { color: var(--text-faint); }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &:disabled { background: var(--bg-muted); cursor: not-allowed; }
 `;
 
 export const InviteButton = styled.button`
-  height: 42px;
+  min-height: 44px;
   padding: 0 20px;
   background: var(--brand);
-  color: #fff;
+  color: var(--on-brand);
   border: none;
-  border-radius: 10px;
-  font-size: 14px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
-  transition: opacity 0.15s;
+  transition: background 0.15s;
 
-  &:hover:not(:disabled) { opacity: 0.9; }
+  &:hover:not(:disabled) { background: var(--brand-dark); }
   &:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  ${media.sm} {
+    width: 100%;
+  }
 `;
 
 export const NoCampaignBanner = styled.div`
   background: var(--status-pending-bg);
   border: 1px solid var(--status-pending-border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 12px 16px;
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--status-pending-text-deep);
   line-height: 1.5;
 `;
@@ -214,28 +260,32 @@ export const NoCampaignBanner = styled.div`
 export const InstagramLink = styled.a`
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--brand);
   text-decoration: none;
-  padding-top: 4px;
-  border-top: 1px solid var(--border-default);
+  transition: background 0.15s;
 
-  &:hover { text-decoration: underline; }
+  &:hover { background: var(--brand-subtle); }
 `;
 
 // Seção de descontos
 export const GrantsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 14px;
+  /* auto-fill (não auto-fit) para um único desconto não esticar na largura toda */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
 `;
 
 export const GrantCard = styled.div`
   background: var(--bg-surface);
-  border: 1px solid var(--status-paid-border);
-  border-radius: 16px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
   padding: 20px 22px;
   display: flex;
   flex-direction: column;
@@ -243,63 +293,106 @@ export const GrantCard = styled.div`
 `;
 
 export const GrantPercent = styled.span`
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--status-paid-text);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-primary);
+  font-variant-numeric: lining-nums tabular-nums;
+
+  small {
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-left: 6px;
+  }
 `;
 
 export const GrantCampaign = styled.span`
-  font-size: 13px;
+  font-size: var(--text-base);
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-secondary);
+  margin-top: 6px;
 `;
 
 export const GrantExpiry = styled.span`
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 `;
 
 export const EmptyGrants = styled.p`
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--text-muted);
-  padding: 16px 0;
+  line-height: 1.6;
+  padding: 20px 0;
+  border-top: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-default);
 `;
 
-// Seção de indicações
+// Seção de indicações — uma lista com divisórias finas
 export const ReferralList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
 `;
 
 export const ReferralCard = styled.div`
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: 14px;
   padding: 16px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+  border-bottom: 1px solid var(--border-default);
+
+  &:last-child { border-bottom: none; }
+
+  /* ≤md: e-mail em linha própria; data e status lado a lado logo abaixo */
+  ${media.md} {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 4px 12px;
+    padding: 14px 16px;
+  }
 `;
 
 export const ReferralInfo = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
+  min-width: 0;
 
-  strong { font-size: 14px; color: var(--text-primary); }
-  span { font-size: 12px; color: var(--text-muted); }
+  ${media.md} {
+    display: contents;
+
+    strong { grid-column: 1 / -1; }
+  }
+
+  strong {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--text-primary);
+    overflow-wrap: anywhere;
+  }
+  span {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
 `;
 
 export const ReferralBadge = styled.span<{ $status?: string }>`
   display: inline-flex;
   align-items: center;
-  padding: 5px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 600;
   border: 1px solid;
   white-space: nowrap;
 
@@ -319,9 +412,12 @@ export const ReferralBadge = styled.span<{ $status?: string }>`
 `;
 
 export const EmptyReferrals = styled.p`
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--text-muted);
-  padding: 16px 0;
+  line-height: 1.6;
+  padding: 20px 0;
+  border-top: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-default);
 `;
 
 export const Spinner = styled.div`

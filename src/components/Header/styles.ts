@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
 import styled from "styled-components";
+import { media } from "../../styles/breakpoints";
 
 export const Container = styled.header`
   width: 100%;
   border-bottom: 1px solid var(--border-default);
-  background: var(--bg-surface);
+  background: color-mix(in srgb, var(--bg-page) 88%, transparent);
+  backdrop-filter: saturate(1.4) blur(10px);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -16,7 +18,13 @@ export const Content = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   min-height: 64px;
-  padding: 0 24px;
+  padding: 0 max(24px, env(safe-area-inset-right)) 0 max(24px, env(safe-area-inset-left));
+
+  ${media.sm} {
+    padding: 0 16px;
+    gap: 12px;
+  }
+
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -26,50 +34,73 @@ export const Content = styled.div`
 export const BrandWrapper = styled(Link)`
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   text-decoration: none;
   white-space: nowrap;
 `;
 
 export const Logo = styled.img`
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
   object-fit: contain;
 `;
 
 export const BrandText = styled.span`
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--brand);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
 
-  @media (max-width: 600px) {
+  ${media.sm} {
     display: none;
   }
 `;
 
-export const Nav = styled.nav`
+export const Nav = styled.nav<{ $open?: boolean }>`
   display: flex;
   align-items: center;
   gap: 4px;
   flex: 1;
 
-  @media (max-width: 768px) {
-    display: none;
+  ${media.lg} {
+    display: ${({ $open }) => ($open ? "flex" : "none")};
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding: 8px 16px 16px;
+    background: var(--bg-page);
+    border-bottom: 1px solid var(--border-default);
+    box-shadow: var(--shadow-lg);
+    max-height: calc(100dvh - 64px);
+    overflow-y: auto;
   }
 `;
 
 export const NavLink = styled(Link)<{ $active?: boolean }>`
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
+  padding: 8px 12px;
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: ${({ $active }) => ($active ? 700 : 500)};
   color: ${({ $active }) => ($active ? "var(--brand)" : "var(--text-muted)")};
-  background: ${({ $active }) => ($active ? "var(--status-paid-bg)" : "transparent")};
+  background: ${({ $active }) => ($active ? "var(--brand-subtle)" : "transparent")};
   transition: background 0.15s ease, color 0.15s ease;
 
   &:hover {
     background: var(--bg-muted);
     color: var(--text-primary);
+  }
+
+  ${media.lg} {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 0 12px;
+    font-size: var(--text-base);
   }
 `;
 
@@ -82,7 +113,7 @@ export const Actions = styled.div`
 export const ProfileLink = styled(Link)`
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   text-decoration: none;
   border-radius: 10px;
   padding: 4px 8px 4px 4px;
@@ -92,7 +123,7 @@ export const ProfileLink = styled(Link)`
     background: var(--bg-muted);
   }
 
-  @media (max-width: 480px) {
+  ${media.sm} {
     padding: 4px;
   }
 `;
@@ -102,14 +133,14 @@ export const Avatar = styled.div`
   height: 34px;
   border-radius: 50%;
   background: var(--brand);
-  color: #ffffff;
-  font-size: 13px;
+  color: var(--on-brand);
+  font-family: var(--font-display);
+  font-size: 14px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  letter-spacing: 0.03em;
 `;
 
 export const UserInfo = styled.div`
@@ -118,29 +149,31 @@ export const UserInfo = styled.div`
   line-height: 1.2;
 
   span {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-faint);
   }
 
   strong {
-    font-size: 13px;
+    font-size: var(--text-sm);
     font-weight: 600;
     color: var(--text-primary);
   }
 
-  @media (max-width: 768px) {
+  /* abaixo de 1200px o avatar sozinho basta; libera espaço para a nav */
+  @media (max-width: 1200px) {
     display: none;
   }
 `;
 
 export const LogoutButton = styled.button`
-  border: 1px solid var(--border-default);
-  background: var(--bg-surface);
-  color: var(--text-secondary);
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
+  min-height: 40px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 500;
   cursor: pointer;
   transition: background 0.15s ease;
   white-space: nowrap;
@@ -152,10 +185,10 @@ export const LogoutButton = styled.button`
 
 export const VerificationBanner = styled.div`
   width: 100%;
-  background: #fef9c3;
-  border-bottom: 1px solid #fde047;
-  color: #713f12;
-  font-size: 13px;
+  background: var(--status-pending-bg);
+  border-bottom: 1px solid var(--status-pending-border);
+  color: var(--status-pending-text);
+  font-size: var(--text-sm);
   padding: 8px 24px;
   display: flex;
   align-items: center;
@@ -167,9 +200,9 @@ export const VerificationBanner = styled.div`
 export const ResendButton = styled.button`
   background: none;
   border: none;
-  color: #713f12;
+  color: var(--status-pending-text);
   font-weight: 700;
-  font-size: 13px;
+  font-size: var(--text-sm);
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -182,11 +215,11 @@ export const ResendButton = styled.button`
 `;
 
 export const ThemeToggle = styled.button`
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  border: 1px solid var(--border-default);
-  background: var(--bg-surface);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
   color: var(--text-muted);
   cursor: pointer;
   display: flex;
@@ -203,5 +236,28 @@ export const ThemeToggle = styled.button`
   svg {
     width: 18px;
     height: 18px;
+  }
+`;
+
+export const MenuButton = styled.button`
+  display: none;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  ${media.lg} {
+    display: inline-flex;
   }
 `;

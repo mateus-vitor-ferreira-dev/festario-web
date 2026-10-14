@@ -39,6 +39,18 @@ interface ReservationSummaryProps {
     quoteLoading: boolean;
 }
 
+/** Formata `YYYY-MM-DD` como "sáb., 14 de nov. de 2026". */
+function formatEventDate(value: string): string {
+    const date = new Date(`${value}T12:00:00`);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString("pt-BR", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+    });
+}
+
 /**
  * Coluna direita: resumo dos campos selecionados e breakdown da cotação.
  */
@@ -67,7 +79,7 @@ export function ReservationSummary({
                 </S.SummaryItem>
                 <S.SummaryItem>
                     <span>Data</span>
-                    <strong>{eventDate || "Não selecionada"}</strong>
+                    <strong>{eventDate ? formatEventDate(eventDate) : "Não selecionada"}</strong>
                 </S.SummaryItem>
                 <S.SummaryItem>
                     <span>Início</span>
@@ -91,6 +103,7 @@ export function ReservationSummary({
 
             {normalizedQuote && !quoteLoading && (
                 <>
+                    <S.QuoteList>
                     {normalizedQuote.items?.map((item, i) => (
                         <S.SummaryItem key={i}>
                             <span>
@@ -121,6 +134,7 @@ export function ReservationSummary({
                             </S.SummaryItem>
                         </>
                     )}
+                    </S.QuoteList>
 
                     <S.TotalRow>
                         <span>Total</span>

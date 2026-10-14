@@ -1,69 +1,53 @@
-import styled, { keyframes } from "styled-components";
-
-const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
-`;
+import styled from "styled-components";
+import { media } from "../../styles/breakpoints";
 
 /* ─── Shell ─── */
 
 export const Container = styled.div`
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
 
-  @media (max-width: 860px) {
+  ${media.lg} {
     grid-template-columns: 1fr;
   }
 `;
 
 /* ─── Left — brand panel ─── */
 
-export const LeftSide = styled.div`
-  position: relative;
-  overflow: hidden;
-  background: #1a3d32;
-  background-image:
-    radial-gradient(ellipse at 20% 10%, #2a5c49 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 80%, #0f2820 0%, transparent 50%);
-  padding: 56px 52px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+export const LeftSide = styled.aside`
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  background: #133428;
+  color: #ffffff;
+  padding: 40px clamp(32px, 4vw, 56px) 48px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 32px;
 
-  @media (max-width: 860px) {
+  ${media.lg} {
     display: none;
   }
 `;
 
-export const LeftInner = styled.div`
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 40px;
-`;
-
 export const Brand = styled.div`
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
 `;
 
 export const BrandName = styled.span`
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--gold);
-  text-shadow: 0 2px 12px rgba(201, 168, 76, 0.25);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: #ffffff;
 `;
 
 export const BrandLogoWrapper = styled.div<{ $visible: boolean }>`
-  width: min(190px, 28vw);
+  width: 56px;
   opacity: ${({ $visible }) => ($visible ? 1 : 0)};
   transition: opacity 180ms ease;
   display: flex;
@@ -77,63 +61,46 @@ export const BrandLogo = styled.img`
   object-fit: contain;
 `;
 
+/* Assinatura: janela em arco colonial com a foto da piscina */
+export const Arch = styled.figure`
+  margin: 0;
+  min-height: 0;
+  width: min(100%, 420px);
+  justify-self: start;
+  border-radius: var(--radius-arch);
+  padding: 8px;
+  border: 1px solid #b08a35;
+  overflow: hidden;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 999px 999px 8px 8px;
+  }
+`;
+
 export const LeftBody = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
+  max-width: 420px;
 `;
 
 export const Headline = styled.h1`
-  font-size: 36px;
-  font-weight: 800;
+  font-size: var(--text-3xl);
+  font-weight: 600;
   color: #ffffff;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  max-width: 380px;
+  line-height: 1.1;
   margin: 0;
 `;
 
 export const Tagline = styled.p`
-  font-size: 15px;
-  line-height: 1.7;
-  color: rgba(255, 255, 255, 0.6);
-  max-width: 360px;
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.72);
   margin: 0;
-`;
-
-/* decorative circles */
-
-export const Deco1 = styled.div`
-  position: absolute;
-  width: 380px;
-  height: 380px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  bottom: -140px;
-  right: -120px;
-  pointer-events: none;
-`;
-
-export const Deco2 = styled.div`
-  position: absolute;
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  top: 24px;
-  right: 32px;
-  pointer-events: none;
-`;
-
-export const Deco3 = styled.div`
-  position: absolute;
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.03);
-  top: 80px;
-  left: 40px;
-  pointer-events: none;
 `;
 
 /* ─── Right — form panel ─── */
@@ -145,7 +112,7 @@ export const RightSide = styled.div`
   background: var(--bg-page);
   padding: 48px 32px;
 
-  @media (max-width: 480px) {
+  ${media.sm} {
     padding: 32px 20px;
     align-items: flex-start;
     padding-top: 48px;
@@ -154,21 +121,20 @@ export const RightSide = styled.div`
 
 export const FormArea = styled.div`
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   display: flex;
   flex-direction: column;
   gap: 28px;
-  animation: ${fadeIn} 0.35s ease;
 `;
 
 export const MobileBrand = styled.div<{ $visible: boolean }>`
   display: none;
 
-  @media (max-width: 860px) {
+  ${media.lg} {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 4px;
     opacity: ${({ $visible }) => ($visible ? 1 : 0)};
     transition: opacity 180ms ease;
@@ -182,29 +148,27 @@ export const MobileBrandLogo = styled.img`
 `;
 
 export const MobileBrandName = styled.span`
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
 `;
 
 export const FormHeader = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 `;
 
 export const Title = styled.h2`
-  font-size: 26px;
-  font-weight: 800;
+  font-size: var(--text-2xl);
+  font-weight: 600;
   color: var(--text-primary);
-  letter-spacing: -0.02em;
   margin: 0;
 `;
 
 export const Subtitle = styled.p`
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--text-muted);
   line-height: 1.5;
   margin: 0;

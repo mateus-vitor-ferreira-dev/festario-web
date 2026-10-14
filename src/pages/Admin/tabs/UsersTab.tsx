@@ -32,6 +32,8 @@ export function UsersTab() {
     useEffect(() => {
         setPage(1);
         load(1);
+    // `load` é recriada a cada render; incluí-la recarregaria a lista em loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [search]);
 
     function handleSearch(e: React.FormEvent<HTMLFormElement>) {
@@ -82,20 +84,20 @@ export function UsersTab() {
                                     <S.Th>E-mail</S.Th>
                                     <S.Th>Telefone</S.Th>
                                     <S.Th>Perfil</S.Th>
-                                    <S.Th>Reservas</S.Th>
+                                    <S.Th $num>Reservas</S.Th>
                                     <S.Th>Cadastro</S.Th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {users.map((u) => (
                                     <S.Tr key={u.id}>
-                                        <S.Td>{u.name}</S.Td>
+                                        <S.Td><strong>{u.name}</strong></S.Td>
                                         <S.Td>{u.email}</S.Td>
                                         <S.Td>{u.phone ?? "—"}</S.Td>
                                         <S.Td>
                                             <S.RoleBadge $role={u.role}>{u.role}</S.RoleBadge>
                                         </S.Td>
-                                        <S.Td>{u._count?.reservations ?? 0}</S.Td>
+                                        <S.Td $num>{u._count?.reservations ?? 0}</S.Td>
                                         <S.Td>{formatDate(u.createdAt)}</S.Td>
                                     </S.Tr>
                                 ))}

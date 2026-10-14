@@ -34,8 +34,8 @@ export async function getReservationsSummary(filters: Record<string, unknown> = 
  *
  * @see GET /admin/reservations
  */
-export async function listAdminReservations(filters: Record<string, unknown> = {}): Promise<Reservation[]> {
-    const { data } = await api.get("/admin/reservations", { params: filters });
+export async function listAdminReservations(filters: Record<string, unknown> = {}, signal?: AbortSignal): Promise<Reservation[]> {
+    const { data } = await api.get("/admin/reservations", { params: filters, signal });
     return data.data;
 }
 
@@ -122,8 +122,8 @@ export async function drawRaffleWinner(id: string): Promise<RaffleWinnerResult> 
  *
  * @see GET /admin/holidays
  */
-export async function listHolidays(year: number): Promise<Holiday[]> {
-    const { data } = await api.get("/admin/holidays", { params: { year } });
+export async function listHolidays(year: number, signal?: AbortSignal): Promise<Holiday[]> {
+    const { data } = await api.get("/admin/holidays", { params: { year }, signal });
     return data.data;
 }
 
@@ -173,8 +173,8 @@ export async function deleteHoliday(id: string): Promise<void> {
  *
  * @see GET /admin/plans
  */
-export async function listPlans(filters: Record<string, unknown> = {}): Promise<ReservationPlan[]> {
-    const { data } = await api.get("/admin/plans", { params: filters });
+export async function listPlans(filters: Record<string, unknown> = {}, signal?: AbortSignal): Promise<ReservationPlan[]> {
+    const { data } = await api.get("/admin/plans", { params: filters, signal });
     return data.data;
 }
 

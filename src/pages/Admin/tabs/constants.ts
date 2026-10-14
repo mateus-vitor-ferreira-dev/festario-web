@@ -1,4 +1,4 @@
-import type { Campaign, RaffleWinnerResult } from "../../../types";
+import type { Campaign, NegotiationStatus, RaffleWinnerResult } from "../../../types";
 // Constantes e helpers compartilhados entre as abas do painel admin
 export { REFUND_TIERS, getRefundPercentage } from "../../../constants/reservation";
 
@@ -9,7 +9,7 @@ export const TABS = [
     { key: "negotiations", label: "Negociações" },
     { key: "campaigns", label: "Campanhas" },
     { key: "holidays", label: "Feriados" },
-    { key: "blockedDates", label: "Datas Bloqueadas" },
+    { key: "blockedDates", label: "Datas bloqueadas" },
     { key: "plans", label: "Planos" },
     { key: "venues", label: "Espaços" },
 ];
@@ -30,16 +30,18 @@ export const STATUS_LABELS = {
     EXPIRED: "Expirado",
 };
 
-export const NEG_STATUS_OPTIONS = [
+export const NEG_STATUS_OPTIONS: Array<{ value: NegotiationStatus | ""; label: string }> = [
     { value: "", label: "Todos os status" },
     { value: "OPEN", label: "Aberta" },
+    { value: "PENDING_APPROVAL", label: "Proposta enviada" },
     { value: "ACCEPTED", label: "Aceita" },
     { value: "REJECTED", label: "Recusada" },
     { value: "CLOSED", label: "Encerrada" },
 ];
 
-export const NEG_STATUS_LABELS = {
+export const NEG_STATUS_LABELS: Record<NegotiationStatus, string> = {
     OPEN: "Aberta",
+    PENDING_APPROVAL: "Proposta enviada",
     ACCEPTED: "Aceita",
     REJECTED: "Recusada",
     CLOSED: "Encerrada",
@@ -52,9 +54,9 @@ export const CAMPAIGN_TYPE_LABELS = {
 };
 
 export const CAMPAIGN_TYPE_OPTIONS = [
-    { value: "REFERRAL_NEXT_BOOKING", label: "Indicação (REFERRAL_NEXT_BOOKING)" },
-    { value: "LOYALTY_ALWAYS_HERE", label: "Fidelidade (LOYALTY_ALWAYS_HERE)" },
-    { value: "RAFFLE_VIP", label: "Sorteio VIP (RAFFLE_VIP)" },
+    { value: "REFERRAL_NEXT_BOOKING", label: "Indicação" },
+    { value: "LOYALTY_ALWAYS_HERE", label: "Fidelidade" },
+    { value: "RAFFLE_VIP", label: "Sorteio VIP" },
 ];
 
 export const CAMPAIGN_STATUS_LABELS = {
