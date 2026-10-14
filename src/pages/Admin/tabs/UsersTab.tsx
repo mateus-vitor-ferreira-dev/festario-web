@@ -24,11 +24,7 @@ export function UsersTab() {
     const topRef = useRef<HTMLDivElement | null>(null);
     const { values, page, activeKeys, setFilter, setPage, clearFilters } = useListParams<UserFilterKey>(USER_FILTER_KEYS);
 
-    // a API usa `search` (e aceita `q`); a URL usa `q`, como nas outras listas
-    const params = useMemo(
-        () => ({ search: values.q, role: values.role, page, limit: ADMIN_USERS_PAGE_SIZE }),
-        [values, page],
-    );
+    const params = useMemo(() => ({ ...values, page, limit: ADMIN_USERS_PAGE_SIZE }), [values, page]);
     const { data, meta, isLoading, isFetching } = usePaginatedQuery(listAdminUsersPage, params, {
         errorMessage: "Erro ao carregar usuários.",
         onPageOutOfRange: setPage,
@@ -64,7 +60,7 @@ export function UsersTab() {
                     label="Buscar"
                     placeholder="Buscar por nome ou e-mail"
                     value={values.q}
-                    onChange={(v) => setFilter("q", v, { replace: true })}
+                    onChange={(v) => setFilter("q", v)}
                     wide
                 />
                 <SelectField label="Perfil" value={values.role} onChange={(v) => setFilter("role", v)} options={ROLE_OPTIONS} />

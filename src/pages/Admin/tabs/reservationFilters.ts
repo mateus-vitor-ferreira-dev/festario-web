@@ -40,11 +40,11 @@ export const PLAN_OPTIONS: SelectOption[] = [
 ];
 
 export const SORT_OPTIONS: SelectOption[] = [
-    { value: "startDate:desc", label: "Data do evento (mais recentes)" },
-    { value: "startDate:asc", label: "Data do evento (mais antigas)" },
+    { value: "startDate:desc", label: "Evento mais recente" },
+    { value: "startDate:asc", label: "Evento mais antigo" },
     { value: "totalPrice:desc", label: "Maior valor" },
     { value: "totalPrice:asc", label: "Menor valor" },
-    { value: "createdAt:desc", label: "Criadas recentemente" },
+    { value: "createdAt:desc", label: "Criada por último" },
 ];
 
 const fmtDate = (iso: string) => {

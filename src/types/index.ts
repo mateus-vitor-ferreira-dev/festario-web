@@ -35,6 +35,8 @@ export interface Venue {
   basePricePerHour?: number;
   /** Alias retornado pela API em alguns endpoints */
   basePrice?: number | null;
+  /** Menor preço de plano ativo, em reais — é o "a partir de" do card e a base do filtro `maxPrice`. */
+  startingPrice?: number | string | null;
   location?: string | null;
   latitude?: number | null;
   longitude?: number | null;

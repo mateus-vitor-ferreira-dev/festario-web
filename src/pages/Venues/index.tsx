@@ -123,7 +123,7 @@ export default function Venues() {
                         type="text"
                         inputMode="numeric"
                         value={values.minCapacity}
-                        onChange={(v) => setFilter("minCapacity", onlyDigits(v), { replace: true })}
+                        onChange={(v) => setFilter("minCapacity", onlyDigits(v))}
                     />
                     <TextField
                         label="Preço máximo (R$)"
@@ -131,7 +131,7 @@ export default function Venues() {
                         type="text"
                         inputMode="decimal"
                         value={values.maxPrice}
-                        onChange={(v) => setFilter("maxPrice", parseMoney(v), { replace: true })}
+                        onChange={(v) => setFilter("maxPrice", parseMoney(v))}
                         debounceMs={500}
                     />
                 </FilterBar>
@@ -152,10 +152,18 @@ export default function Venues() {
                             <S.CardHeader>
                                 <S.CardTitle>{venue.name}</S.CardTitle>
 
-                                <S.PlansTag>
-                                    <span>A partir de</span>
-                                    <strong>R$ 650</strong>
-                                </S.PlansTag>
+                                {venue.startingPrice != null && (
+                                    <S.PlansTag>
+                                        <span>A partir de</span>
+                                        <strong>
+                                            {Number(venue.startingPrice).toLocaleString("pt-BR", {
+                                                style: "currency",
+                                                currency: "BRL",
+                                                maximumFractionDigits: 0,
+                                            })}
+                                        </strong>
+                                    </S.PlansTag>
+                                )}
                             </S.CardHeader>
 
                             <S.CardDescription>

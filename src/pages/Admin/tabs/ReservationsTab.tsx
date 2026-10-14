@@ -141,7 +141,7 @@ export function ReservationsTab() {
                     label="Cliente"
                     placeholder="Nome ou e-mail"
                     value={values.q}
-                    onChange={(v) => setFilter("q", v, { replace: true })}
+                    onChange={(v) => setFilter("q", v)}
                     wide
                 />
                 <SelectField
@@ -178,7 +178,7 @@ export function ReservationsTab() {
                     label="Valor da reserva"
                     min={values.minPrice}
                     max={values.maxPrice}
-                    onChange={({ min, max }) => setFilters({ minPrice: min, maxPrice: max }, { replace: true })}
+                    onChange={({ min, max }) => setFilters({ minPrice: min, maxPrice: max })}
                 />
                 <SelectField
                     label="Ordenar por"

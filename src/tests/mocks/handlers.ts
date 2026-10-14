@@ -71,7 +71,7 @@ export const venueHandlers = [
 
 export const reservationHandlers = [
     http.get(`${BASE_URL}/reservations`, () =>
-        HttpResponse.json({ success: true, data: [] })
+        HttpResponse.json({ success: true, data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 1 } })
     ),
 
     http.get(`${BASE_URL}/reservations/:id`, () =>
@@ -188,9 +188,9 @@ export const adminHandlers = [
         })
     ),
 
-    // formato real da API: listagem paginada dentro do envelope `data`
+    // formato do contrato: `{ data: T[], pagination }`
     http.get(`${BASE_URL}/admin/reservations`, () =>
-        HttpResponse.json({ success: true, data: { page: 1, limit: 20, data: [] } })
+        HttpResponse.json({ success: true, data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 1 } })
     ),
 
     http.get(`${BASE_URL}/admin/campaigns`, () =>
@@ -198,11 +198,11 @@ export const adminHandlers = [
     ),
 
     http.get(`${BASE_URL}/admin/holidays`, () =>
-        HttpResponse.json({ success: true, data: [] })
+        HttpResponse.json({ success: true, data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 1 } })
     ),
 
     http.get(`${BASE_URL}/admin/users`, () =>
-        HttpResponse.json({ success: true, data: { page: 1, limit: 20, total: 0, data: [] } })
+        HttpResponse.json({ success: true, data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 1 } })
     ),
 
     http.get(`${BASE_URL}/admin/plans`, () =>
@@ -230,7 +230,7 @@ export const availabilityHandlers = [
 
 export const negotiationHandlers = [
     http.get(`${BASE_URL}/negotiations`, () =>
-        HttpResponse.json({ success: true, data: [] })
+        HttpResponse.json({ success: true, data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 1 } })
     ),
 
     http.post(`${BASE_URL}/negotiations`, () =>

@@ -52,7 +52,7 @@ export function NegotiationsTab() {
                     label="Buscar"
                     placeholder="Assunto ou nome do cliente"
                     value={values.q}
-                    onChange={(v) => setFilter("q", v, { replace: true })}
+                    onChange={(v) => setFilter("q", v)}
                     wide
                 />
                 <SelectField

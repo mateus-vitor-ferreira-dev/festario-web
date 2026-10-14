@@ -1657,7 +1657,7 @@ describe("Admin - Users tab", () => {
         await user.type(screen.getByLabelText(/^buscar$/i), "João");
 
         await waitFor(() =>
-            expect(capturedUrl).toContain("search=Jo%C3%A3o")
+            expect(capturedUrl).toContain("q=Jo%C3%A3o")
         );
     });
 

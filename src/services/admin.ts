@@ -88,7 +88,7 @@ export async function listAdminUsers(filters: Record<string, unknown> = {}): Pro
 }
 
 /**
- * Lista usuários com paginação. A busca vai em `search` (aceito também como `q` pela API).
+ * Lista usuários com paginação e filtros (`q` — nome ou e-mail — e `role`).
  *
  * @see GET /admin/users
  */
