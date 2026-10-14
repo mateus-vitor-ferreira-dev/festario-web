@@ -8,6 +8,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { resendVerification } from "../../services/auth";
 import { animateFadeInUp } from "../../utils/animations";
 import { getHttpStatus } from "../../utils/errors";
+import { BRAND_NAME } from "../../config/brand";
 import * as S from "./styles";
 
 function getInitials(name: string): string {
@@ -136,8 +137,8 @@ export default function Header() {
             )}
             <S.Content>
                 <S.BrandWrapper to="/home">
-                    <S.Logo src={logo} alt="Logo Recanto Vila Rica" />
-                    <S.BrandText>Recanto Vila Rica</S.BrandText>
+                    <S.Logo src={logo} alt={`Logo ${BRAND_NAME}`} />
+                    <S.BrandText>{BRAND_NAME}</S.BrandText>
                 </S.BrandWrapper>
 
                 <S.Nav id="main-nav" aria-label="Principal" $open={menuOpen}>
