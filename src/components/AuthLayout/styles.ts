@@ -19,8 +19,9 @@ export const Container = styled.div`
 export const LeftSide = styled.aside`
   position: sticky;
   top: 0;
-  height: 100vh;
-  height: 100dvh;
+  /* altura mínima, nunca fixa: se a conta de escala errar, o painel cresce em vez de cortar o texto */
+  min-height: 100vh;
+  min-height: 100dvh;
   background: #133428;
   color: #ffffff;
   /* margens e espaços crescem com a tela, limitados também pela altura
@@ -31,7 +32,6 @@ export const LeftSide = styled.aside`
   /* áreas fixas: quando a prévia some (telas baixas), o título continua no rodapé do painel */
   grid-template-areas: "brand" "preview" "body";
   gap: clamp(20px, min(2.5vw, 3vh), 48px);
-  overflow: hidden;
 
   ${media.lg} {
     display: none;
@@ -77,12 +77,12 @@ export const Preview = styled.div`
   grid-area: preview;
   position: relative;
   align-self: center;
-  font-size: clamp(13px, min(1.05vw, 1.6vh), 21px);
+  font-size: clamp(12px, min(1.05vw, 1.35vh), 21px);
   width: min(100%, 27em);
   padding-top: 1.9em;
 
   /* em telas baixas a prévia não cabe junto da marca e do título: sai */
-  @media (max-height: 760px) {
+  @media (max-height: 720px) {
     display: none;
   }
 `;
