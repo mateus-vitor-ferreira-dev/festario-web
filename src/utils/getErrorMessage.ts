@@ -24,3 +24,13 @@ export function getErrorMessage(error: unknown, fallback = "Ocorreu um erro ines
 
     return translateApiMessage(rawMessage);
 }
+/**
+ * Mensagem para falhas de carregamento de dados: distingue falta de conexão e
+ * erro do servidor (5xx) antes de usar a mensagem da API.
+ */
+export function getLoadErrorMessage(error: unknown, fallback: string): string {
+    const e = error as { response?: { status: number } } | null;
+    if (!e?.response) return "Sem conexão com o servidor. Verifique sua internet.";
+    if (e.response.status >= 500) return "Erro interno do servidor. Tente novamente em instantes.";
+    return getErrorMessage(error, fallback);
+}

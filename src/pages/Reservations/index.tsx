@@ -1,10 +1,12 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useGSAP } from "@gsap/react";
 
 import { cancelReservation, listReservationsPaginated } from "../../services/reservation";
-import { usePagination } from "../../hooks/usePagination";
+import { usePaginatedQuery } from "../../hooks/usePaginatedQuery";
+import { useListParams } from "../../hooks/useListParams";
+import { NoResults, Pagination, SelectField } from "../../components";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { PLAN_LABELS, formatDate, formatTime, formatCurrency, calcDuration } from "../../utils/reservationFormat";
 import { STATUS_MAP, REFUND_TIERS, getRefundPercentage } from "../../constants/reservation";
@@ -19,7 +21,9 @@ import * as S from "./styles";
  * Reservas PENDING têm botão "Pagar" que navega para `/checkout/:reservationId`.
  * Reservas PENDING ou PAID podem ser canceladas com confirmação inline.
  *
- * @see GET /reservations?page=&limit=
+ * Filtro de status e página ficam na URL (`?status=PAID&page=2`).
+ *
+ * @see GET /reservations?page=&limit=&status=
  * @see PATCH /reservations/:id/cancel
  * @component
  */
@@ -40,14 +44,29 @@ function calcRefundEstimate(reservation: Reservation) {
 
 const PAGE_SIZE = 10;
 
+const FILTER_KEYS = ["status"] as const;
+
+const STATUS_FILTER_OPTIONS = [
+    { value: "", label: "Todas" },
+    { value: "PENDING", label: "Aguardando pagamento" },
+    { value: "PAID", label: "Pagas" },
+    { value: "CANCELLED", label: "Canceladas" },
+    { value: "EXPIRED", label: "Expiradas" },
+];
+
 export default function Reservations() {
     const navigate = useNavigate();
     const containerRef = useRef<HTMLDivElement | null>(null);
 
-    const { data: reservations, meta, isLoading, page, setPage, refresh } = usePagination(
+    const listTopRef = useRef<HTMLDivElement | null>(null);
+    const { values, page, activeKeys, setFilter, setPage, clearFilters } = useListParams(FILTER_KEYS);
+    const params = useMemo(() => ({ ...values, page, limit: PAGE_SIZE }), [values, page]);
+    const { data: reservations, meta, isLoading, isFetching, refresh } = usePaginatedQuery(
         listReservationsPaginated,
-        { limit: PAGE_SIZE, errorMessage: "Erro ao carregar reservas." }
+        params,
+        { errorMessage: "Erro ao carregar reservas.", onPageOutOfRange: setPage },
     );
+    const hasFilters = activeKeys.length > 0;
 
     const [cancellingId, setCancellingId] = useState<string | null>(null);
     const [confirmCancelReservation, setConfirmCancelReservation] = useState<Reservation | null>(null);
@@ -67,7 +86,7 @@ export default function Reservations() {
             setCancellingId(reservation.id);
             await cancelReservation(reservation.id);
             toast.success("Reserva cancelada com sucesso.");
-            await refresh();
+            refresh();
         } catch (error) {
             toast.error(getErrorMessage(error, "Erro ao cancelar reserva."));
         } finally {
@@ -89,7 +108,7 @@ export default function Reservations() {
         );
     }
 
-    if (!reservations.length && page === 1) {
+    if (!reservations.length && page === 1 && !hasFilters) {
         return (
             <S.Container>
                 <S.Header>
@@ -181,11 +200,36 @@ export default function Reservations() {
                 <S.Title>Minhas reservas</S.Title>
                 <S.Description>
                     Acompanhe o status das suas reservas e gerencie seus eventos.
-                    {meta?.total != null && ` ${meta.total} reserva${meta.total !== 1 ? "s" : ""} no total.`}
+                    {meta?.total != null && !hasFilters && ` ${meta.total} reserva${meta.total !== 1 ? "s" : ""} no total.`}
                 </S.Description>
             </S.Header>
 
-            <S.List>
+            <S.Toolbar ref={listTopRef} tabIndex={-1}>
+                <S.FilterSlot>
+                    <SelectField
+                        label="Mostrar reservas"
+                        value={values.status}
+                        onChange={(v) => setFilter("status", v)}
+                        options={STATUS_FILTER_OPTIONS}
+                    />
+                </S.FilterSlot>
+                {hasFilters && meta?.total != null && (
+                    <S.ResultCount aria-live="polite">
+                        {meta.total} reserva{meta.total !== 1 ? "s" : ""} encontrada{meta.total !== 1 ? "s" : ""}
+                    </S.ResultCount>
+                )}
+            </S.Toolbar>
+
+            {reservations.length === 0 && (
+                <NoResults
+                    title="Nenhuma reserva com esse status"
+                    description="Escolha outro status ou veja todas as suas reservas."
+                    onClear={clearFilters}
+                    clearLabel="Ver todas as reservas"
+                />
+            )}
+
+            <S.List aria-busy={isFetching} $busy={isFetching}>
                 {reservations.map((reservation) => {
                     const status = STATUS_MAP[reservation.status] ?? { label: reservation.status, color: "gray" };
                     const duration = calcDuration(reservation.startDate, reservation.endDate);
@@ -251,26 +295,19 @@ export default function Reservations() {
                 })}
             </S.List>
 
-            {meta && (meta.totalPages ?? 1) > 1 && (
-                <S.Pagination>
-                    <S.PageButton
-                        onClick={() => setPage((p) => p - 1)}
-                        disabled={page <= 1 || isLoading}
-                    >
-                        ← Anterior
-                    </S.PageButton>
-
-                    <S.PageInfo>
-                        Página {page} de {meta.totalPages ?? 1}
-                    </S.PageInfo>
-
-                    <S.PageButton
-                        onClick={() => setPage((p) => p + 1)}
-                        disabled={page >= (meta.totalPages ?? 1) || isLoading}
-                    >
-                        Próxima →
-                    </S.PageButton>
-                </S.Pagination>
+            {meta && (
+                <Pagination
+                    page={meta.page}
+                    totalPages={meta.totalPages}
+                    total={meta.total}
+                    limit={meta.limit}
+                    count={reservations.length}
+                    hasNext={meta.hasNext}
+                    onChange={setPage}
+                    scrollTargetRef={listTopRef}
+                    disabled={isFetching}
+                    label="Paginação das reservas"
+                />
             )}
         </S.Container>
     );

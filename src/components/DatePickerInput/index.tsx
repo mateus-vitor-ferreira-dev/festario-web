@@ -1,4 +1,4 @@
-import React, { forwardRef, InputHTMLAttributes } from "react";
+import React, { forwardRef, InputHTMLAttributes, useId } from "react";
 import ReactDatePicker, { registerLocale } from "react-datepicker";
 
 interface CustomInputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -6,6 +6,7 @@ interface CustomInputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 interface DatePickerInputProps {
+  id?: string;
   label?: string;
   name?: string;
   value?: string;
@@ -23,9 +24,15 @@ import * as InputS from "../Input/styles";
 
 registerLocale("pt-BR", ptBR);
 
-const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(({ value, onClick, onChange, placeholder, $error, name }, ref) => (
+const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(({ value, onClick, onChange, onKeyDown, onFocus, onBlur, placeholder, $error, name, id, ...rest }, ref) => (
     <InputS.Input
         ref={ref}
+        id={id}
+        aria-describedby={rest["aria-describedby"]}
+        aria-invalid={rest["aria-invalid"]}
+        onKeyDown={onKeyDown}
+        onFocus={onFocus}
+        onBlur={onBlur}
         value={value}
         onClick={onClick}
         onChange={onChange}
@@ -37,6 +44,7 @@ const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(({ value, onC
 ));
 
 export default function DatePickerInput({
+    id: idProp,
     label,
     name,
     value,
@@ -47,6 +55,9 @@ export default function DatePickerInput({
     maxDate,
     ...props
 }: DatePickerInputProps) {
+    // sem id o <label> ficava solto e leitores de tela não anunciavam o campo
+    const generatedId = useId();
+    const id = idProp ?? generatedId;
     const selected = value ? new Date(value + "T12:00:00") : null;
     const parsedMin = minDate ? new Date(minDate + "T12:00:00") : undefined;
     const parsedMax = maxDate ? new Date(maxDate + "T12:00:00") : undefined;
@@ -58,8 +69,9 @@ export default function DatePickerInput({
 
     return (
         <InputS.Container>
-            {label && <InputS.Label>{label}</InputS.Label>}
+            {label && <InputS.Label htmlFor={id}>{label}</InputS.Label>}
             <ReactDatePicker
+                id={id}
                 selected={selected}
                 onChange={handleChange}
                 dateFormat="dd/MM/yyyy"

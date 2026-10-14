@@ -5,6 +5,7 @@
  * automaticamente pelo interceptor do Axios (`services/api.js`).
  */
 import api from "./api";
+import { cleanParams, toPaginated } from "./pagination";
 import type {
     Reservation,
     User,
@@ -15,6 +16,8 @@ import type {
     ReservationSummary,
     MonthlyRevenue,
     RaffleWinnerResult,
+    PaginatedResult,
+    ListParams,
 } from "../types";
 
 /**
@@ -52,6 +55,17 @@ export async function listAdminReservations(filters: Record<string, unknown> = {
 }
 
 /**
+ * Lista reservas do admin com paginação e filtros (`status`, `startDate`, `endDate`,
+ * `q`, `venueId`, `planCode`, `minPrice`, `maxPrice`, `sort`).
+ *
+ * @see GET /admin/reservations
+ */
+export async function listAdminReservationsPage(params: ListParams = {}, signal?: AbortSignal): Promise<PaginatedResult<Reservation>> {
+    const { data } = await api.get("/admin/reservations", { params: cleanParams(params), signal });
+    return toPaginated<Reservation>(data, params);
+}
+
+/**
  * Cancela uma reserva como administrador.
  *
  * @see PATCH /admin/reservations/:id/cancel
@@ -71,6 +85,16 @@ export async function cancelAdminReservation(id: string): Promise<Reservation> {
 export async function listAdminUsers(filters: Record<string, unknown> = {}): Promise<User[]> {
     const { data } = await api.get("/admin/users", { params: filters });
     return unwrapList<User>(data.data);
+}
+
+/**
+ * Lista usuários com paginação e filtros (`q` — nome ou e-mail — e `role`).
+ *
+ * @see GET /admin/users
+ */
+export async function listAdminUsersPage(params: ListParams = {}, signal?: AbortSignal): Promise<PaginatedResult<User>> {
+    const { data } = await api.get("/admin/users", { params: cleanParams(params), signal });
+    return toPaginated<User>(data, params);
 }
 
 // ─── Revenue ──────────────────────────────────────────────────────────────────
@@ -137,6 +161,16 @@ export async function drawRaffleWinner(id: string): Promise<RaffleWinnerResult> 
 export async function listHolidays(year: number, signal?: AbortSignal): Promise<Holiday[]> {
     const { data } = await api.get("/admin/holidays", { params: { year }, signal });
     return data.data;
+}
+
+/**
+ * Lista feriados de um ano com paginação.
+ *
+ * @see GET /admin/holidays?year=&page=&limit=
+ */
+export async function listHolidaysPage(params: ListParams = {}, signal?: AbortSignal): Promise<PaginatedResult<Holiday>> {
+    const { data } = await api.get("/admin/holidays", { params: cleanParams(params), signal });
+    return toPaginated<Holiday>(data, params);
 }
 
 /**
@@ -229,6 +263,16 @@ export async function deletePlan(id: string): Promise<void> {
 export async function listBlockedDates(filters: Record<string, unknown> = {}): Promise<BlockedDate[]> {
     const { data } = await api.get("/blocked-dates", { params: filters });
     return data.data;
+}
+
+/**
+ * Lista datas bloqueadas com paginação e filtros (`venueId`, `from`, `to`).
+ *
+ * @see GET /blocked-dates
+ */
+export async function listBlockedDatesPage(params: ListParams = {}, signal?: AbortSignal): Promise<PaginatedResult<BlockedDate>> {
+    const { data } = await api.get("/blocked-dates", { params: cleanParams(params), signal });
+    return toPaginated<BlockedDate>(data, params);
 }
 
 /**

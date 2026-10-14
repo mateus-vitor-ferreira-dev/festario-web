@@ -35,6 +35,8 @@ export interface Venue {
   basePricePerHour?: number;
   /** Alias retornado pela API em alguns endpoints */
   basePrice?: number | null;
+  /** Menor preço de plano ativo, em reais — é o "a partir de" do card e a base do filtro `maxPrice`. */
+  startingPrice?: number | string | null;
   location?: string | null;
   latitude?: number | null;
   longitude?: number | null;
@@ -226,16 +228,30 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+/**
+ * Metadados de paginação no formato do contrato da API
+ * (`{ data, pagination: { page, limit, total, totalPages } }`).
+ * `total`/`totalPages` ficam opcionais para tolerar respostas antigas sem total;
+ * nesse caso `hasNext` indica se há uma próxima página.
+ */
 export interface PaginationMeta {
   page: number;
   limit: number;
   total?: number;
   totalPages?: number;
+  hasNext?: boolean;
 }
 
 export interface PaginatedResult<T> {
   data: T[];
   meta: PaginationMeta;
+}
+
+/** Parâmetros de consulta comuns a toda listagem paginada. */
+export interface ListParams {
+  page?: number;
+  limit?: number;
+  [key: string]: string | number | undefined;
 }
 
 // ─── Payloads de request ──────────────────────────────────────────────────────

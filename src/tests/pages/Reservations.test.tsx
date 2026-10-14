@@ -113,8 +113,9 @@ describe("Reservations page", () => {
             )
         );
         renderPage();
+        // 5xx: mesma mensagem genérica das demais listagens
         await waitFor(() =>
-            expect(screen.getByText(/erro ao carregar reservas/i)).toBeInTheDocument()
+            expect(screen.getByText(/erro interno do servidor/i)).toBeInTheDocument()
         );
     });
 

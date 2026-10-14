@@ -1205,3 +1205,35 @@ export const VisuallyHidden = styled.span`
   white-space: nowrap;
   border: 0;
 `;
+
+/* ─── Listas paginadas ─── */
+
+/** Região da lista: fica translúcida enquanto a próxima página/filtro carrega. */
+export const ListRegion = styled.div<{ $busy?: boolean }>`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  opacity: ${({ $busy }) => ($busy ? 0.55 : 1)};
+  transition: opacity 0.15s ease;
+`;
+
+/** Alvo de foco/rolagem ao trocar de página (topo da seção). */
+export const ScrollAnchor = styled.div`
+  scroll-margin-top: 96px;
+
+  &:focus {
+    outline: none;
+  }
+`;
+
+export const ResultCount = styled.p`
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-variant-numeric: lining-nums tabular-nums;
+`;
+
+/** Seletor de ano no cabeçalho de Feriados — mesmo controle da barra de filtros. */
+export const YearField = styled.div`
+  width: 140px;
+`;

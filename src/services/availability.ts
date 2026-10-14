@@ -18,7 +18,8 @@ export async function getBlockedDates(
     venueId: string,
     signal?: AbortSignal,
 ): Promise<BlockedDate[]> {
-    const { data } = await api.get("/blocked-dates", { params: { venueId }, signal });
+    // a listagem é paginada (padrão 20); o calendário precisa de todos os períodos
+    const { data } = await api.get("/blocked-dates", { params: { venueId, limit: 100 }, signal });
     return data.data || [];
 }
 

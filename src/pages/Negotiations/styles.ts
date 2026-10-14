@@ -8,6 +8,12 @@ export const Container = styled.div`
 `;
 
 export const Header = styled.section`
+  scroll-margin-top: 96px;
+
+  &:focus {
+    outline: none;
+  }
+
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -71,13 +77,15 @@ export const NewButton = styled.button`
 `;
 
 /* Lista única em painel, linhas separadas por hairline */
-export const List = styled.div`
+export const List = styled.div<{ $busy?: boolean }>`
   display: flex;
   flex-direction: column;
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  opacity: ${({ $busy }) => ($busy ? 0.55 : 1)};
+  transition: opacity 0.15s ease;
 `;
 
 export const NegotiationCard = styled.div`
