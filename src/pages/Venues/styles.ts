@@ -61,7 +61,22 @@ export const Counter = styled.span`
 
 /* ─── Venue cards ─── */
 
-export const Grid = styled.section`
+export const FiltersSlot = styled.div`
+  scroll-margin-top: 96px;
+
+  &:focus {
+    outline: none;
+  }
+`;
+
+export const Grid = styled.section<{ $busy?: boolean }>`
+  opacity: ${({ $busy }) => ($busy ? 0.55 : 1)};
+  transition: opacity 0.15s ease;
+
+  &:empty {
+    display: none;
+  }
+
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
   gap: 24px;

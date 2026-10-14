@@ -1,29 +1,53 @@
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useGSAP } from "@gsap/react";
 
-import { listVenues } from "../../services/venue";
-import { useApiData } from "../../hooks/useApiData";
+import { listVenuesPage } from "../../services/venue";
+import { usePaginatedQuery } from "../../hooks/usePaginatedQuery";
+import { useListParams } from "../../hooks/useListParams";
+import { ActiveFilterChips, FilterBar, NoResults, Pagination, TextField } from "../../components";
+import { parseMoney } from "../../components/FilterBar";
 import { animateFadeInUp } from "../../utils/animations";
 import * as S from "./styles";
 
 /**
  * Página de listagem dos espaços disponíveis para reserva.
  *
- * Carrega todos os venues via `listVenues` e exibe cards com informações de
+ * Carrega os venues via `listVenuesPage` (filtros `minCapacity` e `maxPrice`
+ * na URL, ex.: `/venues?minCapacity=80`) e exibe cards com informações de
  * capacidade e amenidades. Clicar em um card navega para `/reservation-intent/:venueId`.
  *
  * @see GET /venues
  * @component
  */
+export const VENUES_PAGE_SIZE = 12;
+
+/** `city` está reservado no contrato da API para um filtro futuro de endereço/cidade. */
+const VENUE_FILTER_KEYS = ["minCapacity", "maxPrice"] as const;
+type VenueFilterKey = (typeof VENUE_FILTER_KEYS)[number];
+
+const onlyDigits = (v: string) => v.replace(/\D/g, "").replace(/^0+/, "");
+
 export default function Venues() {
     const navigate = useNavigate();
     const containerRef = useRef<HTMLDivElement | null>(null);
 
-    const { data: venues, isLoading } = useApiData(listVenues, {
-        initialData: [],
+    const listTopRef = useRef<HTMLDivElement | null>(null);
+
+    const { values, page, activeKeys, setFilter, setPage, clearFilters } = useListParams<VenueFilterKey>(VENUE_FILTER_KEYS);
+    const params = useMemo(() => ({ ...values, page, limit: VENUES_PAGE_SIZE }), [values, page]);
+    const { data: venues, meta, isLoading, isFetching } = usePaginatedQuery(listVenuesPage, params, {
         errorMessage: "Erro ao carregar os espaços.",
+        onPageOutOfRange: setPage,
     });
+    const hasFilters = activeKeys.length > 0;
+
+    const chips = activeKeys.map((key) => ({
+        key,
+        label: key === "minCapacity"
+            ? `Para ${values.minCapacity}+ pessoas`
+            : `Até ${Number(values.maxPrice).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`,
+    }));
 
     useGSAP(() => {
         if (isLoading || !containerRef.current) return;
@@ -51,7 +75,7 @@ export default function Venues() {
         );
     }
 
-    if (!(venues ?? []).length) {
+    if (!venues.length && !hasFilters && page === 1) {
         return (
             <S.Container>
                 <S.Header>
@@ -82,11 +106,47 @@ export default function Venues() {
                     </S.Description>
                 </S.HeaderContent>
 
-                <S.Counter>{(venues ?? []).length} espaço(s)</S.Counter>
+                <S.Counter aria-live="polite">
+                    {meta?.total ?? venues.length} espaço{(meta?.total ?? venues.length) === 1 ? "" : "s"}
+                </S.Counter>
             </S.Header>
 
-            <S.Grid>
-                {(venues ?? []).map((venue) => (
+            <S.FiltersSlot ref={listTopRef} tabIndex={-1}>
+                <FilterBar
+                    label="Filtrar espaços"
+                    activeCount={activeKeys.length}
+                    footer={<ActiveFilterChips chips={chips} onRemove={(k) => setFilter(k as VenueFilterKey, "")} onClearAll={clearFilters} />}
+                >
+                    <TextField
+                        label="Número de convidados"
+                        placeholder="Ex.: 80"
+                        type="text"
+                        inputMode="numeric"
+                        value={values.minCapacity}
+                        onChange={(v) => setFilter("minCapacity", onlyDigits(v), { replace: true })}
+                    />
+                    <TextField
+                        label="Preço máximo (R$)"
+                        placeholder="Ex.: 1.500"
+                        type="text"
+                        inputMode="decimal"
+                        value={values.maxPrice}
+                        onChange={(v) => setFilter("maxPrice", parseMoney(v), { replace: true })}
+                        debounceMs={500}
+                    />
+                </FilterBar>
+            </S.FiltersSlot>
+
+            {venues.length === 0 && (
+                <NoResults
+                    title="Nenhum espaço com esses filtros"
+                    description="Tente menos convidados ou um preço máximo maior."
+                    onClear={clearFilters}
+                />
+            )}
+
+            <S.Grid aria-busy={isFetching} $busy={isFetching}>
+                {venues.map((venue) => (
                     <S.Card className="anim-card" key={venue.id}>
                         <S.CardContent>
                             <S.CardHeader>
@@ -153,6 +213,21 @@ export default function Venues() {
                     </S.Card>
                 ))}
             </S.Grid>
+
+            {meta && (
+                <Pagination
+                    page={meta.page}
+                    totalPages={meta.totalPages}
+                    total={meta.total}
+                    limit={meta.limit}
+                    count={venues.length}
+                    hasNext={meta.hasNext}
+                    onChange={setPage}
+                    scrollTargetRef={listTopRef}
+                    disabled={isFetching}
+                    label="Paginação dos espaços"
+                />
+            )}
         </S.Container>
     );
 }

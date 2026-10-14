@@ -44,10 +44,16 @@ export const Description = styled.p`
 
 /* ─── Reservation cards ─── */
 
-export const List = styled.div`
+export const List = styled.div<{ $busy?: boolean }>`
   display: flex;
   flex-direction: column;
   gap: 16px;
+  opacity: ${({ $busy }) => ($busy ? 0.55 : 1)};
+  transition: opacity 0.15s ease;
+
+  &:empty {
+    display: none;
+  }
 `;
 
 export const Card = styled.article`
@@ -511,52 +517,31 @@ export const ModalConfirmBtn = styled.button`
   }
 `;
 
-/* ─── Pagination ─── */
+/* ─── Filtro e contagem ─── */
 
-export const Pagination = styled.div`
+export const Toolbar = styled.div`
   display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 16px;
-  margin-top: 8px;
-  padding-bottom: 8px;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  scroll-margin-top: 96px;
 
-  ${media.sm} {
-    gap: 8px;
+  &:focus {
+    outline: none;
   }
 `;
 
-export const PageInfo = styled.span`
+export const FilterSlot = styled.div`
+  width: min(100%, 280px);
+
+  ${media.sm} {
+    width: 100%;
+  }
+`;
+
+export const ResultCount = styled.p`
   font-size: var(--text-sm);
   color: var(--text-muted);
-  min-width: 100px;
-  text-align: center;
   font-variant-numeric: lining-nums tabular-nums;
-
-  ${media.sm} {
-    min-width: 0;
-  }
-`;
-
-export const PageButton = styled.button`
-  min-height: 44px;
-  padding: 0 16px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-medium);
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-
-  &:hover:not(:disabled) {
-    background: var(--bg-muted);
-    border-color: var(--brand-border);
-  }
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
 `;

@@ -1,17 +1,39 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { cancelAdminReservation, listAdminReservations } from "../../../services/admin";
-import { isAbortError } from "../../../utils/errors";
-import { DatePickerInput } from "../../../components";
+import { cancelAdminReservation, listAdminReservationsPage } from "../../../services/admin";
+import { listVenues } from "../../../services/venue";
+import {
+    ActiveFilterChips,
+    DateField,
+    FilterBar,
+    MoneyRangeField,
+    NoResults,
+    Pagination,
+    SelectField,
+    TextField,
+} from "../../../components";
+import { useListParams } from "../../../hooks/useListParams";
+import { usePaginatedQuery } from "../../../hooks/usePaginatedQuery";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
+import { isAbortError } from "../../../utils/errors";
+import { PLAN_LABELS } from "../../../utils/reservationFormat";
 import type { Reservation } from "../../../types";
 import {
     formatCurrency,
     formatDateTime,
     getRefundPercentage,
     STATUS_LABELS,
-    STATUS_OPTIONS,
 } from "./constants";
+import {
+    describeReservationChip,
+    PLAN_OPTIONS,
+    RESERVATION_FILTER_DEFAULTS,
+    RESERVATION_FILTER_KEYS,
+    RESERVATION_NON_FILTER_KEYS,
+    RESERVATION_STATUS_OPTIONS,
+    SORT_OPTIONS,
+    type ReservationFilterKey,
+} from "./reservationFilters";
 import { ModalHeader } from "../ModalHeader";
 import * as S from "../styles";
 
@@ -25,50 +47,43 @@ interface CancelModal {
     refundAmount?: number;
 }
 
+export const ADMIN_RESERVATIONS_PAGE_SIZE = 15;
+
 export function ReservationsTab() {
-    const [reservations, setReservations] = useState<Reservation[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [page, setPage] = useState(1);
-    const [hasMore, setHasMore] = useState(false);
-    const [status, setStatus] = useState("");
-    const [startDate, setStartDate] = useState("");
-    const [endDate, setEndDate] = useState("");
     const [cancellingId, setCancellingId] = useState<string | null>(null);
     const [cancelModal, setCancelModal] = useState<CancelModal | null>(null);
-    const limit = 15;
+    const [venueOptions, setVenueOptions] = useState([{ value: "", label: "Todos os espaços" }]);
+    const topRef = useRef<HTMLDivElement | null>(null);
 
-    async function load(currentPage = 1, signal?: AbortSignal) {
-        try {
-            setIsLoading(true);
-            const filters: Record<string, unknown> = { page: currentPage, limit };
-            if (status) filters.status = status;
-            if (startDate) filters.startDate = new Date(startDate).toISOString();
-            if (endDate) filters.endDate = new Date(endDate + "T23:59:59").toISOString();
-            const result = await listAdminReservations(filters, signal);
-            if (signal?.aborted) return;
-            const list = result ?? [];
-            setReservations(list);
-            setHasMore(list.length === limit);
-        } catch (error) {
-            if (isAbortError(error)) return;
-            toast.error(getErrorMessage(error, "Erro ao carregar reservas."));
-        } finally {
-            if (!signal?.aborted) setIsLoading(false);
-        }
-    }
+    const list = useListParams<ReservationFilterKey>(RESERVATION_FILTER_KEYS, {
+        defaults: RESERVATION_FILTER_DEFAULTS,
+        nonFilterKeys: RESERVATION_NON_FILTER_KEYS,
+    });
+    const { values, page, activeKeys, setFilter, setFilters, setPage, clearFilters } = list;
+
+    const params = useMemo(() => ({ ...values, page, limit: ADMIN_RESERVATIONS_PAGE_SIZE }), [values, page]);
+    const { data: reservations, meta, isLoading, isFetching, refresh } = usePaginatedQuery(
+        listAdminReservationsPage,
+        params,
+        { errorMessage: "Erro ao carregar reservas.", onPageOutOfRange: setPage },
+    );
 
     useEffect(() => {
         const controller = new AbortController();
-        setPage(1);
-        load(1, controller.signal);
+        listVenues(controller.signal)
+            .then((venues) => setVenueOptions([
+                { value: "", label: "Todos os espaços" },
+                ...venues.map((v) => ({ value: v.id, label: v.name })),
+            ]))
+            // sem a lista de espaços o filtro fica só com "Todos os espaços"; a tabela segue funcionando
+            .catch((error) => {
+                if (!isAbortError(error)) toast.error(getErrorMessage(error, "Erro ao carregar os espaços."));
+            });
         return () => controller.abort();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [status, startDate, endDate]);
+    }, []);
 
-    function handlePageChange(next: number) {
-        setPage(next);
-        load(next);
-    }
+    const chips = activeKeys.map((key) => ({ key, label: describeReservationChip(key, values, venueOptions) }));
+    const hasFilters = activeKeys.length > 0;
 
     function handleCancelClick(r: Reservation) {
         if (r.status === "PENDING") {
@@ -89,7 +104,7 @@ export function ReservationsTab() {
             setCancelModal(null);
             await cancelAdminReservation(cancelModal.id);
             toast.success("Reserva cancelada.");
-            load(page);
+            refresh();
         } catch (error) {
             toast.error(getErrorMessage(error, "Erro ao cancelar reserva."));
         } finally {
@@ -99,41 +114,93 @@ export function ReservationsTab() {
 
     return (
         <S.Section>
-            <S.SectionHeader>
-                <S.SectionTitle>Todas as reservas</S.SectionTitle>
-            </S.SectionHeader>
+            <S.ScrollAnchor ref={topRef} tabIndex={-1}>
+                <S.SectionHeader>
+                    <S.SectionTitle>Todas as reservas</S.SectionTitle>
+                    {meta?.total !== undefined && (
+                        <S.ResultCount aria-live="polite">
+                            {meta.total.toLocaleString("pt-BR")} reserva{meta.total === 1 ? "" : "s"}
+                            {hasFilters ? " com esses filtros" : ""}
+                        </S.ResultCount>
+                    )}
+                </S.SectionHeader>
+            </S.ScrollAnchor>
 
-            <S.FiltersRow>
-                <S.Select value={status} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatus(e.target.value)}>
-                    {STATUS_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                </S.Select>
-                <S.FilterField>
-                    <DatePickerInput
-                        value={startDate}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStartDate(e.target.value)}
-                        placeholder="Data inicial"
+            <FilterBar
+                label="Filtrar reservas"
+                activeCount={activeKeys.length}
+                footer={
+                    <ActiveFilterChips
+                        chips={chips}
+                        onRemove={(key) => setFilter(key as ReservationFilterKey, "")}
+                        onClearAll={clearFilters}
                     />
-                </S.FilterField>
-                <S.FilterField>
-                    <DatePickerInput
-                        value={endDate}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value)}
-                        placeholder="Data final"
-                    />
-                </S.FilterField>
-            </S.FiltersRow>
+                }
+            >
+                <TextField
+                    label="Cliente"
+                    placeholder="Nome ou e-mail"
+                    value={values.q}
+                    onChange={(v) => setFilter("q", v, { replace: true })}
+                    wide
+                />
+                <SelectField
+                    label="Status"
+                    value={values.status}
+                    onChange={(v) => setFilter("status", v)}
+                    options={RESERVATION_STATUS_OPTIONS}
+                />
+                <SelectField
+                    label="Espaço"
+                    value={values.venueId}
+                    onChange={(v) => setFilter("venueId", v)}
+                    options={venueOptions}
+                />
+                <SelectField
+                    label="Plano"
+                    value={values.planCode}
+                    onChange={(v) => setFilter("planCode", v)}
+                    options={PLAN_OPTIONS}
+                />
+                <DateField
+                    label="Evento a partir de"
+                    value={values.startDate}
+                    maxDate={values.endDate || undefined}
+                    onChange={(v) => setFilter("startDate", v)}
+                />
+                <DateField
+                    label="Evento até"
+                    value={values.endDate}
+                    minDate={values.startDate || undefined}
+                    onChange={(v) => setFilter("endDate", v)}
+                />
+                <MoneyRangeField
+                    label="Valor da reserva"
+                    min={values.minPrice}
+                    max={values.maxPrice}
+                    onChange={({ min, max }) => setFilters({ minPrice: min, maxPrice: max }, { replace: true })}
+                />
+                <SelectField
+                    label="Ordenar por"
+                    value={values.sort}
+                    onChange={(v) => setFilter("sort", v)}
+                    options={SORT_OPTIONS}
+                />
+            </FilterBar>
 
             {isLoading ? (
-                <S.LoadingSpinner />
+                <S.LoadingSpinner role="status" aria-label="Carregando reservas" />
             ) : reservations.length === 0 ? (
-                <S.EmptyState>
-                    <h3>Nenhuma reserva encontrada</h3>
-                    <p>Tente ajustar os filtros.</p>
-                </S.EmptyState>
+                hasFilters ? (
+                    <NoResults title="Nenhuma reserva com esses filtros" onClear={clearFilters} />
+                ) : (
+                    <S.EmptyState>
+                        <h3>Nenhuma reserva encontrada</h3>
+                        <p>As reservas feitas pelos clientes aparecem aqui.</p>
+                    </S.EmptyState>
+                )
             ) : (
-                <>
+                <S.ListRegion $busy={isFetching} aria-busy={isFetching}>
                     <S.TableWrapper>
                         <S.Table>
                             <thead>
@@ -145,7 +212,7 @@ export function ReservationsTab() {
                                     <S.Th>Plano</S.Th>
                                     <S.Th $num>Valor</S.Th>
                                     <S.Th>Status</S.Th>
-                                    <S.Th></S.Th>
+                                    <S.Th><S.VisuallyHidden>Ação</S.VisuallyHidden></S.Th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -155,11 +222,11 @@ export function ReservationsTab() {
                                         <S.Td>{r.venue?.name ?? r.venueId}</S.Td>
                                         <S.Td>{formatDateTime(r.startDate)}</S.Td>
                                         <S.Td>{formatDateTime(r.endDate)}</S.Td>
-                                        <S.Td>{r.planCode ?? "—"}</S.Td>
+                                        <S.Td>{r.planCode ? (PLAN_LABELS[r.planCode] ?? r.planCode) : "—"}</S.Td>
                                         <S.Td $num>{formatCurrency(r.totalPrice ?? 0)}</S.Td>
                                         <S.Td>
                                             <S.StatusBadge $status={r.status}>
-                                                {STATUS_LABELS[r.status] ?? r.status}
+                                                {STATUS_LABELS[r.status as keyof typeof STATUS_LABELS] ?? r.status}
                                             </S.StatusBadge>
                                         </S.Td>
                                         <S.Td>
@@ -179,12 +246,21 @@ export function ReservationsTab() {
                         </S.Table>
                     </S.TableWrapper>
 
-                    <S.Pagination>
-                        <S.PageButton onClick={() => handlePageChange(page - 1)} disabled={page === 1}>Anterior</S.PageButton>
-                        <S.PageInfo>Página {page}</S.PageInfo>
-                        <S.PageButton onClick={() => handlePageChange(page + 1)} disabled={!hasMore}>Próxima</S.PageButton>
-                    </S.Pagination>
-                </>
+                    {meta && (
+                        <Pagination
+                            page={meta.page}
+                            totalPages={meta.totalPages}
+                            total={meta.total}
+                            limit={meta.limit}
+                            count={reservations.length}
+                            hasNext={meta.hasNext}
+                            onChange={setPage}
+                            scrollTargetRef={topRef}
+                            disabled={isFetching}
+                            label="Paginação das reservas"
+                        />
+                    )}
+                </S.ListRegion>
             )}
 
             {cancelModal && (

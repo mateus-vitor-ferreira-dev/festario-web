@@ -77,10 +77,10 @@ describe("Admin - Reservations tab", () => {
         await waitFor(() =>
             expect(screen.getByText("Mateus")).toBeInTheDocument()
         );
-        expect(screen.getByText("Salão Principal")).toBeInTheDocument();
+        expect(screen.getByRole("cell", { name: "Salão Principal" })).toBeInTheDocument();
     });
 
-    it("shows disabled Anterior button on first page", async () => {
+    it("hides the pagination when every reservation fits on one page", async () => {
         server.use(
             http.get(`${BASE}/admin/reservations`, () =>
                 HttpResponse.json({
@@ -106,9 +106,8 @@ describe("Admin - Reservations tab", () => {
 
         await user.click(screen.getByRole("button", { name: /^reservas$/i }));
 
-        await waitFor(() =>
-            expect(screen.getByRole("button", { name: /anterior/i })).toBeDisabled()
-        );
+        await waitFor(() => expect(screen.getByText("Mateus")).toBeInTheDocument());
+        expect(screen.queryByRole("navigation", { name: /paginação/i })).not.toBeInTheDocument();
     });
 
     it("shows truncated userId and venueId when user and venue are null, and '—' for missing planCode", async () => {
@@ -590,16 +589,15 @@ describe("Admin - Holidays tab", () => {
     });
 
     it("deletes a holiday", async () => {
+        let holidays = [{ id: "h-1", name: "Natal", date: "2026-12-25T00:00:00.000Z", type: "national" }];
         server.use(
             http.get(`${BASE}/admin/holidays`, () =>
-                HttpResponse.json({
-                    success: true,
-                    data: [{ id: "h-1", name: "Natal", date: "2026-12-25T00:00:00.000Z", type: "national" }],
-                })
+                HttpResponse.json({ success: true, data: holidays })
             ),
-            http.delete(`${BASE}/admin/holidays/h-1`, () =>
-                HttpResponse.json({ success: true, data: {} })
-            )
+            http.delete(`${BASE}/admin/holidays/h-1`, () => {
+                holidays = [];
+                return HttpResponse.json({ success: true, data: {} });
+            })
         );
         const user = userEvent.setup();
         renderPage();
@@ -1050,25 +1048,24 @@ describe("Admin - Blocked Dates tab", () => {
     });
 
     it("deletes a blocked date", async () => {
+        let blocked = [
+            {
+                id: "bd-del",
+                venueId: "venue-1",
+                venue: { name: "Salão" },
+                startDate: "2026-08-01T00:00:00.000Z",
+                endDate: "2026-08-02T00:00:00.000Z",
+                reason: "Evento privado",
+            },
+        ];
         server.use(
             http.get(`${BASE}/blocked-dates`, () =>
-                HttpResponse.json({
-                    success: true,
-                    data: [
-                        {
-                            id: "bd-del",
-                            venueId: "venue-1",
-                            venue: { name: "Salão" },
-                            startDate: "2026-08-01T00:00:00.000Z",
-                            endDate: "2026-08-02T00:00:00.000Z",
-                            reason: "Evento privado",
-                        },
-                    ],
-                })
+                HttpResponse.json({ success: true, data: blocked })
             ),
-            http.delete(`${BASE}/blocked-dates/bd-del`, () =>
-                HttpResponse.json({ success: true, data: {} })
-            )
+            http.delete(`${BASE}/blocked-dates/bd-del`, () => {
+                blocked = [];
+                return HttpResponse.json({ success: true, data: {} });
+            })
         );
         const user = userEvent.setup();
         renderPage();
@@ -1656,15 +1653,15 @@ describe("Admin - Users tab", () => {
             expect(screen.getByPlaceholderText(/buscar por nome ou e-mail/i)).toBeInTheDocument()
         );
 
-        await user.type(screen.getByPlaceholderText(/buscar por nome ou e-mail/i), "João");
-        await user.click(screen.getByRole("button", { name: /^buscar$/i }));
+        // busca com debounce: aplica sozinha depois de parar de digitar
+        await user.type(screen.getByLabelText(/^buscar$/i), "João");
 
         await waitFor(() =>
             expect(capturedUrl).toContain("search=Jo%C3%A3o")
         );
     });
 
-    it("clears search when clicking Limpar button", async () => {
+    it("clears search from the active filter chip", async () => {
         const user = userEvent.setup();
         renderPage();
         await waitFor(() => screen.getByText(/total de reservas/i));
@@ -1675,17 +1672,18 @@ describe("Admin - Users tab", () => {
         );
 
         const searchInput = screen.getByPlaceholderText(/buscar por nome ou e-mail/i);
-        await user.type(searchInput, "João");
-        await user.click(screen.getByRole("button", { name: /^buscar$/i }));
+        await user.type(searchInput, "João{Enter}");
 
         await waitFor(() =>
-            expect(screen.getByRole("button", { name: /^limpar$/i })).toBeInTheDocument()
+            expect(screen.getByRole("button", { name: /remover filtro busca: joão/i })).toBeInTheDocument()
         );
+        // sem usuários para a busca: estado "sem resultados" com saída para limpar
+        expect(screen.getByText(/nenhum usuário com esses filtros/i)).toBeInTheDocument();
 
-        await user.click(screen.getByRole("button", { name: /^limpar$/i }));
+        await user.click(screen.getByRole("button", { name: /remover filtro busca: joão/i }));
 
         await waitFor(() =>
-            expect(screen.queryByRole("button", { name: /^limpar$/i })).not.toBeInTheDocument()
+            expect(screen.queryByRole("button", { name: /remover filtro/i })).not.toBeInTheDocument()
         );
         expect(searchInput).toHaveValue("");
     });

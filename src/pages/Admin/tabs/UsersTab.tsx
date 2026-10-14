@@ -1,81 +1,88 @@
-import React, { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import { listAdminUsers } from "../../../services/admin";
-import { getErrorMessage } from "../../../utils/getErrorMessage";
+import { useMemo, useRef } from "react";
+import { listAdminUsersPage } from "../../../services/admin";
+import { ActiveFilterChips, FilterBar, NoResults, Pagination, SelectField, TextField } from "../../../components";
+import { useListParams } from "../../../hooks/useListParams";
+import { usePaginatedQuery } from "../../../hooks/usePaginatedQuery";
 import { formatDate } from "./constants";
 import type { User } from "../../../types";
 import * as S from "../styles";
 
+type AdminUser = User & { _count?: { reservations: number }; createdAt?: string };
+
+export const ADMIN_USERS_PAGE_SIZE = 20;
+
+const USER_FILTER_KEYS = ["q", "role"] as const;
+type UserFilterKey = (typeof USER_FILTER_KEYS)[number];
+
+const ROLE_OPTIONS = [
+    { value: "", label: "Todos os perfis" },
+    { value: "USER", label: "Cliente" },
+    { value: "ADMIN", label: "Administrador" },
+];
+
 export function UsersTab() {
-    const [users, setUsers] = useState<(User & { _count?: { reservations: number }; createdAt?: string })[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [page, setPage] = useState(1);
-    const [hasMore, setHasMore] = useState(false);
-    const [search, setSearch] = useState("");
-    const [searchInput, setSearchInput] = useState("");
-    const limit = 20;
+    const topRef = useRef<HTMLDivElement | null>(null);
+    const { values, page, activeKeys, setFilter, setPage, clearFilters } = useListParams<UserFilterKey>(USER_FILTER_KEYS);
 
-    async function load(currentPage = 1, currentSearch = search) {
-        try {
-            setIsLoading(true);
-            const result = await listAdminUsers({ page: currentPage, limit, search: currentSearch || undefined });
-            const list = (result ?? []) as (User & { _count?: { reservations: number }; createdAt?: string })[];
-            setUsers(list);
-            setHasMore(list.length === limit);
-        } catch (error) {
-            toast.error(getErrorMessage(error, "Erro ao carregar usuários."));
-        } finally {
-            setIsLoading(false);
-        }
-    }
+    // a API usa `search` (e aceita `q`); a URL usa `q`, como nas outras listas
+    const params = useMemo(
+        () => ({ search: values.q, role: values.role, page, limit: ADMIN_USERS_PAGE_SIZE }),
+        [values, page],
+    );
+    const { data, meta, isLoading, isFetching } = usePaginatedQuery(listAdminUsersPage, params, {
+        errorMessage: "Erro ao carregar usuários.",
+        onPageOutOfRange: setPage,
+    });
+    const users = data as AdminUser[];
 
-    useEffect(() => {
-        setPage(1);
-        load(1);
-    // `load` é recriada a cada render; incluí-la recarregaria a lista em loop
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [search]);
-
-    function handleSearch(e: React.FormEvent<HTMLFormElement>) {
-        e.preventDefault();
-        setSearch(searchInput);
-    }
-
-    function handlePageChange(next: number) {
-        setPage(next);
-        load(next);
-    }
+    const chips = activeKeys.map((key) => ({
+        key,
+        label: key === "q"
+            ? `Busca: ${values.q}`
+            : `Perfil: ${ROLE_OPTIONS.find((o) => o.value === values.role)?.label ?? values.role}`,
+    }));
 
     return (
         <S.Section>
-            <S.SectionHeader>
-                <S.SectionTitle>Usuários</S.SectionTitle>
-            </S.SectionHeader>
+            <S.ScrollAnchor ref={topRef} tabIndex={-1}>
+                <S.SectionHeader>
+                    <S.SectionTitle>Usuários</S.SectionTitle>
+                    {meta?.total !== undefined && (
+                        <S.ResultCount aria-live="polite">
+                            {meta.total.toLocaleString("pt-BR")} usuário{meta.total === 1 ? "" : "s"}
+                        </S.ResultCount>
+                    )}
+                </S.SectionHeader>
+            </S.ScrollAnchor>
 
-            <S.FiltersRow as="form" onSubmit={handleSearch}>
-                <S.SearchInput
-                    type="text"
-                    placeholder="Buscar por nome ou e-mail..."
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
+            <FilterBar
+                label="Filtrar usuários"
+                activeCount={activeKeys.length}
+                footer={<ActiveFilterChips chips={chips} onRemove={(k) => setFilter(k as UserFilterKey, "")} onClearAll={clearFilters} />}
+            >
+                <TextField
+                    label="Buscar"
+                    placeholder="Buscar por nome ou e-mail"
+                    value={values.q}
+                    onChange={(v) => setFilter("q", v, { replace: true })}
+                    wide
                 />
-                <S.SecondaryButton type="submit">Buscar</S.SecondaryButton>
-                {search && (
-                    <S.SecondaryButton type="button" onClick={() => { setSearchInput(""); setSearch(""); }}>
-                        Limpar
-                    </S.SecondaryButton>
-                )}
-            </S.FiltersRow>
+                <SelectField label="Perfil" value={values.role} onChange={(v) => setFilter("role", v)} options={ROLE_OPTIONS} />
+            </FilterBar>
 
             {isLoading ? (
-                <S.LoadingSpinner />
+                <S.LoadingSpinner role="status" aria-label="Carregando usuários" />
             ) : users.length === 0 ? (
-                <S.EmptyState>
-                    <h3>Nenhum usuário encontrado</h3>
-                    <p>Tente ajustar a busca.</p>
-                </S.EmptyState>
+                activeKeys.length > 0 ? (
+                    <NoResults title="Nenhum usuário com esses filtros" onClear={clearFilters} />
+                ) : (
+                    <S.EmptyState>
+                        <h3>Nenhum usuário encontrado</h3>
+                        <p>Os clientes cadastrados aparecem aqui.</p>
+                    </S.EmptyState>
+                )
             ) : (
-                <>
+                <S.ListRegion $busy={isFetching} aria-busy={isFetching}>
                     <S.TableWrapper>
                         <S.Table>
                             <thead>
@@ -105,12 +112,21 @@ export function UsersTab() {
                         </S.Table>
                     </S.TableWrapper>
 
-                    <S.Pagination>
-                        <S.PageButton onClick={() => handlePageChange(page - 1)} disabled={page === 1}>Anterior</S.PageButton>
-                        <S.PageInfo>Página {page}</S.PageInfo>
-                        <S.PageButton onClick={() => handlePageChange(page + 1)} disabled={!hasMore}>Próxima</S.PageButton>
-                    </S.Pagination>
-                </>
+                    {meta && (
+                        <Pagination
+                            page={meta.page}
+                            totalPages={meta.totalPages}
+                            total={meta.total}
+                            limit={meta.limit}
+                            count={users.length}
+                            hasNext={meta.hasNext}
+                            onChange={setPage}
+                            scrollTargetRef={topRef}
+                            disabled={isFetching}
+                            label="Paginação dos usuários"
+                        />
+                    )}
+                </S.ListRegion>
             )}
         </S.Section>
     );

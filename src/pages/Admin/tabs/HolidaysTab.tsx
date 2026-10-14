@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import {
     createHoliday,
     deleteHoliday,
-    listHolidays,
+    listHolidaysPage,
     syncHolidays,
     syncMunicipalHolidays,
 } from "../../../services/admin";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
-import { isAbortError } from "../../../utils/errors";
-import { DatePickerInput } from "../../../components";
+import { DatePickerInput, Pagination, SelectField } from "../../../components";
+import { useListParams } from "../../../hooks/useListParams";
+import { usePaginatedQuery } from "../../../hooks/usePaginatedQuery";
 import { formatDate, getMunicipalHolidaysSeed, HOLIDAY_TYPE_OPTIONS } from "./constants";
 import type { Holiday } from "../../../types";
 import { ModalHeader } from "../ModalHeader";
@@ -19,11 +20,19 @@ const HOLIDAY_TYPE_LABELS: Record<string, string> = Object.fromEntries(
     HOLIDAY_TYPE_OPTIONS.map((o) => [o.value, o.label]),
 );
 
+export const HOLIDAYS_PAGE_SIZE = 20;
+
+const HOLIDAY_KEYS = ["year"] as const;
+
 export function HolidaysTab() {
     const currentYear = new Date().getFullYear();
-    const [year, setYear] = useState(currentYear);
-    const [holidays, setHolidays] = useState<Holiday[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const topRef = useRef<HTMLDivElement | null>(null);
+    const { values, page, setFilter, setPage } = useListParams(HOLIDAY_KEYS, {
+        defaults: { year: String(currentYear) },
+        nonFilterKeys: HOLIDAY_KEYS,
+    });
+    const parsedYear = Number.parseInt(values.year, 10);
+    const year = Number.isFinite(parsedYear) ? parsedYear : currentYear;
     const [isSyncing, setIsSyncing] = useState(false);
     const [isSyncingMunicipal, setIsSyncingMunicipal] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -31,26 +40,13 @@ export function HolidaysTab() {
     const [form, setForm] = useState({ date: "", name: "", type: "national" });
     const [isSaving, setIsSaving] = useState(false);
 
-    async function load(signal?: AbortSignal) {
-        try {
-            setIsLoading(true);
-            const data = await listHolidays(year, signal);
-            if (signal?.aborted) return;
-            setHolidays(data ?? []);
-        } catch (error) {
-            if (isAbortError(error)) return;
-            toast.error(getErrorMessage(error, "Erro ao carregar feriados."));
-        } finally {
-            if (!signal?.aborted) setIsLoading(false);
-        }
-    }
-
-    useEffect(() => {
-        const controller = new AbortController();
-        load(controller.signal);
-        return () => controller.abort();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [year]);
+    const params = useMemo(() => ({ year, page, limit: HOLIDAYS_PAGE_SIZE }), [year, page]);
+    const { data: holidays, meta, isLoading, isFetching, refresh } = usePaginatedQuery<Holiday>(
+        listHolidaysPage,
+        params,
+        { errorMessage: "Erro ao carregar feriados.", onPageOutOfRange: setPage },
+    );
+    const load = refresh;
 
     async function handleSync() {
         try {
@@ -84,7 +80,7 @@ export function HolidaysTab() {
             setDeletingId(id);
             await deleteHoliday(id);
             toast.success("Feriado removido.");
-            setHolidays((prev) => prev.filter((h) => h.id !== id));
+            refresh();
         } catch (error) {
             toast.error(getErrorMessage(error, "Erro ao remover feriado."));
         } finally {
@@ -108,27 +104,36 @@ export function HolidaysTab() {
         }
     }
 
-    const yearOptions = [currentYear - 1, currentYear, currentYear + 1, currentYear + 2];
+    const yearOptions = Array.from(new Set([currentYear - 1, currentYear, currentYear + 1, currentYear + 2, year]))
+        .sort((x, y) => x - y)
+        .map((y) => ({ value: String(y), label: String(y) }));
 
     return (
         <S.Section>
-            <S.SectionHeader>
-                <S.InlineGroup style={{ gap: 12 }}>
-                    <S.SectionTitle>Feriados</S.SectionTitle>
-                    <S.Select value={year} onChange={(e) => setYear(Number(e.target.value))}>
-                        {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
-                    </S.Select>
-                </S.InlineGroup>
-                <S.SectionActions>
-                    <S.PrimaryButton onClick={() => setShowModal(true)}>+ Novo feriado</S.PrimaryButton>
-                    <S.SecondaryButton onClick={handleSync} disabled={isSyncing}>
-                        {isSyncing ? "Sincronizando..." : "Sincronizar feriados nacionais"}
-                    </S.SecondaryButton>
-                    <S.SecondaryButton onClick={handleSyncMunicipal} disabled={isSyncingMunicipal}>
-                        {isSyncingMunicipal ? "Sincronizando..." : "Sincronizar feriados municipais"}
-                    </S.SecondaryButton>
-                </S.SectionActions>
-            </S.SectionHeader>
+            <S.ScrollAnchor ref={topRef} tabIndex={-1}>
+                <S.SectionHeader>
+                    <S.InlineGroup style={{ gap: 16, alignItems: "flex-end" }}>
+                        <S.SectionTitle>Feriados</S.SectionTitle>
+                        <S.YearField>
+                            <SelectField
+                                label="Ano"
+                                value={String(year)}
+                                onChange={(v) => setFilter("year", v)}
+                                options={yearOptions}
+                            />
+                        </S.YearField>
+                    </S.InlineGroup>
+                    <S.SectionActions>
+                        <S.PrimaryButton onClick={() => setShowModal(true)}>+ Novo feriado</S.PrimaryButton>
+                        <S.SecondaryButton onClick={handleSync} disabled={isSyncing}>
+                            {isSyncing ? "Sincronizando..." : "Sincronizar feriados nacionais"}
+                        </S.SecondaryButton>
+                        <S.SecondaryButton onClick={handleSyncMunicipal} disabled={isSyncingMunicipal}>
+                            {isSyncingMunicipal ? "Sincronizando..." : "Sincronizar feriados municipais"}
+                        </S.SecondaryButton>
+                    </S.SectionActions>
+                </S.SectionHeader>
+            </S.ScrollAnchor>
 
             {isLoading ? (
                 <S.LoadingSpinner />
@@ -138,22 +143,38 @@ export function HolidaysTab() {
                     <p>Use “Sincronizar feriados nacionais” ou adicione um feriado manualmente.</p>
                 </S.EmptyState>
             ) : (
-                <S.CardList>
-                    {holidays.map((h) => (
-                        <S.HolidayCard key={h.id}>
-                            <S.HolidayInfo>
-                                <strong>{h.name}</strong>
-                                <span>{formatDate(h.date)}</span>
-                            </S.HolidayInfo>
-                            <S.InlineGroup>
-                                {h.type && <S.HolidayType>{HOLIDAY_TYPE_LABELS[h.type] ?? h.type}</S.HolidayType>}
-                                <S.DangerButton $size="sm" onClick={() => handleDelete(h.id)} disabled={deletingId === h.id}>
-                                    {deletingId === h.id ? "Removendo..." : "Remover"}
-                                </S.DangerButton>
-                            </S.InlineGroup>
-                        </S.HolidayCard>
-                    ))}
-                </S.CardList>
+                <S.ListRegion $busy={isFetching} aria-busy={isFetching}>
+                    <S.CardList>
+                        {holidays.map((h) => (
+                            <S.HolidayCard key={h.id}>
+                                <S.HolidayInfo>
+                                    <strong>{h.name}</strong>
+                                    <span>{formatDate(h.date)}</span>
+                                </S.HolidayInfo>
+                                <S.InlineGroup>
+                                    {h.type && <S.HolidayType>{HOLIDAY_TYPE_LABELS[h.type] ?? h.type}</S.HolidayType>}
+                                    <S.DangerButton $size="sm" onClick={() => handleDelete(h.id)} disabled={deletingId === h.id}>
+                                        {deletingId === h.id ? "Removendo..." : "Remover"}
+                                    </S.DangerButton>
+                                </S.InlineGroup>
+                            </S.HolidayCard>
+                        ))}
+                    </S.CardList>
+                    {meta && (
+                        <Pagination
+                            page={meta.page}
+                            totalPages={meta.totalPages}
+                            total={meta.total}
+                            limit={meta.limit}
+                            count={holidays.length}
+                            hasNext={meta.hasNext}
+                            onChange={setPage}
+                            scrollTargetRef={topRef}
+                            disabled={isFetching}
+                            label="Paginação dos feriados"
+                        />
+                    )}
+                </S.ListRegion>
             )}
 
             {showModal && (

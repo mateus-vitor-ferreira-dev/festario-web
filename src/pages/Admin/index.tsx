@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import ErrorBoundary from "../../components/ErrorBoundary";
 import { TABS } from "./tabs/constants";
 import { BlockedDatesTab } from "./tabs/BlockedDatesTab";
@@ -25,7 +26,18 @@ const TAB_COMPONENTS = {
 };
 
 export default function Admin() {
-    const [activeTab, setActiveTab] = useState("dashboard");
+    // a aba fica na URL (?tab=reservations) junto com os filtros/página da aba,
+    // para que recarregar, voltar ou compartilhar o link reabra a mesma visão
+    const [searchParams, setSearchParams] = useSearchParams();
+    const requestedTab = searchParams.get("tab") ?? "dashboard";
+    const activeTab = requestedTab in TAB_COMPONENTS ? requestedTab : "dashboard";
+
+    function setActiveTab(key: string) {
+        if (key === activeTab) return;
+        // filtros pertencem a cada aba: trocar de aba começa limpo
+        setSearchParams(key === "dashboard" ? {} : { tab: key });
+    }
+
     const ActiveTab = TAB_COMPONENTS[activeTab as keyof typeof TAB_COMPONENTS] ?? DashboardTab;
 
     // Indicadores de rolagem da barra de abas (fade nas bordas quando há abas escondidas)
