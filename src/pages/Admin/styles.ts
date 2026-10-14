@@ -788,7 +788,7 @@ export const MessagePreview = styled.div`
 export const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(10, 18, 14, 0.5);
+  background: var(--overlay);
   display: flex;
   align-items: center;
   justify-content: center;

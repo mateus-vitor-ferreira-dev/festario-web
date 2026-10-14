@@ -8,7 +8,7 @@ import api from "./api";
 import type { ContactPayload } from "../types";
 
 /**
- * Envia uma mensagem de contato ao administrador do Recanto Vila Rica.
+ * Envia uma mensagem de contato à equipe do espaço.
  *
  * @see POST /contact/message
  */

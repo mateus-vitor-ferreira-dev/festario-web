@@ -2,6 +2,36 @@ import * as S from "./styles";
 
 const WEEKDAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
 
+/* Varal do símbolo em escala de cartão: fio em curva (quadrática) e bandeirinhas
+   penduradas ao longo dele, na sequência milho, pitanga, milho. */
+const BUNTING_W = 270;
+const ROPE = { x0: 6, y0: 4, cx: 135, cy: 20, x1: 264, y1: 4 };
+const FLAG_COLORS = ["#f4b41a", "#d8344a", "#f4b41a"];
+const FLAGS = Array.from({ length: 11 }, (_, i) => {
+    const t = (i + 0.5) / 11;
+    const u = 1 - t;
+    const x = u * u * ROPE.x0 + 2 * u * t * ROPE.cx + t * t * ROPE.x1;
+    const y = u * u * ROPE.y0 + 2 * u * t * ROPE.cy + t * t * ROPE.y1;
+    return { x, y, color: FLAG_COLORS[i % 3] };
+});
+
+function Bunting() {
+    return (
+        <S.PreviewBunting viewBox={`0 0 ${BUNTING_W} 21`} preserveAspectRatio="xMidYMin meet">
+            <path
+                d={`M${ROPE.x0} ${ROPE.y0} Q${ROPE.cx} ${ROPE.cy} ${ROPE.x1} ${ROPE.y1}`}
+                fill="none"
+                stroke="#27357e"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+            />
+            {FLAGS.map(({ x, y, color }, i) => (
+                <path key={i} d={`M${x - 6} ${y - 0.6} L${x + 6} ${y - 0.6} L${x} ${y + 11} Z`} fill={color} />
+            ))}
+        </S.PreviewBunting>
+    );
+}
+
 /**
  * Prévia decorativa do produto: o calendário do mês com dias reservados e uma
  * data confirmada. Desenhada em código para ficar nítida em qualquer tela e não
@@ -40,6 +70,7 @@ export default function BookingPreview() {
     return (
         <S.Preview aria-hidden="true">
             <S.PreviewCard>
+                <Bunting />
                 <S.PreviewMonth>{monthLabel}</S.PreviewMonth>
                 <S.PreviewGrid>
                     {WEEKDAYS.map((w, i) => (

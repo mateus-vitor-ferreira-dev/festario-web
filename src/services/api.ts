@@ -1,6 +1,6 @@
 /**
  * @module api
- * @description Instância Axios configurada para o backend do Recanto Vila Rica.
+ * @description Instância Axios configurada para o backend da plataforma.
  *
  * Comportamentos automáticos:
  * - **Auth**: injeta o Bearer token de `localStorage["recanto:userData"]` em toda requisição.

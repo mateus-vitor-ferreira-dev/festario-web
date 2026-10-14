@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { readTenant } from "../../config/tenantStorage";
-import { BRAND_NAME } from "../../config/brand";
 import { isManagerRole, PANEL_PATH } from "../../utils/roles";
 import { toast } from "react-toastify";
 
@@ -169,8 +168,9 @@ export default function NegotiationChat() {
 
     const session = readSession();
     const currentUserId = session?.user?.id ?? null;
-    // nome mostrado nas mensagens da equipe: o do espaço guardado, ou a marca no espaço padrão
-    const teamName = readTenant()?.name || BRAND_NAME;
+    // nome mostrado nas mensagens da equipe: o do espaço guardado; sem ele, um rótulo
+    // neutro (a equipe é do salão, não da plataforma)
+    const teamName = readTenant()?.name || "Equipe do espaço";
     // equipe do espaço: dono (OWNER) ou equipe da plataforma (ADMIN)
     const isAdmin = isManagerRole(session?.user?.role);
 

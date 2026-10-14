@@ -156,7 +156,7 @@ export const MessageRow = styled.div<{ $isOwn: boolean; $isSystem?: boolean }>`
 /*
  * Três vozes:
  *  - usuário (próprio): bolha mata à direita;
- *  - Recanto / outro participante: bolha clara com borda à esquerda, com nome;
+ *  - equipe do espaço / outro participante: bolha clara com borda à esquerda, com nome;
  *  - sistema: nota centralizada, sem bolha, em tom de rodapé.
  */
 export const Bubble = styled.div<{ $isOwn: boolean; $isSystem?: boolean; $isProposal?: boolean }>`

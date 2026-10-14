@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { media } from "../../styles/breakpoints";
+import { FestarioLogo } from "../Brand";
 
 export const Container = styled.header`
   width: 100%;
@@ -34,31 +35,22 @@ export const Content = styled.div`
 export const BrandWrapper = styled(Link)`
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-shrink: 0;
+  /* respiro do guia: ¼ da altura do símbolo; também garante o alvo de toque de 44px */
+  padding: 9px 0;
+  min-height: 44px;
   text-decoration: none;
-  white-space: nowrap;
+  border-radius: var(--radius-sm);
 `;
 
-/* o logo é um brasão detalhado: abaixo de ~48px o nome interno vira ruído */
-export const Logo = styled.img`
-  width: 52px;
-  height: 52px;
-  object-fit: contain;
+/* logotipo inline (segue o tema). Altura mínima do guia: 24px */
+export const Logo = styled(FestarioLogo)`
+  display: block;
+  height: 36px;
+  width: auto;
 
   ${media.sm} {
-    width: 44px;
-    height: 44px;
-  }
-`;
-
-export const BrandText = styled.span`
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  font-weight: 600;
-  color: var(--text-primary);
-
-  ${media.sm} {
-    display: none;
+    height: 28px;
   }
 `;
 

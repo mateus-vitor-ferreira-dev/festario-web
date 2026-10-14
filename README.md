@@ -1,8 +1,10 @@
 <div align="center">
 
-<h1>🌿 Recanto Vila Rica — Web App</h1>
+<img src="docs/marca/svg/festario-logotipo.svg" alt="Festário" height="56"/>
 
-<p><strong>Interface de reservas de um espaço de eventos: o cliente escolhe a data, assina o contrato e paga; o dono administra a agenda</strong></p>
+<h1>Festário — Web App</h1>
+
+<p><strong>Interface de reservas de espaços de festa (SaaS multi-espaço, repositório <code>recanto-vila-rica-web</code>): o cliente escolhe a data, assina o contrato e paga; o dono administra a agenda</strong></p>
 
 <p>
   <img src="https://github.com/mateus-vitor-ferreira-dev/recanto-vila-rica-web/actions/workflows/ci.yml/badge.svg" alt="CI"/>
@@ -35,7 +37,7 @@ flowchart TB
     APP["<b>Web App · React 19 + Vite 8</b><br/>intenção de reserva · checkout · negociações<br/>indicações · promoções · perfil · painel admin"]
 
     APP --> AX["Axios · refresh de token + retry com jitter"]
-    AX --> API["API Recanto Vila Rica"]
+    AX --> API["API (recanto-vila-rica-api)"]
 
     APP --> G["Google OAuth · login"]
     APP --> PDF["@react-pdf/renderer<br/>contrato gerado no browser"]
@@ -164,7 +166,7 @@ O cancelamento devolve conforme a distância até o evento — **100%** acima de
 |---|---|---|
 | **Node.js** | **20.x** | versão usada em todos os jobs do CI (`.github/workflows/ci.yml`) |
 | **npm** | 10+ | acompanha o Node 20; o projeto usa `package-lock.json` |
-| **API do Recanto Vila Rica** | — | precisa estar rodando — repositório `recanto-vila-rica-api` (privado, código de cliente) |
+| **API da plataforma** | — | precisa estar rodando — repositório `recanto-vila-rica-api` (privado, código de cliente) |
 
 > Sem a API no ar a aplicação abre, mas login, salões e reservas falham — todo dado vem dela.
 

@@ -38,15 +38,23 @@ describe("ChatWidget", () => {
     it("renders FAB button initially, chat window is closed", () => {
         renderWidget();
         expect(screen.getByRole("button", { name: /abrir chat/i })).toBeInTheDocument();
-        expect(screen.queryByText(/assistente recanto vila rica/i)).not.toBeInTheDocument();
+        expect(screen.queryByText(/assistente de reservas/i)).not.toBeInTheDocument();
     });
 
     it("opens chat window when FAB is clicked", async () => {
         const user = userEvent.setup();
         renderWidget();
         await user.click(screen.getByRole("button", { name: /abrir chat/i }));
-        expect(screen.getByText(/assistente recanto vila rica/i)).toBeInTheDocument();
+        expect(screen.getByText(/assistente de reservas/i)).toBeInTheDocument();
         expect(screen.getByText(/olá! sou o assistente/i)).toBeInTheDocument();
+    });
+
+    it("shows the space (tenant) name in the title when the browser knows it", async () => {
+        localStorage.setItem("recanto:tenant", JSON.stringify({ slug: "salao-jardim-das-flores", name: "Salão Jardim das Flores" }));
+        const user = userEvent.setup();
+        renderWidget();
+        await user.click(screen.getByRole("button", { name: /abrir chat/i }));
+        expect(screen.getByRole("dialog", { name: "Chat — Assistente · Salão Jardim das Flores" })).toBeInTheDocument();
     });
 
     it("closes chat window when FAB is clicked again", async () => {
@@ -54,7 +62,7 @@ describe("ChatWidget", () => {
         renderWidget();
         await user.click(screen.getByRole("button", { name: /abrir chat/i }));
         await user.click(screen.getByRole("button", { name: /fechar chat/i }));
-        expect(screen.queryByText(/assistente recanto vila rica/i)).not.toBeInTheDocument();
+        expect(screen.queryByText(/assistente de reservas/i)).not.toBeInTheDocument();
     });
 
     it("closes with the header close button and with Escape, returning focus to the FAB", async () => {
@@ -63,12 +71,12 @@ describe("ChatWidget", () => {
         await user.click(screen.getByRole("button", { name: /abrir chat/i }));
         expect(screen.getByPlaceholderText(/digite sua dúvida/i)).toHaveFocus();
         await user.click(screen.getByRole("button", { name: /fechar assistente/i }));
-        expect(screen.queryByText(/assistente recanto vila rica/i)).not.toBeInTheDocument();
+        expect(screen.queryByText(/assistente de reservas/i)).not.toBeInTheDocument();
         expect(screen.getByRole("button", { name: /abrir chat/i })).toHaveFocus();
 
         await user.click(screen.getByRole("button", { name: /abrir chat/i }));
         await user.keyboard("{Escape}");
-        expect(screen.queryByText(/assistente recanto vila rica/i)).not.toBeInTheDocument();
+        expect(screen.queryByText(/assistente de reservas/i)).not.toBeInTheDocument();
         expect(screen.getByRole("button", { name: /abrir chat/i })).toHaveFocus();
     });
 

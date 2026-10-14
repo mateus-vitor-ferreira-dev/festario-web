@@ -156,7 +156,7 @@ export async function respondToProposal(id: string, action: "ACCEPT" | "REJECT")
 }
 
 /**
- * Retorna as informações de contato públicas do Recanto Vila Rica
+ * Retorna as informações de contato públicas do espaço
  * (WhatsApp, e-mail, Instagram).
  *
  * @see GET /contact

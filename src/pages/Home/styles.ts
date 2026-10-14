@@ -190,7 +190,8 @@ export const ContentGrid = styled.div`
     align-items: start;
 
     ${media.lg} {
-        grid-template-columns: 1fr;
+        /* minmax(0, …): o painel não cresce até o min-content da data em destaque */
+        grid-template-columns: minmax(0, 1fr);
     }
 `;
 

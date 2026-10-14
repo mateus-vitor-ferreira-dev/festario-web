@@ -109,7 +109,7 @@ describe("NegotiationChat page", () => {
             expect(screen.getByText("Olá, gostaria de saber mais.")).toBeInTheDocument()
         );
         expect(screen.getByText("Olá! Como posso ajudar?")).toBeInTheDocument();
-        expect(screen.getByText("Recanto Vila Rica")).toBeInTheDocument();
+        expect(screen.getByText("Equipe do espaço")).toBeInTheDocument();
     });
 
     it("sends a message successfully", async () => {
