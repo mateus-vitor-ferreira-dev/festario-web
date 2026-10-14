@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { media } from "../../styles/breakpoints";
 
 export const Form = styled.form`
   display: flex;
@@ -9,10 +10,11 @@ export const Form = styled.form`
 export const NameRow = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 12px;
 
-  @media (max-width: 480px) {
+  ${media.sm} {
     grid-template-columns: 1fr;
+    gap: 20px;
   }
 `;
 
@@ -31,23 +33,34 @@ export const Divider = styled.div`
   }
 
   span {
-    font-size: 12px;
+    font-size: var(--text-xs);
     font-weight: 500;
-    color: var(--text-faint);
+    color: var(--text-muted);
     white-space: nowrap;
   }
 `;
 
 export const FooterText = styled.p`
-  text-align: center;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: var(--text-sm);
   margin-top: 4px;
 
   a {
     color: var(--brand);
-    font-weight: 600;
+    font-weight: 700;
     text-decoration: underline;
+    text-decoration-color: var(--brand-border);
     text-underline-offset: 3px;
+
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+
+    /* alvo de toque ≥44px */
+    ${media.md} {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+    }
   }
 `;

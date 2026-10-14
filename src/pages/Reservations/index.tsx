@@ -8,7 +8,7 @@ import { usePagination } from "../../hooks/usePagination";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { PLAN_LABELS, formatDate, formatTime, formatCurrency, calcDuration } from "../../utils/reservationFormat";
 import { STATUS_MAP, REFUND_TIERS, getRefundPercentage } from "../../constants/reservation";
-import { animateFadeInUp, animateStagger } from "../../utils/animations";
+import { animateFadeInUp } from "../../utils/animations";
 import type { Reservation } from "../../types";
 import * as S from "./styles";
 
@@ -57,7 +57,6 @@ export default function Reservations() {
         const el = containerRef.current;
         if (!el) return;
         animateFadeInUp(el.querySelector(".anim-header"));
-        animateStagger(el.querySelectorAll(".anim-card"), { delay: 0.15 });
     }, { scope: containerRef, dependencies: [isLoading, reservations.length] });
 
     async function handleCancelReservation() {
@@ -79,6 +78,9 @@ export default function Reservations() {
     if (isLoading) {
         return (
             <S.Container>
+                <S.Header>
+                    <S.Title>Minhas reservas</S.Title>
+                </S.Header>
                 <S.LoadingCard>
                     <h2>Carregando reservas...</h2>
                     <p>Aguarde enquanto buscamos suas reservas.</p>
@@ -90,9 +92,12 @@ export default function Reservations() {
     if (!reservations.length && page === 1) {
         return (
             <S.Container>
+                <S.Header>
+                    <S.Title>Minhas reservas</S.Title>
+                </S.Header>
                 <S.EmptyState>
                     <h2>Nenhuma reserva encontrada</h2>
-                    <p>Você ainda não possui reservas cadastradas.</p>
+                    <p>Você ainda não tem reservas. Escolha um espaço e marque a data do seu evento.</p>
                     <S.PayButton as={Link} to="/venues">Fazer uma reserva</S.PayButton>
                 </S.EmptyState>
             </S.Container>
@@ -221,6 +226,7 @@ export default function Reservations() {
                                 </div>
                             </S.CardBody>
 
+                            {canCancel && (
                             <S.CardFooter>
                                 {reservation.status === "PENDING" && (
                                     <S.PayButton
@@ -239,6 +245,7 @@ export default function Reservations() {
                                     </S.CancelButton>
                                 )}
                             </S.CardFooter>
+                            )}
                         </S.Card>
                     );
                 })}

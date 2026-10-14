@@ -4,30 +4,30 @@ export const GoogleBtnWrapper = styled.div`
     width: 100%;
 `;
 
+/* Secundário: superfície + borda média, mesmo raio/altura do botão primário */
 export const GoogleButton = styled.button`
     width: 100%;
-    height: 44px;
+    min-height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    background: #fff;
-    color: #3c4043;
-    border: 1px solid #dadce0;
-    border-radius: 4px;
-    font-size: 14px;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
     font-weight: 500;
-    font-family: "Google Sans", Roboto, Arial, sans-serif;
     cursor: pointer;
-    transition: background 0.2s, box-shadow 0.2s;
+    transition: background 0.15s ease, border-color 0.15s ease;
 
     &:hover {
-        background: #f8faff;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-        border-color: #c6c6c6;
+        background: var(--bg-muted);
+        border-color: var(--text-faint);
     }
 
     &:active {
-        background: #f0f0f0;
+        background: var(--bg-muted);
     }
 `;

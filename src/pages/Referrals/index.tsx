@@ -5,7 +5,7 @@ import { useGSAP } from "@gsap/react";
 import { createReferral, listReferrals } from "../../services/referral";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { useApiData } from "../../hooks/useApiData";
-import { animateFadeInUp, animateStagger } from "../../utils/animations";
+import { animateFadeInUp } from "../../utils/animations";
 import * as S from "./styles";
 
 /**
@@ -68,7 +68,6 @@ export default function Referrals() {
     useGSAP(() => {
         if (!containerRef.current) return;
         animateFadeInUp(containerRef.current.querySelector(".anim-header"));
-        animateStagger(containerRef.current.querySelectorAll(".anim-card"), { delay: 0.1 });
     }, { scope: containerRef, dependencies: [] });
 
     return (
@@ -80,7 +79,7 @@ export default function Referrals() {
                 </S.Description>
             </S.Header>
 
-            <S.InviteCard className="anim-card">
+            <S.InviteCard>
                 <S.InviteTitle>Convidar um amigo</S.InviteTitle>
 
                 {noCampaign && (
@@ -117,7 +116,7 @@ export default function Referrals() {
 
                     {(referrals ?? []).length === 0 ? (
                         <S.EmptyState>
-                            <p>Você ainda não fez nenhuma indicação.<br />Convide um amigo usando o formulário acima.</p>
+                            <p>Você ainda não fez nenhuma indicação. Digite o e-mail de um amigo no formulário acima e toque em “Indicar”.</p>
                         </S.EmptyState>
                     ) : (
                         <S.List>

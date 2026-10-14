@@ -57,32 +57,32 @@ describe("Header component", () => {
     });
 
     it("shows Admin link only for ADMIN role", () => {
-        renderHeader({ user: { name: "Admin", role: "ADMIN" } });
+        renderHeader({ token: "t", user: { name: "Admin", role: "ADMIN" } });
         expect(screen.getByRole("link", { name: /^admin$/i })).toBeInTheDocument();
     });
 
     it("does not show Admin link for USER role", () => {
-        renderHeader({ user: { name: "Mateus", role: "USER" } });
+        renderHeader({ token: "t", user: { name: "Mateus", role: "USER" } });
         expect(screen.queryByRole("link", { name: /^admin$/i })).not.toBeInTheDocument();
     });
 
     it("shows user initials in avatar", () => {
-        renderHeader({ user: { name: "Mateus Ferreira", role: "USER" } });
+        renderHeader({ token: "t", user: { name: "Mateus Ferreira", role: "USER" } });
         expect(screen.getByText("MF")).toBeInTheDocument();
     });
 
     it("falls back to Usuário when name is empty", () => {
-        renderHeader({ user: { name: "", role: "USER" } });
+        renderHeader({ token: "t", user: { name: "", role: "USER" } });
         expect(screen.getByText("Usuário")).toBeInTheDocument();
     });
 
     it("shows single initial when name has only one word", () => {
-        renderHeader({ user: { name: "Mateus", role: "USER" } });
+        renderHeader({ token: "t", user: { name: "Mateus", role: "USER" } });
         expect(screen.getByText("M")).toBeInTheDocument();
     });
 
-    it("falls back to userData.name when user object is absent", () => {
-        renderHeader({ name: "Mateus", role: "USER" });
+    it("shows name from migrated legacy session", () => {
+        renderHeader({ id: "u1", name: "Mateus", email: "m@m.com", role: "USER", token: "t" });
         expect(screen.getByText(/mateus/i)).toBeInTheDocument();
     });
 

@@ -7,6 +7,7 @@
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { getErrorMessage } from "../utils/getErrorMessage";
+import { isAbortError } from "../utils/errors";
 import type { PaginatedResult, PaginationMeta } from "../types";
 
 interface PaginationParams {
@@ -53,8 +54,7 @@ export function usePagination<T>(
                     setMeta(result.meta);
                 }
             } catch (err) {
-                const e = err as { name?: string };
-                if (e?.name === "CanceledError" || e?.name === "AbortError") return;
+                if (isAbortError(err)) return;
                 toast.error(getErrorMessage(err, errorMessage));
             } finally {
                 if (!signal.aborted) setIsLoading(false);

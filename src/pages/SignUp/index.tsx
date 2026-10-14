@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { AuthLayout, Button, DatePickerInput, GoogleButton, Input, PhoneInput } from "../../components";
 
 import api from "../../services/api";
+import { getErrorMessage } from "../../utils/getErrorMessage";
 import { validatePassword } from "../../utils/validatePassword";
 import * as S from "./styles";
 
@@ -88,13 +89,7 @@ export default function SignUp({ introFinished = true }) {
             toast.success("Cadastro realizado com sucesso.");
             navigate("/login");
         } catch (error) {
-            const e = error as { response?: { data?: { message?: string; error?: { message?: string } } } };
-            const message =
-                e.response?.data?.message ||
-                e.response?.data?.error?.message ||
-                "Erro ao cadastrar usuário.";
-
-            toast.error(message);
+            toast.error(getErrorMessage(error, "Erro ao cadastrar usuário."));
         } finally {
             setIsLoading(false);
         }
@@ -115,6 +110,8 @@ export default function SignUp({ introFinished = true }) {
                         value={form.firstName}
                         onChange={handleChange}
                         error={errors.firstName ?? undefined}
+                        maxLength={100}
+                        autoComplete="given-name"
                     />
                     <Input
                         label="Sobrenome"
@@ -123,6 +120,8 @@ export default function SignUp({ introFinished = true }) {
                         value={form.lastName}
                         onChange={handleChange}
                         error={errors.lastName ?? undefined}
+                        maxLength={100}
+                        autoComplete="family-name"
                     />
                 </S.NameRow>
 
@@ -134,6 +133,8 @@ export default function SignUp({ introFinished = true }) {
                     value={form.email}
                     onChange={handleChange}
                     error={errors.email ?? undefined}
+                    maxLength={254}
+                    autoComplete="email"
                 />
 
                 <PhoneInput
@@ -154,6 +155,8 @@ export default function SignUp({ introFinished = true }) {
                     onChange={handleChange}
                     showPasswordToggle
                     error={errors.password ?? undefined}
+                    maxLength={128}
+                    autoComplete="new-password"
                 />
 
                 <DatePickerInput

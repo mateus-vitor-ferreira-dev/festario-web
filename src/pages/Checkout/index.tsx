@@ -6,8 +6,9 @@ import { useGSAP } from "@gsap/react";
 import { getReservation } from "../../services/reservation";
 import { createCheckoutSession, getPaymentStatus } from "../../services/payment";
 import { getErrorMessage } from "../../utils/getErrorMessage";
+import { isAbortError, getHttpStatus } from "../../utils/errors";
 import { PLAN_LABELS, formatDateFull, formatTime, formatCurrency, calcDuration } from "../../utils/reservationFormat";
-import { animateFadeInUp, animateStagger } from "../../utils/animations";
+import { animateFadeInUp } from "../../utils/animations";
 import type { Reservation, PixChargeResult } from "../../types";
 import * as S from "./styles";
 
@@ -46,7 +47,7 @@ export default function Checkout() {
                 const data = await getReservation(reservationId!, controller.signal);
                 setReservation(data);
             } catch (error) {
-                if ((error as { name?: string })?.name === "CanceledError" || (error as { name?: string })?.name === "AbortError") return;
+                if (isAbortError(error)) return;
                 toast.error(getErrorMessage(error, "Erro ao carregar a reserva."));
                 navigate("/reservations");
             } finally {
@@ -116,7 +117,7 @@ export default function Checkout() {
                     navigate("/reservations");
                 }
             } catch (err) {
-                if ((err as { name?: string })?.name === "CanceledError" || (err as { name?: string })?.name === "AbortError") return;
+                if (isAbortError(err)) return;
                 consecutiveErrors += 1;
                 if (consecutiveErrors >= MAX_ERRORS) {
                     clearInterval(interval);
@@ -144,7 +145,7 @@ export default function Checkout() {
             const session = await createCheckoutSession(reservationId!);
             window.location.href = session.url;
         } catch (error) {
-            const status = (error as { response?: { status?: number } })?.response?.status;
+            const status = getHttpStatus(error);
 
             if (status === 409) {
                 toast.error("Já existe uma sessão de pagamento ativa para esta reserva. Verifique seu e-mail ou aguarde a expiração.");
@@ -171,7 +172,6 @@ export default function Checkout() {
         if (isLoading || !reservation || !containerRef.current) return;
         const el = containerRef.current;
         animateFadeInUp(el.querySelector(".anim-header"));
-        animateStagger(el.querySelectorAll(".anim-card"), { delay: 0.15 });
     }, { scope: containerRef, dependencies: [isLoading, reservation] });
 
     if (isLoading) {
@@ -202,7 +202,7 @@ export default function Checkout() {
             </S.PageHeader>
 
             <S.Grid>
-                <S.SummaryCard className="anim-card">
+                <S.SummaryCard>
                     <S.SummaryHeader>
                         <S.VenueName>{reservation.venue?.name}</S.VenueName>
                         <S.StatusBadge status={reservation.status}>
@@ -249,23 +249,23 @@ export default function Checkout() {
                     </S.TotalRow>
                 </S.SummaryCard>
 
-                <S.PaymentCard className="anim-card">
+                <S.PaymentCard>
                     <S.PaymentTitle>Pagamento seguro</S.PaymentTitle>
 
                     {isPendingPayment && pixStep === "select" && (
                         <>
-                            <S.PaymentDescription>
-                                Pague com segurança via cartão de crédito.
-                            </S.PaymentDescription>
+                            <S.MethodOption>
+                                <S.MethodRadio aria-hidden="true" />
+                                <S.MethodText>
+                                    <strong>Cartão de crédito</strong>
+                                    <span>Você conclui o pagamento na página segura do Stripe.</span>
+                                </S.MethodText>
+                            </S.MethodOption>
 
                             <S.SecurityBadges>
                                 <S.SecurityItem>
                                     <S.SecurityDot />
                                     Criptografia SSL de ponta a ponta
-                                </S.SecurityItem>
-                                <S.SecurityItem>
-                                    <S.SecurityDot />
-                                    Pagamento processado pelo Stripe
                                 </S.SecurityItem>
                             </S.SecurityBadges>
 
@@ -323,10 +323,6 @@ export default function Checkout() {
                     <S.CancelLink onClick={() => navigate("/reservations")}>
                         Voltar para minhas reservas
                     </S.CancelLink>
-
-                    <S.StripeBadge>
-                        Pagamento processado com segurança
-                    </S.StripeBadge>
                 </S.PaymentCard>
             </S.Grid>
         </S.Container>

@@ -15,6 +15,7 @@ import { toast } from "react-toastify";
 
 import { AuthLayout, Button, Input } from "../../components";
 import { resetPassword } from "../../services/auth";
+import { getErrorMessage } from "../../utils/getErrorMessage";
 import { validatePassword } from "../../utils/validatePassword";
 import * as S from "./styles";
 
@@ -64,11 +65,7 @@ export default function ResetPassword({ introFinished = true }) {
             toast.success("Senha redefinida com sucesso! Faça login.");
             navigate("/login");
         } catch (error) {
-            const e = error as { response?: { data?: { message?: string } } };
-            const message =
-                e?.response?.data?.message ||
-                "Token inválido ou expirado. Solicite um novo link.";
-            toast.error(message);
+            toast.error(getErrorMessage(error, "Token inválido ou expirado. Solicite um novo link."));
         } finally {
             setLoading(false);
         }
@@ -83,9 +80,12 @@ export default function ResetPassword({ introFinished = true }) {
             >
                 <S.Form>
                     <S.ErrorBox>
-                        Este link não é válido. Solicite um novo link de redefinição
-                        na página de login.
+                        Este link não é válido. Peça um novo link de redefinição
+                        para o seu e-mail.
                     </S.ErrorBox>
+                    <S.FooterText>
+                        <Link to="/esqueci-senha">Solicitar novo link</Link>
+                    </S.FooterText>
                     <S.FooterText>
                         <Link to="/login">Voltar para o login</Link>
                     </S.FooterText>

@@ -116,10 +116,13 @@ describe("GoogleButton", () => {
         );
     });
 
-    it("onSuccess: shows fallback message when no error message field exists", async () => {
+    it("onSuccess: shows error message from API on failure", async () => {
         server.use(
             http.post(`${BASE}/auth/google`, () =>
-                HttpResponse.json({ success: false }, { status: 500 })
+                HttpResponse.json(
+                    { success: false, message: "Erro ao autenticar com Google." },
+                    { status: 500 }
+                )
             )
         );
         renderButton();

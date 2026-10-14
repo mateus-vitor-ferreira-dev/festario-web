@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -10,6 +10,7 @@ import {
 } from "../../constants/reservation";
 import { createReservation, quoteReservation } from "../../services/reservation";
 import { getErrorMessage } from "../../utils/getErrorMessage";
+import { isAbortError } from "../../utils/errors";
 import type { QuoteResult, PlanCode } from "../../types";
 
 /** Items da cotação com campos extras retornados pela API */
@@ -26,15 +27,40 @@ interface ExtendedQuoteResult extends Omit<QuoteResult, "items"> {
     items: QuoteItem[];
 }
 
+export interface UseReservationFormReturn {
+    planCode: PlanCode | "";
+    eventDate: string;
+    startTime: string;
+    setStartTime: Dispatch<SetStateAction<string>>;
+    endTime: string;
+    setEndTime: Dispatch<SetStateAction<string>>;
+    kidsMonitorHours: number;
+    setKidsMonitorHours: Dispatch<SetStateAction<number>>;
+    notes: string;
+    setNotes: Dispatch<SetStateAction<string>>;
+    acceptedContract: boolean;
+    setAcceptedContract: Dispatch<SetStateAction<boolean>>;
+    selectedPlan: typeof PLANS[number] | null;
+    normalizedQuote: ExtendedQuoteResult | null;
+    quoteLoading: boolean;
+    submitting: boolean;
+    minimumKidsHours: number;
+    kidsMonitorExtraHours: number;
+    planIsIncompatible: boolean;
+    handlePlanClick: (code: PlanCode) => void;
+    handleDateChange: (newDate: string) => void;
+    handleConfirmReservation: () => Promise<void>;
+}
+
 /**
  * Gerencia todo o estado do formulário de intenção de reserva e a cotação automática.
  *
  * @param {{ venueId: string, hasKidsArea: boolean }} params
  */
-export function useReservationForm({ venueId, hasKidsArea }: { venueId: string | undefined; hasKidsArea: boolean }) {
+export function useReservationForm({ venueId, hasKidsArea }: { venueId: string | undefined; hasKidsArea: boolean }): UseReservationFormReturn {
     const navigate = useNavigate();
 
-    const [planCode, setPlanCode] = useState("");
+    const [planCode, setPlanCode] = useState<PlanCode | "">("");
     const [eventDate, setEventDate] = useState("");
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
@@ -50,18 +76,18 @@ export function useReservationForm({ venueId, hasKidsArea }: { venueId: string |
 
     useEffect(() => {
         if (!hasKidsArea) return;
-        const includedHours = INCLUDED_KIDS_HOURS_BY_PLAN[planCode as PlanCode] ?? 0;
+        const includedHours = planCode ? INCLUDED_KIDS_HOURS_BY_PLAN[planCode] : 0;
         setKidsMonitorHours((current) => {
             if (!planCode) return 0;
             return current < includedHours ? includedHours : current;
         });
     }, [planCode, hasKidsArea]);
 
-    const minimumKidsHours = INCLUDED_KIDS_HOURS_BY_PLAN[planCode as PlanCode] ?? 0;
+    const minimumKidsHours = planCode ? INCLUDED_KIDS_HOURS_BY_PLAN[planCode] : 0;
     const kidsMonitorExtraHours = Math.max(0, kidsMonitorHours - minimumKidsHours);
 
     useEffect(() => {
-        if (!planCode || !eventDate || !startTime || !endTime) {
+        if (!planCode || !eventDate || !startTime || !endTime || !venueId) {
             setQuote(null);
             return;
         }
@@ -82,8 +108,8 @@ export function useReservationForm({ venueId, hasKidsArea }: { venueId: string |
                 setQuoteLoading(true);
                 const result = await quoteReservation(
                     {
-                        venueId: venueId!,
-                        planCode: planCode as PlanCode,
+                        venueId,
+                        planCode,
                         startDate: startDate.toISOString(),
                         endDate: endDate.toISOString(),
                         ...(kidsMonitorExtraHours > 0 && { kidsMonitorExtraHours }),
@@ -92,7 +118,7 @@ export function useReservationForm({ venueId, hasKidsArea }: { venueId: string |
                 );
                 if (!controller.signal.aborted) setQuote(result);
             } catch (error) {
-                if ((error as { name?: string })?.name === "CanceledError" || (error as { name?: string })?.name === "AbortError") return;
+                if (isAbortError(error)) return;
                 if (!controller.signal.aborted) {
                     toast.error(getErrorMessage(error, "Erro ao calcular orçamento."));
                     setQuote(null);
@@ -134,7 +160,7 @@ export function useReservationForm({ venueId, hasKidsArea }: { venueId: string |
 
     const planIsIncompatible = Boolean(planCode && eventDate && !isPlanAvailableForDate(planCode, eventDate));
 
-    function handlePlanClick(code: string) {
+    function handlePlanClick(code: PlanCode) {
         if (eventDate && !isPlanAvailableForDate(code, eventDate)) {
             toast.warning(getBlockedPlanMessage(code, eventDate));
             return;
@@ -151,23 +177,24 @@ export function useReservationForm({ venueId, hasKidsArea }: { venueId: string |
     }
 
     async function handleConfirmReservation() {
-        if (!planCode) return toast.warning("Selecione um plano.");
-        if (!eventDate) return toast.warning("Selecione a data do evento.");
-        if (!startTime) return toast.warning("Selecione o horário de início.");
-        if (!endTime) return toast.warning("Selecione o horário de término.");
+        if (!venueId) return;
+        if (!planCode) { toast.warning("Selecione um plano."); return; }
+        if (!eventDate) { toast.warning("Selecione a data do evento."); return; }
+        if (!startTime) { toast.warning("Selecione o horário de início."); return; }
+        if (!endTime) { toast.warning("Selecione o horário de término."); return; }
 
         const startDate = new Date(`${eventDate}T${startTime}:00`);
         const endDate = new Date(`${eventDate}T${endTime}:00`);
 
-        if (endDate <= startDate) return toast.warning("O horário de término deve ser posterior ao de início.");
-        if (!isPlanAvailableForDate(planCode, eventDate)) return toast.warning(getBlockedPlanMessage(planCode, eventDate));
-        if (!acceptedContract) return toast.warning("Aceite o contrato para continuar.");
+        if (endDate <= startDate) { toast.warning("O horário de término deve ser posterior ao de início."); return; }
+        if (!isPlanAvailableForDate(planCode, eventDate)) { toast.warning(getBlockedPlanMessage(planCode, eventDate)); return; }
+        if (!acceptedContract) { toast.warning("Aceite o contrato para continuar."); return; }
 
         try {
             setSubmitting(true);
             const reservation = await createReservation({
-                venueId: venueId!,
-                planCode: planCode as PlanCode,
+                venueId,
+                planCode,
                 startDate: startDate.toISOString(),
                 endDate: endDate.toISOString(),
                 termsAccepted: true,

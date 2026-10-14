@@ -113,6 +113,33 @@ describe("ReservationIntent page", () => {
         expect(screen.getAllByText("Essencial").length).toBeGreaterThan(1);
     });
 
+    it("plan selector is a keyboard-operable radiogroup", async () => {
+        const user = userEvent.setup();
+        renderPage();
+        const group = await screen.findByRole("radiogroup", { name: /escolha a modalidade/i });
+        const radios = screen.getAllByRole("radio");
+        expect(group).toBeInTheDocument();
+        expect(radios).toHaveLength(3);
+        expect(radios[0]).toHaveAttribute("tabindex", "0");
+        expect(radios[1]).toHaveAttribute("tabindex", "-1");
+
+        radios[0].focus();
+        await user.keyboard("{ArrowDown}");
+        expect(radios[1]).toHaveFocus();
+        await user.keyboard("{Enter}");
+
+        await waitFor(() => expect(radios[1]).toHaveAttribute("aria-checked", "true"));
+        expect(radios[1]).toHaveAttribute("tabindex", "0");
+        expect(radios[0]).toHaveAttribute("aria-checked", "false");
+    });
+
+    it("formats the selected date in pt-BR in the summary", async () => {
+        const { container } = renderPage();
+        await screen.findByRole("radiogroup");
+        fillDateTime(container, { date: "2027-06-20", start: "", end: "" });
+        expect(await screen.findByText(/20 de jun\.? de 2027/i)).toBeInTheDocument();
+    });
+
     it("shows base plan price in estimated card when date/time not filled", async () => {
         const user = userEvent.setup();
         renderPage();

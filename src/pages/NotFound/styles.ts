@@ -1,115 +1,108 @@
-import styled, { keyframes } from "styled-components";
-
-const fadeUp = keyframes`
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-`;
-
-const popIn = keyframes`
-  0%   { transform: scale(0.6); opacity: 0; }
-  70%  { transform: scale(1.1); }
-  100% { transform: scale(1); opacity: 1; }
-`;
+import styled from "styled-components";
+import { media } from "../../styles/breakpoints";
 
 export const Container = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
+  min-height: 100dvh;
   padding: 32px;
   background: var(--bg-page);
+
+  ${media.sm} {
+    padding: 16px;
+  }
 `;
 
+/* Estado único: centralizado faz sentido aqui */
 export const Card = styled.div`
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: 28px;
-  padding: 56px 48px;
-  max-width: 520px;
+  border-radius: var(--radius-lg);
+  padding: 48px 40px;
+  max-width: 480px;
   width: 100%;
-  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 20px;
-  animation: ${fadeUp} 0.4s ease;
+  gap: 16px;
 
-  @media (max-width: 600px) {
-    padding: 40px 24px;
+  ${media.sm} {
+    padding: 36px 20px;
   }
 `;
 
-export const IconWrapper = styled.div`
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: var(--bg-page);
-  border: 2px solid var(--border-default);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: ${popIn} 0.5s ease 0.1s both;
-`;
-
 export const Code = styled.span`
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--text-muted);
-  letter-spacing: -1px;
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-faint);
+  font-variant-numeric: lining-nums tabular-nums;
 `;
 
 export const Title = styled.h1`
-  font-size: 26px;
-  font-weight: 700;
+  font-size: var(--text-3xl);
+  font-weight: 600;
+  line-height: 1.1;
   color: var(--text-primary);
+
+  ${media.sm} {
+    font-size: var(--text-2xl);
+  }
 `;
 
 export const Description = styled.p`
-  font-size: 15px;
+  font-size: var(--text-base);
   color: var(--text-muted);
-  line-height: 1.7;
+  line-height: 1.6;
   max-width: 380px;
 `;
 
 export const Actions = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
   margin-top: 8px;
 `;
 
 export const PrimaryButton = styled.button`
   width: 100%;
-  padding: 14px;
-  border: none;
-  border-radius: 12px;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
   background: var(--brand);
-  color: #ffffff;
-  font-size: 15px;
+  color: var(--on-brand);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
   font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: background 0.15s ease;
 
   &:hover {
-    opacity: 0.92;
+    background: var(--brand-dark);
   }
 `;
 
 export const SecondaryButton = styled.button`
   width: 100%;
-  padding: 14px;
-  border: 1px solid var(--border-default);
-  border-radius: 12px;
-  background: var(--bg-surface);
-  color: var(--text-secondary);
-  font-size: 15px;
-  font-weight: 600;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--brand);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.15s ease;
 
   &:hover {
-    background: var(--bg-page);
+    background: var(--brand-subtle);
   }
 `;

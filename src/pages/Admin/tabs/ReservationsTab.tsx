@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { cancelAdminReservation, listAdminReservations } from "../../../services/admin";
+import { isAbortError } from "../../../utils/errors";
 import { DatePickerInput } from "../../../components";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
 import type { Reservation } from "../../../types";
@@ -11,6 +12,7 @@ import {
     STATUS_LABELS,
     STATUS_OPTIONS,
 } from "./constants";
+import { ModalHeader } from "../ModalHeader";
 import * as S from "../styles";
 
 interface CancelModal {
@@ -35,27 +37,32 @@ export function ReservationsTab() {
     const [cancelModal, setCancelModal] = useState<CancelModal | null>(null);
     const limit = 15;
 
-    async function load(currentPage = 1) {
+    async function load(currentPage = 1, signal?: AbortSignal) {
         try {
             setIsLoading(true);
             const filters: Record<string, unknown> = { page: currentPage, limit };
             if (status) filters.status = status;
             if (startDate) filters.startDate = new Date(startDate).toISOString();
             if (endDate) filters.endDate = new Date(endDate + "T23:59:59").toISOString();
-            const result = await listAdminReservations(filters);
+            const result = await listAdminReservations(filters, signal);
+            if (signal?.aborted) return;
             const list = result ?? [];
             setReservations(list);
             setHasMore(list.length === limit);
         } catch (error) {
+            if (isAbortError(error)) return;
             toast.error(getErrorMessage(error, "Erro ao carregar reservas."));
         } finally {
-            setIsLoading(false);
+            if (!signal?.aborted) setIsLoading(false);
         }
     }
 
     useEffect(() => {
+        const controller = new AbortController();
         setPage(1);
-        load(1);
+        load(1, controller.signal);
+        return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [status, startDate, endDate]);
 
     function handlePageChange(next: number) {
@@ -102,16 +109,20 @@ export function ReservationsTab() {
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                 </S.Select>
-                <DatePickerInput
-                    value={startDate}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStartDate(e.target.value)}
-                    placeholder="Data inicial"
-                />
-                <DatePickerInput
-                    value={endDate}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value)}
-                    placeholder="Data final"
-                />
+                <S.FilterField>
+                    <DatePickerInput
+                        value={startDate}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStartDate(e.target.value)}
+                        placeholder="Data inicial"
+                    />
+                </S.FilterField>
+                <S.FilterField>
+                    <DatePickerInput
+                        value={endDate}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value)}
+                        placeholder="Data final"
+                    />
+                </S.FilterField>
             </S.FiltersRow>
 
             {isLoading ? (
@@ -132,7 +143,7 @@ export function ReservationsTab() {
                                     <S.Th>Início</S.Th>
                                     <S.Th>Fim</S.Th>
                                     <S.Th>Plano</S.Th>
-                                    <S.Th>Valor</S.Th>
+                                    <S.Th $num>Valor</S.Th>
                                     <S.Th>Status</S.Th>
                                     <S.Th></S.Th>
                                 </tr>
@@ -145,7 +156,7 @@ export function ReservationsTab() {
                                         <S.Td>{formatDateTime(r.startDate)}</S.Td>
                                         <S.Td>{formatDateTime(r.endDate)}</S.Td>
                                         <S.Td>{r.planCode ?? "—"}</S.Td>
-                                        <S.Td>{formatCurrency(r.totalPrice ?? 0)}</S.Td>
+                                        <S.Td $num>{formatCurrency(r.totalPrice ?? 0)}</S.Td>
                                         <S.Td>
                                             <S.StatusBadge $status={r.status}>
                                                 {STATUS_LABELS[r.status] ?? r.status}
@@ -154,7 +165,7 @@ export function ReservationsTab() {
                                         <S.Td>
                                             {(r.status === "PENDING" || r.status === "PAID") && (
                                                 <S.DangerButton
-                                                    style={{ height: "30px", padding: "0 10px", fontSize: "12px" }}
+                                                    $size="sm"
                                                     onClick={() => handleCancelClick(r)}
                                                     disabled={cancellingId === r.id}
                                                 >
@@ -178,31 +189,38 @@ export function ReservationsTab() {
 
             {cancelModal && (
                 <S.ModalOverlay onClick={() => setCancelModal(null)}>
-                    <S.ModalBox onClick={(e: React.MouseEvent) => e.stopPropagation()} style={{ maxWidth: 480 }}>
-                        <S.ModalTitle>Cancelar reserva</S.ModalTitle>
+                    <S.ModalBox onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                        <ModalHeader onClose={() => setCancelModal(null)}>Cancelar reserva</ModalHeader>
 
                         {cancelModal.status === "PAID" ? (
-                            <div style={{ display: "flex", flexDirection: "column", gap: 12, fontSize: 14, color: "var(--text-secondary)" }}>
-                                <p>Esta reserva já foi <strong>paga</strong>. O reembolso será calculado com base na política vigente:</p>
-                                <div style={{ background: "var(--bg-muted)", borderRadius: 10, padding: "12px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
-                                    <span>📅 Dias até o evento: <strong>{cancelModal.daysBeforeEvent}</strong></span>
-                                    <span>💸 Percentual de reembolso: <strong>{cancelModal.refundPct}%</strong></span>
-                                    <span>💰 Valor a reembolsar: <strong>{formatCurrency(cancelModal.refundAmount ?? 0)}</strong></span>
-                                    {cancelModal.refundPct === 0 && (
-                                        <span style={{ color: "var(--color-error)", fontSize: 12 }}>
-                                            ⚠️ Cancelamento fora do prazo — sem reembolso.
-                                        </span>
-                                    )}
-                                </div>
-                                <p style={{ fontSize: 13, color: "var(--text-muted)" }}>O reembolso será processado automaticamente na forma de pagamento original.</p>
-                            </div>
+                            <>
+                                <S.ModalText>Esta reserva já foi <strong>paga</strong>. O reembolso segue a política de cancelamento:</S.ModalText>
+                                <S.RefundSummary>
+                                    <div>
+                                        <dt>Dias até o evento</dt>
+                                        <dd>{cancelModal.daysBeforeEvent}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Percentual de reembolso</dt>
+                                        <dd>{cancelModal.refundPct}%</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Valor a reembolsar</dt>
+                                        <dd>{formatCurrency(cancelModal.refundAmount ?? 0)}</dd>
+                                    </div>
+                                </S.RefundSummary>
+                                {cancelModal.refundPct === 0 && (
+                                    <S.RefundWarning>Cancelamento fora do prazo: não há reembolso.</S.RefundWarning>
+                                )}
+                                <S.ModalNote>O reembolso é processado automaticamente na forma de pagamento original.</S.ModalNote>
+                            </>
                         ) : (
-                            <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+                            <S.ModalText>
                                 Tem certeza que deseja cancelar esta reserva? Esta ação não pode ser desfeita.
-                            </p>
+                            </S.ModalText>
                         )}
 
-                        <S.ModalActions style={{ marginTop: 20 }}>
+                        <S.ModalActions>
                             <S.SecondaryButton onClick={() => setCancelModal(null)}>Voltar</S.SecondaryButton>
                             <S.DangerButton onClick={handleConfirmCancel}>Confirmar cancelamento</S.DangerButton>
                         </S.ModalActions>

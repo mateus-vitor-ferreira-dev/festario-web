@@ -8,9 +8,11 @@ import Input from "../../components/Input";
 import { useAuth } from "../../contexts/AuthContext";
 import { getVenue } from "../../services/venue";
 import { getErrorMessage } from "../../utils/getErrorMessage";
-import { animateFadeInUp, animateStagger } from "../../utils/animations";
+import { isAbortError } from "../../utils/errors";
+import { animateFadeInUp } from "../../utils/animations";
 import { formatCents } from "../../utils/reservationFormat";
 import type { Venue } from "../../types";
+import type { ContratoRVRProps } from "../../components/ContratoRVR";
 
 import { useReservationForm } from "./useReservationForm";
 import { ContractSection } from "./components/ContractSection";
@@ -36,7 +38,7 @@ export default function ReservationIntent() {
                 const data = await getVenue(venueId!, controller.signal);
                 setVenue(data);
             } catch (error) {
-                if ((error as {name?: string})?.name === "CanceledError" || (error as {name?: string})?.name === "AbortError") return;
+                if (isAbortError(error)) return;
                 toast.error(getErrorMessage(error, "Erro ao carregar os dados do salão."));
             } finally {
                 if (!controller.signal.aborted) setLoading(false);
@@ -53,7 +55,6 @@ export default function ReservationIntent() {
         if (loading || !containerRef.current) return;
         const el = containerRef.current;
         animateFadeInUp(el.querySelector(".anim-top"));
-        animateStagger(el.querySelectorAll(".anim-card"), { delay: 0.15 });
     }, { scope: containerRef, dependencies: [loading] });
 
     if (loading) {
@@ -80,7 +81,7 @@ export default function ReservationIntent() {
 
     const today = new Date().toISOString().split("T")[0];
 
-    const contratoProps = {
+    const contratoProps: ContratoRVRProps = {
         locatario: user?.name ?? "",
         data: form.eventDate
             ? new Date(`${form.eventDate}T00:00:00`).toLocaleDateString("pt-BR")
@@ -89,7 +90,7 @@ export default function ReservationIntent() {
         horarioFim: form.endTime || "—",
         comKids: Boolean(venue.hasKidsArea),
         comPiscina: form.planCode === "COMPLETA",
-        planCode: form.planCode || "ESSENCIAL",
+        planCode: (form.planCode || "ESSENCIAL") as ContratoRVRProps["planCode"],
         totalCents: form.normalizedQuote?.totalCents ?? form.selectedPlan?.priceCents ?? undefined,
     };
 
@@ -155,7 +156,7 @@ export default function ReservationIntent() {
                         <S.Card className="anim-card">
                             <S.CardTitle>Data e horário</S.CardTitle>
                             <S.CardDescription>
-                                Selecione a data do evento no calendário. Datas em laranja já estão reservadas e datas em roxo estão bloqueadas.
+                                Escolha um dia disponível no calendário. Dias reservados ou bloqueados não podem ser selecionados — veja a legenda abaixo.
                             </S.CardDescription>
                             <AvailabilityCalendar
                                 venueId={venueId ?? ""}

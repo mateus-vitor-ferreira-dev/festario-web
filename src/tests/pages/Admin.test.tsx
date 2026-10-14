@@ -1900,7 +1900,7 @@ describe("Admin - Negotiations tab", () => {
         await waitFor(() => expect(screen.getByText("Dashboard")).toBeInTheDocument());
         await user.click(screen.getByRole("button", { name: /negociações/i }));
         await waitFor(() =>
-            expect(screen.getByText(/erro ao carregar negociações/i)).toBeInTheDocument()
+            expect(screen.getByText(/erro interno do servidor/i)).toBeInTheDocument()
         );
     });
 

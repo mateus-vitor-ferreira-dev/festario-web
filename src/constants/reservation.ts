@@ -1,3 +1,5 @@
+import type { PlanCode } from "../types";
+
 export const STATUS_MAP = {
     PENDING: { label: "Pendente", color: "amber" },
     PAID: { label: "Pago", color: "green" },
@@ -23,7 +25,9 @@ export const PLANS = [
     { code: "PROMOCIONAL", label: "Promocional", days: "Segunda a Quinta (não feriados)", priceCents: 65000 },
     { code: "ESSENCIAL",   label: "Essencial",   days: "Sexta a Domingo e feriados",      priceCents: 85000 },
     { code: "COMPLETA",    label: "Completa",     days: "Sexta a Domingo e feriados",      priceCents: 100000 },
-];
+] as const satisfies ReadonlyArray<{ code: PlanCode; label: string; days: string; priceCents: number }>;
+
+export type Plan = typeof PLANS[number];
 
 // Feriados nacionais fixos (MM-DD) e móveis (AAAA-MM-DD)
 export const FIXED_HOLIDAYS = ["01-01","04-21","05-01","09-07","10-12","11-02","11-15","11-20","12-25"];

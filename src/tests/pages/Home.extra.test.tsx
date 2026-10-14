@@ -100,8 +100,9 @@ describe("Home extra coverage", () => {
                         {
                             id: "res-1",
                             status: "PENDING",
-                            startDate: "2026-05-10T10:00:00.000Z",
-                            endDate: "2026-05-10T14:00:00.000Z",
+                            // data relativa: uma data fixa vira passado e muda as contagens
+                            startDate: new Date(Date.now() + 30 * 86400000).toISOString(),
+                            endDate: new Date(Date.now() + 30 * 86400000 + 4 * 3600000).toISOString(),
                             venue: { name: "Salão Principal" },
                         },
                     ],

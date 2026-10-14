@@ -57,6 +57,21 @@ describe("ChatWidget", () => {
         expect(screen.queryByText(/assistente recanto vila rica/i)).not.toBeInTheDocument();
     });
 
+    it("closes with the header close button and with Escape, returning focus to the FAB", async () => {
+        const user = userEvent.setup();
+        renderWidget();
+        await user.click(screen.getByRole("button", { name: /abrir chat/i }));
+        expect(screen.getByPlaceholderText(/digite sua dúvida/i)).toHaveFocus();
+        await user.click(screen.getByRole("button", { name: /fechar assistente/i }));
+        expect(screen.queryByText(/assistente recanto vila rica/i)).not.toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /abrir chat/i })).toHaveFocus();
+
+        await user.click(screen.getByRole("button", { name: /abrir chat/i }));
+        await user.keyboard("{Escape}");
+        expect(screen.queryByText(/assistente recanto vila rica/i)).not.toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /abrir chat/i })).toHaveFocus();
+    });
+
     it("disables send button when input is empty", async () => {
         const user = userEvent.setup();
         renderWidget();
@@ -118,7 +133,7 @@ describe("ChatWidget", () => {
         await user.click(screen.getByRole("button", { name: /enviar/i }));
 
         await waitFor(() =>
-            expect(screen.getByText(/desculpe, ocorreu um erro/i)).toBeInTheDocument()
+            expect(screen.getByText(/não consegui responder agora/i)).toBeInTheDocument()
         );
     });
 
@@ -131,7 +146,7 @@ describe("ChatWidget", () => {
         await user.click(screen.getByRole("button", { name: /enviar/i }));
 
         await waitFor(() =>
-            expect(screen.getByText(/desculpe, ocorreu um erro/i)).toBeInTheDocument()
+            expect(screen.getByText(/não consegui responder agora/i)).toBeInTheDocument()
         );
     });
 
@@ -161,7 +176,7 @@ describe("ChatWidget", () => {
         await user.click(screen.getByRole("button", { name: /enviar/i }));
 
         await waitFor(() =>
-            expect(screen.getByText(/desculpe, ocorreu um erro/i)).toBeInTheDocument()
+            expect(screen.getByText(/não consegui responder agora/i)).toBeInTheDocument()
         );
     });
 });

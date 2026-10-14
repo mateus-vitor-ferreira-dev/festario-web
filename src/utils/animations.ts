@@ -1,18 +1,25 @@
 /**
  * @module utils/animations
- * @description Helpers GSAP para animações de entrada. Todos os efeitos partem de
- * `opacity: 0, y: 30` e terminam em `opacity: 1, y: 0` com easing `power2.out`.
+ * @description Helpers GSAP para animações de entrada. Os efeitos partem de
+ * `opacity: 0, y: 12` e terminam em `opacity: 1, y: 0` com easing `power3.out`.
+ * Com `prefers-reduced-motion: reduce`, os elementos aparecem direto, sem tween.
  */
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const FROM = { opacity: 0, y: 30 };
-const TO = { opacity: 1, y: 0, duration: 0.7, ease: "power2.out", clearProps: "all" };
+const FROM = { opacity: 0, y: 12 };
+const TO = { opacity: 1, y: 0, duration: 0.55, ease: "power3.out", clearProps: "all" };
 
 /** Preset de fade-up para uso direto em `gsap.to()` / `gsap.fromTo()`. */
-export const FADE_UP = { opacity: 0, y: 30, duration: 0.7, ease: "power2.out" };
+export const FADE_UP = { opacity: 0, y: 12, duration: 0.55, ease: "power3.out" };
+
+function prefersReducedMotion() {
+    return typeof window !== "undefined"
+        && typeof window.matchMedia === "function"
+        && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
 
 /**
  * Anima um elemento com fade-in de baixo para cima.
@@ -22,6 +29,7 @@ export const FADE_UP = { opacity: 0, y: 30, duration: 0.7, ease: "power2.out" };
  * @returns {gsap.core.Tween}
  */
 export function animateFadeInUp(targets: gsap.TweenTarget, overrides: gsap.TweenVars = {}) {
+    if (prefersReducedMotion()) return gsap.set(targets, { clearProps: "all" });
     return gsap.fromTo(targets, FROM, { ...TO, ...overrides });
 }
 
@@ -33,5 +41,6 @@ export function animateFadeInUp(targets: gsap.TweenTarget, overrides: gsap.Tween
  * @returns {gsap.core.Tween}
  */
 export function animateStagger(targets: gsap.TweenTarget, overrides: gsap.TweenVars = {}) {
-    return gsap.fromTo(targets, FROM, { ...TO, stagger: 0.1, ...overrides });
+    if (prefersReducedMotion()) return gsap.set(targets, { clearProps: "all" });
+    return gsap.fromTo(targets, FROM, { ...TO, stagger: 0.06, ...overrides });
 }
