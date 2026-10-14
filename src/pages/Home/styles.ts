@@ -87,6 +87,49 @@ export const NewReservationButton = styled.a`
     }
 `;
 
+/** Atalhos do cabeçalho: área do papel (painel/plataforma) + nova reserva. */
+export const HeaderActions = styled.div`
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    ${media.sm} {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr;
+
+        & > a {
+            justify-content: center;
+        }
+    }
+`;
+
+export const ShortcutLink = styled.a`
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 1px solid var(--brand-border);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--brand);
+    font-size: var(--text-base);
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+        background: var(--brand-subtle);
+        border-color: var(--brand);
+    }
+
+    &:focus-visible {
+        outline: none;
+        box-shadow: var(--focus-ring);
+    }
+`;
+
 /* ─── Facts — linha discreta de números ─── */
 
 export const Facts = styled.dl`

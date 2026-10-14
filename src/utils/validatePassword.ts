@@ -23,3 +23,11 @@ export function validatePassword(password: string) {
 
     return null;
 }
+
+/** As mesmas regras de `validatePassword`, para mostrar o progresso enquanto a pessoa digita. */
+export const PASSWORD_RULES: ReadonlyArray<{ label: string; test: (password: string) => boolean }> = [
+    { label: "8 caracteres ou mais", test: (p) => p.length >= 8 },
+    { label: "1 letra maiúscula", test: (p) => /[A-Z]/.test(p) },
+    { label: "1 número", test: (p) => /[0-9]/.test(p) },
+    { label: "1 caractere especial (!@#…)", test: (p) => /[!@#$%^&*(),.?":{}|<>_\-\\[\]/+=;']/.test(p) },
+];

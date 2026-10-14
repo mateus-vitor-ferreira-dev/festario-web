@@ -6,15 +6,20 @@ import { ToastContainer } from "react-toastify";
 import { describe, expect, it } from "vitest";
 import Admin from "../../pages/Admin";
 import { server } from "../mocks/server";
+import { AuthProvider } from "../../contexts/AuthContext";
 
 const BASE = "http://localhost:3000";
 
 function renderPage() {
+    // o painel é do OWNER/ADMIN; ADMIN vê também as ações de feriados
+    localStorage.setItem("recanto:userData", JSON.stringify({ token: "t", user: { id: "admin-1", name: "Admin", email: "admin@x.com", role: "ADMIN" } }));
     return render(
-        <MemoryRouter>
-            <Admin />
-            <ToastContainer />
-        </MemoryRouter>
+        <AuthProvider>
+            <MemoryRouter>
+                <Admin />
+                <ToastContainer />
+            </MemoryRouter>
+        </AuthProvider>
     );
 }
 
@@ -1633,7 +1638,7 @@ describe("Admin - Users tab", () => {
             expect(screen.getByText("Maria")).toBeInTheDocument()
         );
         expect(screen.getByText("—")).toBeInTheDocument();
-        expect(screen.getByText("ADMIN")).toBeInTheDocument();
+        expect(screen.getByText("Equipe da plataforma")).toBeInTheDocument();
     });
 
     it("searches for users by submitting the search form", async () => {

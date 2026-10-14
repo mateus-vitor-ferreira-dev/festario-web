@@ -32,13 +32,13 @@ describe("Header extra coverage", () => {
         expect(screen.getByText(/usuário/i)).toBeInTheDocument();
     });
 
-    it("shows Admin link for migrated legacy session with ADMIN role", () => {
+    it("shows Plataforma link for migrated legacy session with ADMIN role", () => {
         localStorage.setItem(
             "recanto:userData",
             JSON.stringify({ id: "u1", name: "Admin Root", email: "a@a.com", role: "ADMIN", token: "t" })
         );
         renderHeader();
-        expect(screen.getByRole("link", { name: /^admin$/i })).toBeInTheDocument();
+        expect(screen.getByRole("link", { name: /^plataforma$/i })).toBeInTheDocument();
     });
 
     it("does not show Admin link when nested user role is USER", () => {
@@ -48,7 +48,7 @@ describe("Header extra coverage", () => {
         );
         renderHeader();
         expect(
-            screen.queryByRole("link", { name: /admin/i })
+            screen.queryByRole("link", { name: /plataforma|painel/i })
         ).not.toBeInTheDocument();
     });
 
@@ -67,6 +67,6 @@ describe("Header extra coverage", () => {
             JSON.stringify({ role: "ADMIN", user: { name: "Alex" } })
         );
         renderHeader();
-        expect(screen.queryByRole("link", { name: /admin/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole("link", { name: /plataforma|painel/i })).not.toBeInTheDocument();
     });
 });

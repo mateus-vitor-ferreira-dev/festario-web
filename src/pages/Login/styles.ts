@@ -76,3 +76,50 @@ export const FooterText = styled.p`
     }
   }
 `;
+
+/** Aviso do espaço em que o login vai entrar (`/login?espaco=<slug>`). */
+export const TenantNotice = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-md);
+  background: var(--brand-subtle);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+
+  strong {
+    color: var(--text-primary);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  button {
+    min-height: 44px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--brand);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    text-decoration: underline;
+    text-decoration-color: var(--brand-border);
+    text-underline-offset: 3px;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
+      border-radius: var(--radius-sm);
+    }
+  }
+`;

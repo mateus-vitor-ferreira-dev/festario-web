@@ -8,6 +8,7 @@ import {
     syncMunicipalHolidays,
 } from "../../../services/admin";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
+import { useAuth } from "../../../contexts/AuthContext";
 import { DatePickerInput, Pagination, SelectField } from "../../../components";
 import { useListParams } from "../../../hooks/useListParams";
 import { usePaginatedQuery } from "../../../hooks/usePaginatedQuery";
@@ -24,7 +25,13 @@ export const HOLIDAYS_PAGE_SIZE = 20;
 
 const HOLIDAY_KEYS = ["year"] as const;
 
+/**
+ * Feriados são globais (afetam o preço de todos os espaços): só o ADMIN da
+ * plataforma cria, sincroniza ou remove. O OWNER apenas consulta.
+ */
 export function HolidaysTab() {
+    const { user } = useAuth();
+    const canEdit = user?.role === "ADMIN";
     const currentYear = new Date().getFullYear();
     const topRef = useRef<HTMLDivElement | null>(null);
     const { values, page, setFilter, setPage } = useListParams(HOLIDAY_KEYS, {
@@ -123,6 +130,7 @@ export function HolidaysTab() {
                             />
                         </S.YearField>
                     </S.InlineGroup>
+                    {canEdit && (
                     <S.SectionActions>
                         <S.PrimaryButton onClick={() => setShowModal(true)}>+ Novo feriado</S.PrimaryButton>
                         <S.SecondaryButton onClick={handleSync} disabled={isSyncing}>
@@ -132,15 +140,26 @@ export function HolidaysTab() {
                             {isSyncingMunicipal ? "Sincronizando..." : "Sincronizar feriados municipais"}
                         </S.SecondaryButton>
                     </S.SectionActions>
+                    )}
                 </S.SectionHeader>
             </S.ScrollAnchor>
+
+            {!canEdit && (
+                <S.ModalNote>
+                    Os feriados valem para todos os espaços e são mantidos pela equipe da plataforma. Se faltar algum, fale com o suporte.
+                </S.ModalNote>
+            )}
 
             {isLoading ? (
                 <S.LoadingSpinner />
             ) : holidays.length === 0 ? (
                 <S.EmptyState>
                     <h3>Nenhum feriado cadastrado para {year}</h3>
-                    <p>Use “Sincronizar feriados nacionais” ou adicione um feriado manualmente.</p>
+                    <p>
+                        {canEdit
+                            ? "Use “Sincronizar feriados nacionais” ou adicione um feriado manualmente."
+                            : "A equipe da plataforma ainda não cadastrou os feriados deste ano. Escolha outro ano ou fale com o suporte."}
+                    </p>
                 </S.EmptyState>
             ) : (
                 <S.ListRegion $busy={isFetching} aria-busy={isFetching}>
@@ -153,9 +172,11 @@ export function HolidaysTab() {
                                 </S.HolidayInfo>
                                 <S.InlineGroup>
                                     {h.type && <S.HolidayType>{HOLIDAY_TYPE_LABELS[h.type] ?? h.type}</S.HolidayType>}
-                                    <S.DangerButton $size="sm" onClick={() => handleDelete(h.id)} disabled={deletingId === h.id}>
-                                        {deletingId === h.id ? "Removendo..." : "Remover"}
-                                    </S.DangerButton>
+                                    {canEdit && (
+                                        <S.DangerButton $size="sm" onClick={() => handleDelete(h.id)} disabled={deletingId === h.id}>
+                                            {deletingId === h.id ? "Removendo..." : "Remover"}
+                                        </S.DangerButton>
+                                    )}
                                 </S.InlineGroup>
                             </S.HolidayCard>
                         ))}
@@ -177,7 +198,7 @@ export function HolidaysTab() {
                 </S.ListRegion>
             )}
 
-            {showModal && (
+            {canEdit && showModal && (
                 <S.ModalOverlay onClick={() => setShowModal(false)}>
                     <S.ModalBox onClick={(e) => e.stopPropagation()}>
                         <ModalHeader onClose={() => setShowModal(false)} disabled={isSaving}>Novo feriado</ModalHeader>

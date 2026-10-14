@@ -1,12 +1,15 @@
 import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { MainLayout } from "../components";
 import ErrorBoundary from "../components/ErrorBoundary";
 import PageLoader from "../components/PageLoader";
-import { AdminRoute } from "./AdminRoute";
 import { PrivateRoute } from "./PrivateRoute";
+import { RoleRoute } from "./RoleRoute";
 
 const Admin             = lazy(() => import("../pages/Admin"));
+const InviteAccept      = lazy(() => import("../pages/InviteAccept"));
+const Platform          = lazy(() => import("../pages/Platform"));
+const TenantDetail      = lazy(() => import("../pages/Platform/TenantDetail"));
 const Checkout          = lazy(() => import("../pages/Checkout"));
 const ContactUs         = lazy(() => import("../pages/ContactUs"));
 const ForgotPassword    = lazy(() => import("../pages/ForgotPassword"));
@@ -41,8 +44,17 @@ function PageErrorFallback() {
     );
 }
 
+/** Links antigos de `/admin` (inclusive `?tab=`) continuam funcionando. */
+function LegacyAdminRedirect() {
+    const { search } = useLocation();
+    return <Navigate to={{ pathname: "/painel", search }} replace />;
+}
+
 /**
  * Árvore de rotas da aplicação.
+ *
+ * Áreas por papel (ver `utils/roles`): `/painel` (OWNER e ADMIN — painel do espaço),
+ * `/plataforma` (só ADMIN). `/convite/:token` é pública (aceite do convite do dono).
  *
  * Cada página é carregada sob demanda via React.lazy — o bundle inicial
  * contém apenas o shell (Auth, Layout, rotas) e cada chunk de página é
@@ -68,6 +80,7 @@ export function AppRoutes({ introFinished }: AppRoutesProps) {
                     />
                     <Route path="/esqueci-senha" element={<ForgotPassword />} />
                     <Route path="/redefinir-senha" element={<ResetPassword />} />
+                    <Route path="/convite/:token" element={<InviteAccept />} />
 
                     <Route element={<PrivateRoute />}>
                         <Route element={<MainLayout />}>
@@ -98,12 +111,31 @@ export function AppRoutes({ introFinished }: AppRoutesProps) {
                             />
                             <Route path="/payment/success" element={<PaymentSuccess />} />
                             <Route path="/payment/cancel" element={<PaymentCancel />} />
-                            <Route element={<AdminRoute />}>
+                            <Route path="/admin" element={<LegacyAdminRedirect />} />
+                            <Route element={<RoleRoute roles={["OWNER", "ADMIN"]} />}>
                                 <Route
-                                    path="/admin"
+                                    path="/painel"
                                     element={
                                         <ErrorBoundary fallback={<PageErrorFallback />}>
                                             <Admin />
+                                        </ErrorBoundary>
+                                    }
+                                />
+                            </Route>
+                            <Route element={<RoleRoute roles={["ADMIN"]} />}>
+                                <Route
+                                    path="/plataforma"
+                                    element={
+                                        <ErrorBoundary fallback={<PageErrorFallback />}>
+                                            <Platform />
+                                        </ErrorBoundary>
+                                    }
+                                />
+                                <Route
+                                    path="/plataforma/espacos/:slug"
+                                    element={
+                                        <ErrorBoundary fallback={<PageErrorFallback />}>
+                                            <TenantDetail />
                                         </ErrorBoundary>
                                     }
                                 />

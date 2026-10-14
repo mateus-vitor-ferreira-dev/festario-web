@@ -4,6 +4,7 @@ import { ActiveFilterChips, FilterBar, NoResults, Pagination, SelectField, TextF
 import { useListParams } from "../../../hooks/useListParams";
 import { usePaginatedQuery } from "../../../hooks/usePaginatedQuery";
 import { formatDate } from "./constants";
+import { ROLE_LABELS } from "../../../utils/roles";
 import type { User } from "../../../types";
 import * as S from "../styles";
 
@@ -16,8 +17,8 @@ type UserFilterKey = (typeof USER_FILTER_KEYS)[number];
 
 const ROLE_OPTIONS = [
     { value: "", label: "Todos os perfis" },
-    { value: "USER", label: "Cliente" },
-    { value: "ADMIN", label: "Administrador" },
+    { value: "USER", label: ROLE_LABELS.USER },
+    { value: "OWNER", label: ROLE_LABELS.OWNER },
 ];
 
 export function UsersTab() {
@@ -98,7 +99,7 @@ export function UsersTab() {
                                         <S.Td>{u.email}</S.Td>
                                         <S.Td>{u.phone ?? "—"}</S.Td>
                                         <S.Td>
-                                            <S.RoleBadge $role={u.role}>{u.role}</S.RoleBadge>
+                                            <S.RoleBadge $role={u.role}>{ROLE_LABELS[u.role] ?? u.role}</S.RoleBadge>
                                         </S.Td>
                                         <S.Td $num>{u._count?.reservations ?? 0}</S.Td>
                                         <S.Td>{formatDate(u.createdAt)}</S.Td>

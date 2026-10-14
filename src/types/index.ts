@@ -1,6 +1,11 @@
 // ─── Primitivos / Enums ───────────────────────────────────────────────────────
 
-export type UserRole = "USER" | "ADMIN";
+/**
+ * Papéis: `USER` (cliente), `OWNER` (dono do espaço — painel do próprio tenant) e
+ * `ADMIN` (equipe da plataforma — área da plataforma e painel de qualquer espaço).
+ */
+export type UserRole = "USER" | "OWNER" | "ADMIN";
+export type Role = UserRole;
 export type ReservationStatus = "PENDING" | "PAID" | "CANCELLED" | "EXPIRED";
 export type PaymentStatus = "PENDING" | "PAID" | "FAILED";
 export type NegotiationStatus = "OPEN" | "ACCEPTED" | "REJECTED" | "CLOSED" | "PENDING_APPROVAL";
@@ -211,13 +216,83 @@ export interface AuthSession {
   refreshToken?: string | null;
 }
 
+/** Espaço (tenant) em que a sessão opera; enviado em `X-Tenant-Slug`. */
+export interface TenantRef {
+  slug: string;
+  name?: string | null;
+}
+
 export interface AuthContextValue {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
-  login: (data: unknown) => void;
+  /** Espaço guardado (vindo do convite, de `/login?espaco=` ou escolhido pelo ADMIN); `null` = espaço padrão. */
+  tenant: TenantRef | null;
+  /** Guarda a sessão; com `tenant`, passa a enviar `X-Tenant-Slug` nas próximas requisições. */
+  login: (data: unknown, tenant?: TenantRef | null) => void;
+  /** Troca o espaço da sessão (`null` volta ao padrão). */
+  setTenant: (tenant: TenantRef | null) => void;
   logout: () => void;
   updateUser: (updated: Partial<User>) => void;
+}
+
+// ─── Plataforma (estabelecimentos e convites) ─────────────────────────────────
+
+export type TenantPlan = "FREE" | "STARTER" | "PRO";
+export type InviteStatus = "valid" | "expired" | "accepted" | "revoked";
+
+export interface TenantStats {
+  venues: number;
+  owners: number;
+  reservations: number;
+  pendingInvites: number;
+  /** Soma das reservas pagas, em reais. */
+  paidRevenue: number;
+}
+
+export interface Tenant {
+  id: string;
+  slug: string;
+  name: string;
+  plan: TenantPlan;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  stats?: TenantStats;
+}
+
+export interface OwnerInvite {
+  id: string;
+  tenantId: string;
+  email: string;
+  status: InviteStatus;
+  expiresAt: string;
+  acceptedAt?: string | null;
+  revokedAt?: string | null;
+  createdAt?: string;
+  invitedBy?: { id: string; name: string } | null;
+}
+
+export interface CreateInviteResult {
+  invite: OwnerInvite;
+  emailSent: boolean;
+  /** Só fora de produção (o e-mail pode não estar configurado). */
+  inviteUrl?: string;
+}
+
+/** Dados públicos do convite (`GET /owner-invites/:token`). */
+export interface InviteInfo {
+  tenantName: string;
+  email: string;
+  status: InviteStatus;
+  expiresAt: string;
+}
+
+export interface AcceptInviteResult {
+  user: User;
+  token: string;
+  refreshToken?: string | null;
+  tenant: { id: string; slug: string; name: string };
 }
 
 // ─── API Response wrappers ────────────────────────────────────────────────────

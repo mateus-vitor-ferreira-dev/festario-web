@@ -5,12 +5,19 @@ import { toast } from "react-toastify";
 import { AuthLayout, Button, GoogleButton, Input } from "../../components";
 
 import { useAuth } from "../../contexts/AuthContext";
+import { isValidTenantSlug } from "../../config/tenantStorage";
 import { getErrorMessage } from "../../utils/getErrorMessage";
+import { homePathFor } from "../../utils/roles";
 import api from "../../services/api";
 import * as S from "./styles";
 
 /**
  * Página de login com e-mail/senha e autenticação via Google OAuth.
+ *
+ * Espaço: `/login?espaco=<slug>` guarda o espaço e passa a enviar `X-Tenant-Slug`
+ * (é assim que o dono de um espaço que não é o padrão entra). Sem o parâmetro, vale o
+ * espaço já guardado no navegador ou o padrão. Depois de entrar, cada papel vai para
+ * a sua área (`homePathFor`).
  *
  * @see POST /auth/login
  * @component
@@ -19,14 +26,38 @@ import * as S from "./styles";
  */
 export default function Login({ introFinished = true }) {
     const navigate = useNavigate();
-    const { login } = useAuth();
-    const [searchParams] = useSearchParams();
+    const { login, tenant, setTenant } = useAuth();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const espacoParam = searchParams.get("espaco")?.trim().toLowerCase() ?? "";
 
     useEffect(() => {
         if (searchParams.get("verified") === "true") {
             toast.success("E-mail verificado com sucesso! Faça login.");
         }
     }, [searchParams]);
+
+    useEffect(() => {
+        if (!espacoParam) return;
+        if (!isValidTenantSlug(espacoParam)) {
+            toast.error("O endereço do espaço no link é inválido. Confira o link ou entre no espaço padrão.", { toastId: "invalid-espaco" });
+            return;
+        }
+        setTenant({ slug: espacoParam });
+    // só quando o parâmetro muda (setTenant/tenant mudam a cada render do provider;
+    // reagir a eles reativaria o espaço logo depois de "Entrar no espaço padrão")
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [espacoParam]);
+
+    function switchToDefaultTenant() {
+        setTenant(null);
+        if (espacoParam) {
+            setSearchParams((prev) => {
+                const next = new URLSearchParams(prev);
+                next.delete("espaco");
+                return next;
+            }, { replace: true });
+        }
+    }
 
     const [form, setForm] = useState({ email: "", password: "" });
     const [isLoading, setIsLoading] = useState(false);
@@ -49,7 +80,7 @@ export default function Login({ introFinished = true }) {
             login(data.data);
 
             toast.success(data.message || "Login realizado com sucesso.");
-            navigate("/home");
+            navigate(homePathFor(data.data?.user?.role ?? data.data?.role));
         } catch (error) {
             toast.error(getErrorMessage(error, "Erro ao fazer login."));
         } finally {
@@ -64,6 +95,17 @@ export default function Login({ introFinished = true }) {
             introFinished={introFinished}
         >
             <S.Form onSubmit={handleSubmit}>
+                {tenant && (
+                    <S.TenantNotice role="status">
+                        <span>
+                            Entrando no espaço <strong>{tenant.name || tenant.slug}</strong>
+                        </span>
+                        <button type="button" onClick={switchToDefaultTenant}>
+                            Entrar no espaço padrão
+                        </button>
+                    </S.TenantNotice>
+                )}
+
                 <Input
                     label="E-mail"
                     name="email"

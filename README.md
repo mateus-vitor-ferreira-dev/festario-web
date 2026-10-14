@@ -80,9 +80,14 @@ flowchart TB
   <tbody>
     <tr><td><strong>Visitante</strong></td><td>Cadastro, login (e-mail/senha ou Google), recuperação e redefinição de senha</td></tr>
     <tr><td><strong>Cliente</strong></td><td>Home, salões, calendário de disponibilidade, intenção de reserva com cotação e contrato, checkout (cartão/PIX), minhas reservas com cancelamento, negociações, promoções, indicações, contato e perfil</td></tr>
-    <tr><td><strong>Admin</strong></td><td>Tudo do cliente + <code>/admin</code>, com 9 abas: dashboard, reservas, usuários, negociações (propostas e reservas customizadas), campanhas (indicação, fidelidade e sorteio VIP), feriados, datas bloqueadas, planos e espaços</td></tr>
+    <tr><td><strong>Dono do espaço</strong> (<code>OWNER</code>)</td><td>Tudo do cliente + <code>/painel</code> do próprio estabelecimento, com 9 abas: dashboard, reservas, usuários, negociações (propostas e reservas customizadas), campanhas (indicação, fidelidade e sorteio VIP), feriados (só consulta), datas bloqueadas, planos e espaços</td></tr>
+    <tr><td><strong>Equipe da plataforma</strong> (<code>ADMIN</code>)</td><td>Tudo do dono, em qualquer estabelecimento, + <code>/plataforma</code>: estabelecimentos (cadastro, ativar/desativar, números), convites do dono e feriados (globais)</td></tr>
   </tbody>
 </table>
+
+O link antigo <code>/admin</code> redireciona para <code>/painel</code>. O dono convidado cria a conta em <code>/convite/:token</code>.
+
+**Espaço (tenant).** A API escolhe o estabelecimento pelo cabeçalho `X-Tenant-Slug`; sem ele, usa o espaço padrão. O web guarda o slug em `localStorage["recanto:tenant"]` e o envia em toda requisição quando ele existe. O slug é guardado ao aceitar o convite, ao abrir `/login?espaco=<slug>` (é o link de acesso do dono de um estabelecimento que não é o padrão — ex.: `/login?espaco=salao-jardim-das-flores`) ou quando a equipe da plataforma abre o painel de um estabelecimento. No login, "Entrar no espaço padrão" apaga o slug guardado.
 
 ---
 
