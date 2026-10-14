@@ -316,7 +316,7 @@ export const EmptyState = styled.div`
 export const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(10, 18, 14, 0.55);
+  background: var(--overlay);
   display: flex;
   align-items: center;
   justify-content: center;

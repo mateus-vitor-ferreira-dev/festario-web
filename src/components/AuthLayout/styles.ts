@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { media } from "../../styles/breakpoints";
+import { FestarioSymbol, FestarioWordmark } from "../Brand";
 
 /* ─── Shell ─── */
 
@@ -22,7 +23,12 @@ export const LeftSide = styled.aside`
   /* altura mínima, nunca fixa: se a conta de escala errar, o painel cresce em vez de cortar o texto */
   min-height: 100vh;
   min-height: 100dvh;
-  background: #133428;
+  /* anil escuro com um halo de anil no alto: noite de festa, sem preto neutro */
+  background:
+    radial-gradient(120% 70% at 0% 0%, rgba(39, 53, 126, 0.75) 0%, transparent 60%),
+    #141936;
+  /* no tema escuro a página também é noite: um fio separa os dois lados */
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
   color: #ffffff;
   /* margens e espaços crescem com a tela, limitados também pela altura
      (monitores largos e baixos não podem empilhar conteúdo além da tela) */
@@ -38,37 +44,28 @@ export const LeftSide = styled.aside`
   }
 `;
 
+/* logotipo em duas peças; respiro do guia (¼ da altura do símbolo) vem do gap do grid */
 export const Brand = styled.div`
   grid-area: brand;
   display: flex;
   align-items: center;
-  gap: clamp(14px, 1.2vw, 24px);
+  height: clamp(44px, min(3.4vw, 6.5vh), 76px);
 `;
 
-export const BrandName = styled.span`
-  font-family: var(--font-display);
-  font-size: clamp(22px, 1.6vw, 34px);
-  font-weight: 600;
-  line-height: 1.1;
-  color: #ffffff;
-`;
-
-/* o logo é um brasão detalhado (louros + nome interno): abaixo de ~88px vira ruído */
-export const BrandLogoWrapper = styled.div<{ $visible: boolean }>`
-  width: clamp(88px, min(6.5vw, 11vh), 136px);
+export const BrandSymbol = styled(FestarioSymbol)<{ $visible: boolean }>`
+  height: 100%;
+  width: auto;
   aspect-ratio: 1;
   flex-shrink: 0;
+  display: block;
   opacity: ${({ $visible }) => ($visible ? 1 : 0)};
   transition: opacity 180ms ease;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 `;
 
-export const BrandLogo = styled.img`
-  width: 100%;
+export const BrandWordmark = styled(FestarioWordmark)`
+  height: 100%;
+  width: auto;
   display: block;
-  object-fit: contain;
 `;
 
 /* Prévia do produto: calendário do mês desenhado em código.
@@ -88,11 +85,23 @@ export const Preview = styled.div`
 `;
 
 export const PreviewCard = styled.div`
+  position: relative;
   background: #ffffff;
-  color: #17241e;
+  color: #141936;
   border-radius: var(--radius-lg);
-  padding: 1.6em 1.6em 1.35em;
+  /* o alto do cartão guarda o varal de bandeirinhas, como no símbolo */
+  padding: 2.5em 1.6em 1.35em;
   box-shadow: 0 24px 48px -16px rgba(0, 0, 0, 0.45);
+`;
+
+/* varal: fio de anil preso nos cantos do cartão, bandeirinhas milho e pitanga */
+export const PreviewBunting = styled.svg`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2.1em;
+  overflow: visible;
 `;
 
 export const PreviewMonth = styled.p`
@@ -115,16 +124,17 @@ export const PreviewGrid = styled.div`
 export const PreviewWeekday = styled.span`
   font-size: max(12px, 0.8em);
   font-weight: 500;
-  color: #5c6b63;
+  color: #5a6079;
   text-align: center;
   padding-bottom: 0.3em;
 `;
 
 const dayStates = {
-  free: "background: #e8ede6; color: #17241e;",
+  free: "background: #ebedf6; color: #141936;",
   /* indisponível sem alarmar: apagado e riscado */
-  booked: "background: transparent; color: #8a978f; text-decoration: line-through; text-decoration-color: #c3cdc4;",
-  confirmed: "background: #1f4f41; color: #ffffff; box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #b08a35;",
+  booked: "background: transparent; color: #7c8199; text-decoration: line-through; text-decoration-color: #c5c9dc;",
+  /* a data da festa: anil com anel de milho (o check do símbolo) */
+  confirmed: "background: #27357e; color: #ffffff; box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #f4b41a;",
 } as const;
 
 export const PreviewDay = styled.span<{ $state: keyof typeof dayStates }>`
@@ -145,7 +155,7 @@ export const PreviewLegend = styled.div`
   gap: 0.4em 1.1em;
   margin-top: 1.1em;
   font-size: max(12px, 0.87em);
-  color: #5c6b63;
+  color: #5a6079;
 
   span {
     display: inline-flex;
@@ -159,9 +169,9 @@ export const PreviewLegend = styled.div`
     border-radius: 3px;
   }
 
-  i[data-state="free"] { background: #e8ede6; }
-  i[data-state="booked"] { background: transparent; border: 1px solid #a3aea7; }
-  i[data-state="confirmed"] { background: #1f4f41; }
+  i[data-state="free"] { background: #ebedf6; }
+  i[data-state="booked"] { background: transparent; border: 1px solid #a2a7bd; }
+  i[data-state="confirmed"] { background: #27357e; }
 `;
 
 export const PreviewTicket = styled.div`
@@ -173,15 +183,15 @@ export const PreviewTicket = styled.div`
   gap: 0.15em;
   padding: 0.8em 1.05em;
   border-radius: var(--radius-md);
-  background: #f7f0de;
-  color: #17241e;
-  border: 1px solid #e6d5a6;
+  background: #fdf4dc;
+  color: #141936;
+  border: 1px solid #f2d68c;
   box-shadow: 0 16px 32px -12px rgba(0, 0, 0, 0.5);
 
   strong {
     font-size: max(12px, 0.87em);
     font-weight: 700;
-    color: #1d6436;
+    color: #1b6334;
   }
 
   span {
@@ -215,7 +225,7 @@ export const Headline = styled.h1`
 export const Tagline = styled.p`
   font-size: 1em;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.78);
+  color: rgba(255, 255, 255, 0.8);
   margin: 0;
 `;
 
@@ -243,31 +253,35 @@ export const FormArea = styled.div`
   gap: clamp(24px, 1.8vw, 36px);
 `;
 
-export const MobileBrand = styled.div<{ $visible: boolean }>`
+export const MobileBrand = styled.div`
   display: none;
 
   ${media.lg} {
     display: flex;
-    flex-direction: column;
+    align-self: center;
     align-items: center;
-    gap: 8px;
+    height: 48px;
     margin-bottom: 4px;
-    opacity: ${({ $visible }) => ($visible ? 1 : 0)};
-    transition: opacity 180ms ease;
+  }
+
+  ${media.sm} {
+    height: 40px;
   }
 `;
 
-export const MobileBrandLogo = styled.img`
-  width: min(150px, 42vw);
+export const MobileBrandSymbol = styled(FestarioSymbol)<{ $visible: boolean }>`
+  height: 100%;
+  width: auto;
+  aspect-ratio: 1;
   display: block;
-  object-fit: contain;
+  opacity: ${({ $visible }) => ($visible ? 1 : 0)};
+  transition: opacity 180ms ease;
 `;
 
-export const MobileBrandName = styled.span`
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  font-weight: 600;
-  color: var(--text-primary);
+export const MobileBrandWordmark = styled(FestarioWordmark)`
+  height: 100%;
+  width: auto;
+  display: block;
 `;
 
 export const FormHeader = styled.div`

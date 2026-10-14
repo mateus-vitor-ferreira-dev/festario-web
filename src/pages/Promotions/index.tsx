@@ -15,14 +15,14 @@ const CAMPAIGN_CONFIGS = {
         typeLabel: "Indicação",
         title: "Indique e Ganhe",
         description:
-            "Indique um amigo pelo e-mail. Quando ele fizer a primeira reserva no Recanto Vila Rica, você recebe automaticamente um desconto na sua próxima reserva.",
+            "Indique um amigo pelo e-mail. Quando ele fizer a primeira reserva neste espaço, você recebe automaticamente um desconto na sua próxima reserva.",
         cta: "invite",
     },
     LOYALTY_ALWAYS_HERE: {
         typeLabel: "Fidelidade",
         title: "Programa de Fidelidade",
         description:
-            "Clientes que retornam ao Recanto Vila Rica recebem descontos exclusivos automaticamente. Quanto mais você reserva, maiores os benefícios.",
+            "Clientes que voltam a reservar neste espaço recebem descontos exclusivos automaticamente. Quanto mais você reserva, maiores os benefícios.",
         cta: null,
     },
     RAFFLE_VIP: {

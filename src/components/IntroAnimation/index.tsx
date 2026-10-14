@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import styled, { css, keyframes } from "styled-components";
-import logo from "../../assets/logo-recanto.svg";
+import { FestarioSymbol } from "../Brand";
+import { BRAND_NAME } from "../../config/brand";
 
 const REVEAL_DURATION = 1080;
 const TRAVEL_DURATION = 1180;
@@ -9,30 +10,21 @@ const logoReveal = keyframes`
   0% {
     opacity: 0;
     transform: scale(0.42);
-    filter: blur(10px) drop-shadow(0 0 0 rgba(193, 166, 129, 0));
+    filter: blur(10px) drop-shadow(0 0 0 rgba(244, 180, 26, 0));
   }
   55% {
     opacity: 1;
     transform: scale(1.08);
-    filter: blur(0) drop-shadow(0 0 56px rgba(193, 166, 129, 0.58));
+    filter: blur(0) drop-shadow(0 0 56px rgba(244, 180, 26, 0.42));
   }
   78% {
     transform: scale(0.97);
-    filter: blur(0) drop-shadow(0 0 32px rgba(193, 166, 129, 0.32));
+    filter: blur(0) drop-shadow(0 0 32px rgba(244, 180, 26, 0.24));
   }
   100% {
     opacity: 1;
     transform: scale(1);
-    filter: blur(0) drop-shadow(0 0 18px rgba(150, 123, 88, 0.22));
-  }
-`;
-
-const travelSpin = keyframes`
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
+    filter: blur(0) drop-shadow(0 0 18px rgba(154, 168, 242, 0.22));
   }
 `;
 
@@ -82,9 +74,9 @@ const Background = styled.div`
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at 20% 10%, #2a5c49 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 80%, #0f2820 0%, transparent 50%),
-    #1a3d32;
+    radial-gradient(ellipse at 20% 10%, #27357e 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 80%, #0a0d24 0%, transparent 50%),
+    #141936;
 `;
 
 const AmbientLight = styled.div<{ $active: boolean }>`
@@ -93,7 +85,7 @@ const AmbientLight = styled.div<{ $active: boolean }>`
   z-index: 1;
   background:
     radial-gradient(circle at center, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.06) 24%, transparent 58%),
-    radial-gradient(circle at 50% 45%, rgba(201, 168, 76, 0.22) 0%, transparent 52%);
+    radial-gradient(circle at 50% 45%, rgba(244, 180, 26, 0.18) 0%, transparent 52%);
   opacity: 0;
 
   ${({ $active }) =>
@@ -111,7 +103,7 @@ const SoftCurtain = styled.div<{ $active: boolean }>`
     180deg,
     rgba(255, 255, 255, 0.16) 0%,
     rgba(255, 255, 255, 0.05) 38%,
-    rgba(10, 26, 21, 0.08) 100%
+    rgba(15, 19, 48, 0.08) 100%
   );
   opacity: 0;
   transform-origin: center;
@@ -139,12 +131,13 @@ const MovingLogo = styled.div<{ $x: number; $y: number; $size: number; $phase: s
     opacity 260ms ease;
 `;
 
-const MovingLogoImage = styled.img<{ $phase: string }>`
+/* o guia proíbe girar a marca: no voo ela só desliza e encolhe até o destino */
+const MovingLogoImage = styled(FestarioSymbol)<{ $phase: string }>`
   width: 100%;
+  height: auto;
+  aspect-ratio: 1;
   display: block;
-  object-fit: contain;
   will-change: transform, filter, opacity;
-  transform: rotate(0deg);
 
   ${({ $phase }) =>
     $phase === "revealing" &&
@@ -155,8 +148,7 @@ const MovingLogoImage = styled.img<{ $phase: string }>`
   ${({ $phase }) =>
     $phase === "travelling" &&
     css`
-      animation: ${travelSpin} ${TRAVEL_DURATION}ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
-      filter: drop-shadow(0 0 18px rgba(193, 166, 129, 0.22));
+      filter: drop-shadow(0 0 18px rgba(244, 180, 26, 0.2));
     `}
 `;
 
@@ -198,9 +190,9 @@ interface IntroAnimationProps {
 }
 
 /**
- * Animação de intro com o logo do Recanto Vila Rica.
+ * Animação de intro com o símbolo Festário.
  *
- * Exibe o logo no centro da tela com efeito de revelação (fade + scale), depois o
+ * Exibe o símbolo no centro da tela com efeito de revelação (fade + scale), depois o
  * anima até o destino no Header (buscado via `[data-intro-target-desktop]` /
  * `[data-intro-target-mobile]`). Ao terminar chama `onComplete`.
  *
@@ -285,11 +277,7 @@ export function IntroAnimation({ onComplete }: IntroAnimationProps) {
         $size={current.size}
         $phase={phase}
       >
-        <MovingLogoImage
-          src={logo}
-          alt="Recanto Vila Rica"
-          $phase={phase}
-        />
+        <MovingLogoImage tone="onDark" title={BRAND_NAME} $phase={phase} />
       </MovingLogo>
     </Overlay>
   );

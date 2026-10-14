@@ -7,6 +7,7 @@ import {
     updateCampaign,
 } from "../../../services/admin";
 import { DatePickerInput } from "../../../components";
+import { useAuth } from "../../../contexts/AuthContext";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
 import type { Campaign, RaffleWinnerResult } from "../../../types";
 import {
@@ -21,6 +22,7 @@ import { ModalHeader } from "../ModalHeader";
 import * as S from "../styles";
 
 export function CampaignsTab() {
+    const { tenant } = useAuth();
     const [campaigns, setCampaigns] = useState<Campaign[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -204,8 +206,8 @@ export function CampaignsTab() {
                         </S.WinnerCard>
                         <S.MessageBlock>
                             <S.SummaryLabel>Mensagem para enviar ao ganhador</S.SummaryLabel>
-                            <S.MessagePreview>{buildWinnerMessage(winnerResult.winner, winnerResult.campaignName)}</S.MessagePreview>
-                            <S.CopyButton onClick={() => handleCopyMessage(buildWinnerMessage(winnerResult.winner, winnerResult.campaignName))}>
+                            <S.MessagePreview>{buildWinnerMessage(winnerResult.winner, winnerResult.campaignName, tenant?.name)}</S.MessagePreview>
+                            <S.CopyButton onClick={() => handleCopyMessage(buildWinnerMessage(winnerResult.winner, winnerResult.campaignName, tenant?.name))}>
                                 {copied ? "Copiado!" : "Copiar mensagem"}
                             </S.CopyButton>
                         </S.MessageBlock>

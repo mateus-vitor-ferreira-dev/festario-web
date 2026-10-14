@@ -2,13 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useGSAP } from "@gsap/react";
-import logo from "../../assets/logo-recanto.svg";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { resendVerification } from "../../services/auth";
 import { animateFadeInUp } from "../../utils/animations";
 import { getHttpStatus } from "../../utils/errors";
-import { BRAND_NAME } from "../../config/brand";
 import { isManagerRole, PANEL_PATH, PLATFORM_PATH } from "../../utils/roles";
 import * as S from "./styles";
 
@@ -138,9 +136,8 @@ export default function Header() {
                 </S.VerificationBanner>
             )}
             <S.Content>
-                <S.BrandWrapper to="/home">
-                    <S.Logo src={logo} alt={`Logo ${BRAND_NAME}`} />
-                    <S.BrandText>{BRAND_NAME}</S.BrandText>
+                <S.BrandWrapper to="/home" title="Ir para o início">
+                    <S.Logo />
                 </S.BrandWrapper>
 
                 <S.Nav id="main-nav" aria-label="Principal" $open={menuOpen}>

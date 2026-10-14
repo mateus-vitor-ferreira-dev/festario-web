@@ -86,8 +86,10 @@ export function getCampaignDateDisplay(campaign: Campaign) {
     return `${formatDate(campaign.startsAt)} → ${formatDate(campaign.endsAt)}`;
 }
 
-export function buildWinnerMessage(winner: RaffleWinnerResult["winner"], campaignName: string) {
-    return `Olá, ${winner.name}! 🎉\n\nVocê foi o grande sorteado do *${campaignName}* do Recanto Vila Rica!\n\nPara resgatar seu prêmio, publique um stories no Instagram marcando @recantovilarica e nos envie a confirmação. 📸\n\nQualquer dúvida, é só entrar em contato. Parabéns! 🥳`;
+/** Mensagem para o ganhador; `venueName` é o nome do espaço (tenant) quando o navegador o conhece. */
+export function buildWinnerMessage(winner: RaffleWinnerResult["winner"], campaignName: string, venueName?: string | null) {
+    const venue = venueName ? ` de ${venueName}` : "";
+    return `Olá, ${winner.name}! 🎉\n\nVocê foi o grande sorteado do *${campaignName}*${venue}!\n\nPara resgatar seu prêmio, publique um stories no Instagram marcando @recantovilarica e nos envie a confirmação. 📸\n\nQualquer dúvida, é só entrar em contato. Parabéns! 🥳`;
 }
 
 export const HOLIDAY_TYPE_OPTIONS = [

@@ -302,7 +302,7 @@ export function VenueTab() {
                                 </S.FormRow>
                                 <S.FormGroup>
                                     <label htmlFor="venue-bairro">Bairro</label>
-                                    <S.TextInput {...field("bairro")} placeholder="Ex: Jardim Vila Rica" />
+                                    <S.TextInput {...field("bairro")} placeholder="Ex: Centro" />
                                 </S.FormGroup>
                                 <S.FormRow $cols="2fr 1fr">
                                     <S.FormGroup>

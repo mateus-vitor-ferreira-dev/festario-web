@@ -1,6 +1,6 @@
 /**
  * @module components/Footer
- * @description Rodapé simples com copyright e tagline do Recanto Vila Rica.
+ * @description Rodapé simples com copyright da plataforma (`BRAND_NAME`).
  */
 import { BRAND_NAME } from "../../config/brand";
 import * as S from "./styles";

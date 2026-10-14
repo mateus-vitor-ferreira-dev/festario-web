@@ -17,7 +17,7 @@ describe("MainLayout", () => {
                 </AuthProvider>
             </ThemeProvider>
         );
-        expect(screen.getAllByText(/recanto vila rica/i).length).toBeGreaterThan(0);
+        expect(screen.getAllByText(new RegExp(BRAND_NAME, "i")).length).toBeGreaterThan(0);
         expect(screen.getByText(new RegExp(`${new Date().getFullYear()} ${BRAND_NAME}`, "i"))).toBeInTheDocument();
     });
 });

@@ -1,7 +1,7 @@
 import { ReactNode, useRef } from "react";
 import { useGSAP } from "@gsap/react";
-import Logo from "../../assets/logo-recanto.svg";
 import { BRAND_NAME } from "../../config/brand";
+import { FestarioSymbol, FestarioWordmark } from "../Brand";
 import BookingPreview from "./BookingPreview";
 import { animateStagger } from "../../utils/animations";
 import * as S from "./styles";
@@ -18,8 +18,9 @@ interface AuthLayoutProps {
  *
  * Coluna esquerda: marca, prévia do calendário de reservas e chamada (sem foto de
  * um espaço específico — a plataforma atende vários espaços). Coluna direita: formulário com GSAP stagger.
- * Enquanto `introFinished` é `false`, o logo fica invisível para não conflitar
- * com a `IntroAnimation` que está voando até sua posição.
+ * A marca é o logotipo Festário em duas peças (símbolo + nome) para que a
+ * `IntroAnimation` pouse o símbolo exatamente no lugar dele: enquanto
+ * `introFinished` é `false`, só o símbolo fica invisível.
  *
  * @component
  */
@@ -39,15 +40,14 @@ export default function AuthLayout({
     return (
         <S.Container>
             <S.LeftSide>
-                <S.Brand>
-                    <S.BrandLogoWrapper
+                <S.Brand role="img" aria-label={BRAND_NAME}>
+                    <S.BrandSymbol
+                        tone="onDark"
                         data-intro-logo-target="true"
                         data-intro-target-desktop="true"
                         $visible={introFinished}
-                    >
-                        <S.BrandLogo src={Logo} alt="" />
-                    </S.BrandLogoWrapper>
-                    <S.BrandName>{BRAND_NAME}</S.BrandName>
+                    />
+                    <S.BrandWordmark tone="onDark" />
                 </S.Brand>
 
                 <BookingPreview />
@@ -63,13 +63,13 @@ export default function AuthLayout({
 
             <S.RightSide>
                 <S.FormArea ref={formAreaRef}>
-                    <S.MobileBrand
-                        data-intro-logo-target="true"
-                        data-intro-target-mobile="true"
-                        $visible={introFinished}
-                    >
-                        <S.MobileBrandLogo src={Logo} alt={BRAND_NAME} />
-                        <S.MobileBrandName>{BRAND_NAME}</S.MobileBrandName>
+                    <S.MobileBrand role="img" aria-label={BRAND_NAME}>
+                        <S.MobileBrandSymbol
+                            data-intro-logo-target="true"
+                            data-intro-target-mobile="true"
+                            $visible={introFinished}
+                        />
+                        <S.MobileBrandWordmark />
                     </S.MobileBrand>
 
                     <S.FormHeader>
