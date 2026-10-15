@@ -14,6 +14,7 @@ import { validatePassword } from "../../utils/validatePassword";
 import { animateFadeInUp } from "../../utils/animations";
 import type { User } from "../../types";
 import { ROLE_LABELS } from "../../utils/roles";
+import { AddressCard } from "./AddressCard";
 import * as S from "./styles";
 
 interface ProfileUser extends User {
@@ -310,6 +311,8 @@ export default function Profile() {
                             </S.SaveButton>
                         </S.FormFooter>
                     </S.FormCard>
+
+                    {user && <AddressCard user={user} onChange={(u) => setUser((cur) => (cur ? { ...cur, ...u } : cur))} />}
 
                     {passwordStep === "verify" ? (
                         <S.FormCard as="form" onSubmit={handleVerifyPassword}>
