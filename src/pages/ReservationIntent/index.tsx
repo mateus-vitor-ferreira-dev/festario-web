@@ -252,7 +252,7 @@ export default function ReservationIntent() {
                                 onClick={form.handleConfirmReservation}
                                 disabled={form.submitting || !form.quote || Boolean(form.quoteError) || !form.acceptedContract}
                             >
-                                {form.submitting ? "Confirmando reserva..." : "Confirmar e ir para pagamento"}
+                                {form.submitting ? "Reservando..." : "Reservar e ver como pagar"}
                             </S.ConfirmButton>
 
                             <ContractSection

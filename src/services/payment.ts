@@ -1,53 +1,40 @@
 /**
  * @module services/payment
- * @description Funções para iniciar e consultar pagamentos.
- *
- * Métodos suportados:
- * - **Stripe** (cartão de crédito) — redireciona para checkout.stripe.com
- * - **PIX** (Mercado Pago) — retorna QR Code + copia-e-cola para exibição inline
+ * @description Pagamento combinado com o salão (#48). Não há cobrança online: o cliente paga direto ao
+ * salão (PIX, dinheiro, cartão na maquininha) e o dono registra o que recebeu no painel. A reserva é
+ * confirmada quando o recebido chega ao sinal (ou ao total).
  */
 import api from "./api";
 import { tenantHeaderFor } from "../config/tenantStorage";
-import type { PixChargeResult, PaymentStatusResult } from "../types";
+import type { PaymentEntryInput, ReservationPayment } from "../types";
 
 /**
- * Cria uma sessão de checkout no Stripe para pagamento via cartão.
- * Retorna a URL de redirecionamento para o checkout hospedado pelo Stripe.
+ * Resumo do pagamento da reserva, os lançamentos e como pagar (instruções e contatos do salão).
+ * O cliente vê as próprias reservas de qualquer salão; o salão da reserva vai no header.
  *
- * @see POST /payments/checkout/:reservationId
+ * @see GET /payments/reservation/:reservationId
  */
-export async function createCheckoutSession(
-    reservationId: string,
-    tenantSlug?: string | null,
-): Promise<{ url: string }> {
-    const { data } = await api.post(`/payments/checkout/${reservationId}`, undefined, { headers: tenantHeaderFor(tenantSlug) });
-    return data;
-}
-
-/**
- * Gera uma cobrança PIX via Mercado Pago para a reserva.
- * Retorna os dados necessários para exibir o QR Code ao usuário.
- *
- * @see POST /payments/pix/:reservationId
- */
-export async function createPixCharge(
-    reservationId: string,
-    tenantSlug?: string | null,
-): Promise<PixChargeResult> {
-    const { data } = await api.post(`/payments/pix/${reservationId}`, undefined, { headers: tenantHeaderFor(tenantSlug) });
+export async function getReservationPayment(reservationId: string, tenantSlug?: string | null, signal?: AbortSignal): Promise<ReservationPayment> {
+    const { data } = await api.get(`/payments/reservation/${reservationId}`, { signal, headers: tenantHeaderFor(tenantSlug) });
     return data.data;
 }
 
 /**
- * Consulta o status atual do pagamento de uma reserva.
- * Usado pelo polling no Checkout para detectar quando o PIX é pago.
+ * O dono registra um pagamento recebido ou uma devolução.
  *
- * @see GET /payments/reservation/:reservationId
+ * @see POST /admin/reservations/:id/payments
  */
-export async function getPaymentStatus(
-    reservationId: string,
-    signal?: AbortSignal,
-): Promise<PaymentStatusResult> {
-    const { data } = await api.get(`/payments/reservation/${reservationId}`, { signal });
+export async function recordPaymentEntry(reservationId: string, payload: PaymentEntryInput): Promise<ReservationPayment> {
+    const { data } = await api.post(`/admin/reservations/${reservationId}/payments`, payload);
+    return data.data;
+}
+
+/**
+ * Desfaz um lançamento feito por engano.
+ *
+ * @see DELETE /admin/reservations/:id/payments/:entryId
+ */
+export async function deletePaymentEntry(reservationId: string, entryId: string): Promise<ReservationPayment> {
+    const { data } = await api.delete(`/admin/reservations/${reservationId}/payments/${entryId}`);
     return data.data;
 }

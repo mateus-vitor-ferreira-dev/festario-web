@@ -5,7 +5,8 @@ import { getMonthlyRevenue, getReservationsSummary } from "../../../services/adm
 import { getErrorMessage } from "../../../utils/getErrorMessage";
 import { animateFadeInUp } from "../../../utils/animations";
 import { formatCurrency, MONTH_NAMES } from "./constants";
-import type { ReservationSummary, MonthlyRevenue } from "../../../types";
+import type { MonthlyRevenue, PaymentMethod, ReservationSummary } from "../../../types";
+import { METHOD_LABELS } from "../../../utils/paymentFormat";
 import * as S from "../styles";
 
 export function DashboardTab() {
@@ -41,8 +42,10 @@ export function DashboardTab() {
     if (isLoading) return <S.LoadingSpinner />;
     if (!summary) return null;
 
-    const stripe = summary.revenueByMethod?.stripe;
-    const pix = summary.revenueByMethod?.pix;
+    // Formas de pagamento que o salão registrou (#48), da que mais rendeu para a que menos rendeu.
+    const methods = (Object.entries(summary.revenueByMethod ?? {}) as [PaymentMethod, { amount: number; count: number }][])
+        .filter(([, v]) => v.count > 0 || v.amount !== 0)
+        .sort(([, a], [, b]) => b.amount - a.amount);
 
     const paymentCount = (count?: number) => `${count ?? 0} pagamento${count !== 1 ? "s" : ""}`;
 
@@ -81,22 +84,20 @@ export function DashboardTab() {
             <S.SectionTitle style={{ marginTop: 16 }}>Receita</S.SectionTitle>
             <S.RevenueBreakdown>
                 <S.SummaryCard>
-                    <S.SummaryLabel>Receita confirmada</S.SummaryLabel>
+                    <S.SummaryLabel>Receita</S.SummaryLabel>
                     <S.SummaryValue>{formatCurrency(summary.totalRevenue ?? 0)}</S.SummaryValue>
-                    <S.SummarySubtitle>reservas pagas</S.SummarySubtitle>
+                    <S.SummarySubtitle>
+                        recebido{summary.totalRefunded ? `, menos ${formatCurrency(summary.totalRefunded)} devolvidos` : ""}
+                    </S.SummarySubtitle>
                 </S.SummaryCard>
 
-                <S.SummaryCard>
-                    <S.SummaryLabel>Cartão de crédito</S.SummaryLabel>
-                    <S.SummaryValue>{formatCurrency(stripe?.amount ?? 0)}</S.SummaryValue>
-                    <S.SummarySubtitle>{paymentCount(stripe?.count)}</S.SummarySubtitle>
-                </S.SummaryCard>
-
-                <S.SummaryCard>
-                    <S.SummaryLabel>PIX</S.SummaryLabel>
-                    <S.SummaryValue>{formatCurrency(pix?.amount ?? 0)}</S.SummaryValue>
-                    <S.SummarySubtitle>{paymentCount(pix?.count)}</S.SummarySubtitle>
-                </S.SummaryCard>
+                {methods.map(([method, v]) => (
+                    <S.SummaryCard key={method}>
+                        <S.SummaryLabel>{METHOD_LABELS[method]}</S.SummaryLabel>
+                        <S.SummaryValue>{formatCurrency(v.amount)}</S.SummaryValue>
+                        <S.SummarySubtitle>{paymentCount(v.count)}</S.SummarySubtitle>
+                    </S.SummaryCard>
+                ))}
             </S.RevenueBreakdown>
 
             {monthly && (
@@ -107,9 +108,8 @@ export function DashboardTab() {
                             <thead>
                                 <tr>
                                     <S.MonthlyTh>Mês</S.MonthlyTh>
-                                    <S.MonthlyTh $num $hideSm>Reservas</S.MonthlyTh>
-                                    <S.MonthlyTh $num $hideSm>Cartão</S.MonthlyTh>
-                                    <S.MonthlyTh $num $hideSm>PIX</S.MonthlyTh>
+                                    <S.MonthlyTh $num $hideSm>Pagamentos</S.MonthlyTh>
+                                    <S.MonthlyTh $num $hideSm>Devolvido</S.MonthlyTh>
                                     <S.MonthlyTh $num>Receita</S.MonthlyTh>
                                     <S.MonthlyTh style={{ width: "28%" }}>
                                         <S.VisuallyHidden>Proporção da receita</S.VisuallyHidden>
@@ -120,21 +120,20 @@ export function DashboardTab() {
                                 {(() => {
                                     const maxRevenue = Math.max(...monthly.months.map((m) => m.revenue), 1);
                                     return monthly.months.map((m) => {
-                                        const empty = m.revenue === 0 && m.count === 0;
+                                        const empty = m.revenue === 0 && m.count === 0 && !m.refunded;
                                         return (
                                             <S.MonthlyTr key={m.month}>
                                                 <S.MonthlyTd>{MONTH_NAMES[m.month - 1]}</S.MonthlyTd>
                                                 <S.MonthlyTd $num $hideSm $muted={empty}>{m.count}</S.MonthlyTd>
-                                                <S.MonthlyTd $num $hideSm $muted={empty}>{formatCurrency(m.stripe)}</S.MonthlyTd>
-                                                <S.MonthlyTd $num $hideSm $muted={empty}>{formatCurrency(m.pix)}</S.MonthlyTd>
+                                                <S.MonthlyTd $num $hideSm $muted={!m.refunded}>{formatCurrency(m.refunded ?? 0)}</S.MonthlyTd>
                                                 <S.MonthlyTd $num $muted={empty}>
                                                     {formatCurrency(m.revenue)}
                                                     <S.MonthlyCount aria-hidden="true">
-                                                        {m.count} reserva{m.count !== 1 ? "s" : ""}
+                                                        {m.count} pagamento{m.count !== 1 ? "s" : ""}
                                                     </S.MonthlyCount>
                                                 </S.MonthlyTd>
                                                 <S.MonthlyTd>
-                                                    <S.RevenueBar $pct={Math.round((m.revenue / maxRevenue) * 100)} />
+                                                    <S.RevenueBar $pct={Math.max(0, Math.round((m.revenue / maxRevenue) * 100))} />
                                                 </S.MonthlyTd>
                                             </S.MonthlyTr>
                                         );

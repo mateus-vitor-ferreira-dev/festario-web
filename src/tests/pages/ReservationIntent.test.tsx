@@ -218,7 +218,7 @@ describe("ReservationIntent", () => {
         await fillSaturday(user, container, { guests: "200" });
         expect(await screen.findByText(/é para até 120 convidados/i, {}, { timeout: 2000 })).toBeInTheDocument();
         await user.click(screen.getByLabelText(/li e estou de acordo/i));
-        expect(screen.getByRole("button", { name: /confirmar e ir para pagamento/i })).toBeDisabled();
+        expect(screen.getByRole("button", { name: /reservar e ver como pagar/i })).toBeDisabled();
     });
 
     it("lists what is missing before quoting", async () => {
@@ -242,7 +242,7 @@ describe("ReservationIntent", () => {
         await user.type(screen.getByPlaceholderText(/festa infantil/i), "Aniversário de 5 anos");
         await screen.findByText("Valor da reserva", {}, { timeout: 2000 });
         await user.click(screen.getByLabelText(/li e estou de acordo/i));
-        await user.click(screen.getByRole("button", { name: /confirmar e ir para pagamento/i }));
+        await user.click(screen.getByRole("button", { name: /reservar e ver como pagar/i }));
         expect(await screen.findByText("Checkout Page")).toBeInTheDocument();
         expect(created).toMatchObject({ packageId: "pkg-sab", guestCount: 80, termsAccepted: true, notes: "Aniversário de 5 anos", items: [{ itemId: "it-mon", quantity: 3 }] });
     });
@@ -256,7 +256,7 @@ describe("ReservationIntent", () => {
         await fillSaturday(user, container);
         await screen.findByText("Valor da reserva", {}, { timeout: 2000 });
         await user.click(screen.getByLabelText(/li e estou de acordo/i));
-        await user.click(screen.getByRole("button", { name: /confirmar e ir para pagamento/i }));
+        await user.click(screen.getByRole("button", { name: /reservar e ver como pagar/i }));
         expect(await screen.findByText(/data já reservada|erro ao confirmar/i)).toBeInTheDocument();
     });
 

@@ -32,7 +32,25 @@ describe("Admin - Dashboard tab", () => {
             expect(screen.getByText("10")).toBeInTheDocument()
         );
         expect(screen.getByText(/total de reservas/i)).toBeInTheDocument();
-        expect(screen.getByText(/receita confirmada/i)).toBeInTheDocument();
+        expect(screen.getAllByText("Receita").length).toBeGreaterThan(0);
+    });
+
+    it("breaks the revenue down by the payment methods the salon registered (#48)", async () => {
+        server.use(
+            http.get(`${BASE}/admin/reservations/summary`, () =>
+                HttpResponse.json({
+                    data: {
+                        totalReservations: 3, totalRevenue: 1500, totalRefunded: 200, pendingReservations: 0, paidReservations: 3, cancelledReservations: 0, expiredReservations: 0,
+                        revenueByMethod: { PIX: { amount: 1000, count: 2 }, CASH: { amount: 500, count: 1 }, CARD: { amount: 0, count: 0 } },
+                    },
+                })
+            )
+        );
+        renderPage();
+        expect(await screen.findByText("Dinheiro")).toBeInTheDocument();
+        expect(screen.getByText("PIX")).toBeInTheDocument();
+        expect(screen.queryByText(/cartão/i)).not.toBeInTheDocument();
+        expect(screen.getByText(/menos R\$\s?200,00 devolvidos/)).toBeInTheDocument();
     });
 });
 

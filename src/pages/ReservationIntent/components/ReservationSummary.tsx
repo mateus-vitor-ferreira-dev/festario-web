@@ -99,6 +99,15 @@ export function ReservationSummary({
                             <strong>{formatCents(quote.totalCents)}</strong>
                         </S.TotalRow>
 
+                        <S.PolicyBox>
+                            <h3>Como fica o pagamento</h3>
+                            <S.Hint style={{ marginTop: 0 }}>
+                                {quote.paymentTerms?.depositCents != null
+                                    ? `Você combina o pagamento com o salão. A reserva é confirmada com o sinal de ${formatCents(quote.paymentTerms.depositCents)} (${quote.paymentTerms.depositPercent}%); o restante, ${formatCents(quote.totalCents - quote.paymentTerms.depositCents)}, ${quote.paymentTerms.balanceDueDays != null ? `até ${quote.paymentTerms.balanceDueDays} dia${quote.paymentTerms.balanceDueDays === 1 ? "" : "s"} antes do evento` : "até o dia do evento"}.`
+                                    : "Você combina o pagamento com o salão. A reserva é confirmada quando ele registrar o valor total."}
+                            </S.Hint>
+                        </S.PolicyBox>
+
                         {quote.cancellationPolicy?.summary?.length > 0 && (
                             <S.PolicyBox>
                                 <h3>Se precisar cancelar</h3>

@@ -823,6 +823,11 @@ export const ModalBox = styled.div<{ $maxWidth?: number }>`
   flex-direction: column;
   gap: 20px;
 
+  /* Conteúdo longo rola dentro do modal; os blocos não encolhem (senão um quadro com overflow fica cortado). */
+  & > * {
+    flex-shrink: 0;
+  }
+
   /* Folha inferior de largura total */
   ${media.sm} {
     max-width: none;
