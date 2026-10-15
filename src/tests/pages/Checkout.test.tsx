@@ -87,6 +87,26 @@ describe("Checkout page", () => {
         );
     });
 
+    it("opens the card checkout on the reservation's own salon (#35)", async () => {
+        let checkoutTenant: string | null = null;
+        server.use(
+            http.get(`${BASE}/reservations/res-1`, () =>
+                HttpResponse.json({ success: true, data: { ...mockReservation, tenant: { slug: "casa-pampulha-eventos", name: "Casa Pampulha Eventos" } } })
+            ),
+            http.post(`${BASE}/payments/checkout/res-1`, ({ request }) => {
+                checkoutTenant = request.headers.get("X-Tenant-Slug");
+                return HttpResponse.json({ url: "https://stripe.com/pay/session-2" });
+            })
+        );
+        renderPage();
+        const button = await screen.findByRole("button", { name: /pagar com cartão/i });
+
+        vi.stubGlobal("location", { href: "http://localhost/" });
+        await userEvent.setup().click(button);
+        await waitFor(() => expect(window.location.href).toBe("https://stripe.com/pay/session-2"));
+        expect(checkoutTenant).toBe("casa-pampulha-eventos");
+    });
+
     it("shows 409 specific error when payment session already exists", async () => {
         server.use(
             http.get(`${BASE}/reservations/res-1`, () =>

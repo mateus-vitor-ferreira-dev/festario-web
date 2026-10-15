@@ -7,6 +7,7 @@
  * - **PIX** (Mercado Pago) — retorna QR Code + copia-e-cola para exibição inline
  */
 import api from "./api";
+import { tenantHeaderFor } from "../config/tenantStorage";
 import type { PixChargeResult, PaymentStatusResult } from "../types";
 
 /**
@@ -17,8 +18,9 @@ import type { PixChargeResult, PaymentStatusResult } from "../types";
  */
 export async function createCheckoutSession(
     reservationId: string,
+    tenantSlug?: string | null,
 ): Promise<{ url: string }> {
-    const { data } = await api.post(`/payments/checkout/${reservationId}`);
+    const { data } = await api.post(`/payments/checkout/${reservationId}`, undefined, { headers: tenantHeaderFor(tenantSlug) });
     return data;
 }
 
@@ -30,8 +32,9 @@ export async function createCheckoutSession(
  */
 export async function createPixCharge(
     reservationId: string,
+    tenantSlug?: string | null,
 ): Promise<PixChargeResult> {
-    const { data } = await api.post(`/payments/pix/${reservationId}`);
+    const { data } = await api.post(`/payments/pix/${reservationId}`, undefined, { headers: tenantHeaderFor(tenantSlug) });
     return data.data;
 }
 

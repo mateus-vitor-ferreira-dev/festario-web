@@ -106,6 +106,27 @@ describe("Reservations page", () => {
         );
     });
 
+    it("shows the salon and cancels on the reservation's own salon, not the stored one", async () => {
+        localStorage.setItem("recanto:tenant", JSON.stringify({ slug: "recanto-vila-rica", name: "Recanto Vila Rica" }));
+        let cancelTenant: string | null = null;
+        server.use(
+            http.get(`${BASE}/reservations`, () =>
+                HttpResponse.json({ success: true, data: [{ ...mockReservation, tenant: { slug: "casa-pampulha-eventos", name: "Casa Pampulha Eventos" } }] })
+            ),
+            http.patch(`${BASE}/reservations/res-1/cancel`, ({ request }) => {
+                cancelTenant = request.headers.get("X-Tenant-Slug");
+                return HttpResponse.json({ success: true, data: { ...mockReservation, status: "CANCELLED" } });
+            })
+        );
+        const user = userEvent.setup();
+        renderPage();
+        expect(await screen.findByText("Casa Pampulha Eventos")).toBeInTheDocument();
+        await user.click(screen.getByRole("button", { name: /cancelar reserva/i }));
+        await user.click(await screen.findByRole("button", { name: /sim, cancelar/i }));
+        await waitFor(() => expect(screen.getByText(/reserva cancelada com sucesso/i)).toBeInTheDocument());
+        expect(cancelTenant).toBe("casa-pampulha-eventos");
+    });
+
     it("shows error toast when load fails", async () => {
         server.use(
             http.get(`${BASE}/reservations`, () =>

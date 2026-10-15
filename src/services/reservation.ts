@@ -9,6 +9,7 @@
  *   4. `cancelReservation` — cancelamento com reembolso proporcional
  */
 import api from "./api";
+import { tenantHeaderFor } from "../config/tenantStorage";
 import { cleanParams, toPaginated } from "./pagination";
 import type {
     QuotePayload,
@@ -92,7 +93,8 @@ export async function getReservation(
  */
 export async function cancelReservation(
     reservationId: string,
+    tenantSlug?: string | null,
 ): Promise<Reservation> {
-    const { data } = await api.patch(`/reservations/${reservationId}/cancel`);
+    const { data } = await api.patch(`/reservations/${reservationId}/cancel`, undefined, { headers: tenantHeaderFor(tenantSlug) });
     return data.data;
 }

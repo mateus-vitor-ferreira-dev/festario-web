@@ -42,6 +42,15 @@ export function clearTenant(): void {
     localStorage.removeItem(TENANT_STORAGE_KEY);
 }
 
+/**
+ * Cabeçalho que fixa o salão de uma chamada específica, sobrepondo o espaço guardado.
+ * O cliente é uma conta da plataforma e tem reservas em vários salões: cancelar ou pagar
+ * uma delas precisa ir para o salão dela, não para o espaço aberto no navegador.
+ */
+export function tenantHeaderFor(slug: string | null | undefined): Record<string, string> {
+    return slug ? { "X-Tenant-Slug": slug } : {};
+}
+
 /** Cabeçalho para chamadas feitas fora do axios (`fetch`). */
 export function tenantHeaders(): Record<string, string> {
     const slug = readTenant()?.slug;
