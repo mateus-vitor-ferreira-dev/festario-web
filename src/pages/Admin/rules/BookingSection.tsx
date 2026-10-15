@@ -30,6 +30,9 @@ interface Form {
     state: string;
     tiers: { minDays: string; percentage: string }[];
     notes: string;
+    depositPercent: string;
+    balanceDueDays: string;
+    paymentInstructions: string;
 }
 
 function toForm(s: TenantSettings): Form {
@@ -45,6 +48,9 @@ function toForm(s: TenantSettings): Form {
         state: s.state ?? "",
         tiers: s.cancellationPolicy.tiers.map((t) => ({ minDays: String(t.minDays), percentage: String(t.percentage) })),
         notes: s.cancellationPolicy.notes ?? "",
+        depositPercent: s.depositPercent != null ? String(s.depositPercent) : "",
+        balanceDueDays: s.balanceDueDays != null ? String(s.balanceDueDays) : "",
+        paymentInstructions: s.paymentInstructions ?? "",
     };
 }
 
@@ -65,6 +71,10 @@ function validate(f: Form): string[] {
     if (tiers.length === 0) errors.push("A política de cancelamento precisa de pelo menos uma faixa.");
     if (new Set(tiers.map((t) => t.minDays)).size !== tiers.length) errors.push("Duas faixas de cancelamento não podem começar no mesmo número de dias.");
     if (tiers.some((t) => t.percentage < 0 || t.percentage > 100 || !Number.isInteger(t.percentage))) errors.push("O reembolso vai de 0% a 100%.");
+    const deposit = int(f.depositPercent);
+    if (deposit != null && (!Number.isInteger(deposit) || deposit < 1 || deposit > 100)) errors.push("O sinal vai de 1% a 100% do valor da reserva.");
+    const dueDays = int(f.balanceDueDays);
+    if (dueDays != null && (!Number.isInteger(dueDays) || dueDays < 0 || dueDays > 365)) errors.push("O prazo do restante vai de 0 a 365 dias antes do evento.");
     return errors;
 }
 
@@ -122,6 +132,9 @@ export function BookingSection() {
             city: f.city.trim() || null,
             state: f.state || null,
             cancellationPolicy: { tiers, notes: f.notes.trim() || null },
+            depositPercent: int(f.depositPercent),
+            balanceDueDays: int(f.depositPercent) == null ? null : int(f.balanceDueDays),
+            paymentInstructions: f.paymentInstructions.trim() || null,
         }, "Regras salvas.");
     }
 
@@ -153,8 +166,41 @@ export function BookingSection() {
                     </S.NumberField>
                 </S.InlineFields>
                 <A.FieldHint>
-                    Sem pagamento dentro do prazo, a reserva expira e a data volta a ficar livre. Hoje o prazo é de <strong>{settings.effectivePaymentHoldMinutes} minutos</strong>.
+                    Se você não registrar o pagamento (ou o sinal) dentro do prazo, a reserva expira e a data volta a ficar livre. Hoje o prazo é de <strong>{settings.effectivePaymentHoldMinutes} minutos</strong>.
                 </A.FieldHint>
+            </A.FormSection>
+
+            <A.FormSection>
+                <legend>Pagamento</legend>
+                <S.Intro>
+                    O cliente paga direto ao salão (PIX, dinheiro, cartão na maquininha) e você registra o que recebeu em
+                    <strong> Reservas → Pagamentos</strong>. A reserva é confirmada quando o valor abaixo é atingido.
+                </S.Intro>
+                <S.InlineFields>
+                    <S.NumberField>
+                        Sinal para confirmar (%)
+                        <A.TextInput inputMode="numeric" value={form.depositPercent} onChange={(e) => set("depositPercent", e.target.value)} placeholder="valor total" />
+                    </S.NumberField>
+                    <S.NumberField>
+                        Restante até (dias antes)
+                        <A.TextInput inputMode="numeric" value={form.balanceDueDays} onChange={(e) => set("balanceDueDays", e.target.value)} placeholder="o dia do evento" disabled={!form.depositPercent} />
+                    </S.NumberField>
+                </S.InlineFields>
+                <A.FieldHint aria-live="polite">
+                    {int(form.depositPercent) != null && Number(form.depositPercent) < 100
+                        ? <>Numa reserva de R$ 1.000,00, o cliente confirma com <strong>R$ {(10 * Number(form.depositPercent)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</strong> e paga o restante {int(form.balanceDueDays) != null ? `até ${form.balanceDueDays} dia${form.balanceDueDays === "1" ? "" : "s"} antes do evento` : "até o dia do evento"}.</>
+                        : "Sem sinal: a reserva só é confirmada com o valor total."}
+                </A.FieldHint>
+                <A.FormGroup>
+                    <label htmlFor="rules-pay-instructions">Como pagar (aparece para o cliente depois de reservar)</label>
+                    <S.TextArea
+                        id="rules-pay-instructions"
+                        value={form.paymentInstructions}
+                        onChange={(e) => set("paymentInstructions", e.target.value)}
+                        maxLength={1000}
+                        placeholder={"Ex.: PIX (chave CNPJ): 00.000.000/0001-00, em nome de ...\nEnvie o comprovante pelo WhatsApp. Também aceitamos cartão no salão."}
+                    />
+                </A.FormGroup>
             </A.FormSection>
 
             <A.FormSection>

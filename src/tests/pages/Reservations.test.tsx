@@ -63,7 +63,7 @@ describe("Reservations page", () => {
         );
         renderPage();
         await waitFor(() =>
-            expect(screen.getByRole("button", { name: /ir para pagamento/i })).toBeInTheDocument()
+            expect(screen.getByRole("button", { name: /como pagar/i })).toBeInTheDocument()
         );
     });
 
@@ -76,9 +76,9 @@ describe("Reservations page", () => {
         const user = userEvent.setup();
         renderPage();
         await waitFor(() =>
-            expect(screen.getByRole("button", { name: /ir para pagamento/i })).toBeInTheDocument()
+            expect(screen.getByRole("button", { name: /como pagar/i })).toBeInTheDocument()
         );
-        await user.click(screen.getByRole("button", { name: /ir para pagamento/i }));
+        await user.click(screen.getByRole("button", { name: /como pagar/i }));
         expect(screen.getByText("Checkout Page")).toBeInTheDocument();
     });
 
@@ -195,7 +195,7 @@ describe("Reservations page", () => {
         await waitFor(() =>
             expect(screen.getByText("Pago")).toBeInTheDocument()
         );
-        expect(screen.queryByRole("button", { name: /ir para pagamento/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /como pagar/i })).not.toBeInTheDocument();
     });
 
     it("shows raw status when not in STATUS_MAP", async () => {

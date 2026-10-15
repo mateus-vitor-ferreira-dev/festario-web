@@ -79,9 +79,9 @@ function SendIcon() {
     );
 }
 
-function extractPixCode(content: string): string | null {
-    const match = content.match(/PIX copia e cola:\n(.+)/s);
-    return match ? match[1].trim() : null;
+/** Conversas antigas traziam um código PIX vencido no fim da mensagem; o pagamento agora é combinado com o salão (#48). */
+function withoutLegacyPix(content: string): string {
+    return content.replace(/\n\nPIX copia e cola:\n.+/s, "");
 }
 
 interface ProposalMessageProps {
@@ -336,7 +336,7 @@ export default function NegotiationChat() {
         try {
             setIsResponding(true);
             const result = await respondToProposal(id, "ACCEPT");
-            toast.success("Proposta aceita! Redirecionando para o pagamento...");
+            toast.success("Proposta aceita! Veja como pagar e combinar com o salão.");
             setTimeout(() => navigate(`/checkout/${result.reservation?.id}`), 1200);
         } catch (error) {
             toast.error(getErrorMessage(error, "Erro ao aceitar proposta."));
@@ -394,11 +394,6 @@ export default function NegotiationChat() {
         }
     }
 
-    async function handleCopyPix(code: string) {
-        await navigator.clipboard.writeText(code);
-        toast.success("Código PIX copiado!");
-    }
-
     const isClosed = negotiation?.status === "CLOSED" || negotiation?.status === "REJECTED";
     const isPendingApproval = negotiation?.status === "PENDING_APPROVAL";
 
@@ -438,10 +433,7 @@ export default function NegotiationChat() {
                         const isOwn = !msg.isSystem && msg.author.id === currentUserId;
                         const meta = msg.metadata;
                         const isProposal = meta?.type === "PROPOSAL";
-                        const pixCode = msg.isSystem && !isProposal ? extractPixCode(msg.content) : null;
-                        const displayContent = pixCode
-                            ? msg.content.replace(/\n\nPIX copia e cola:\n.+/s, "")
-                            : msg.content;
+                        const displayContent = msg.isSystem && !isProposal ? withoutLegacyPix(msg.content) : msg.content;
 
                         return (
                             <S.MessageRow key={msg.id} $isOwn={isOwn} $isSystem={msg.isSystem}>
@@ -465,16 +457,6 @@ export default function NegotiationChat() {
                                         <S.BubbleText $isOwn={isOwn} $isSystem={msg.isSystem}>
                                             {displayContent}
                                         </S.BubbleText>
-                                    )}
-
-                                    {pixCode && (
-                                        <S.PixBlock>
-                                            <S.PixLabel>PIX copia e cola</S.PixLabel>
-                                            <S.PixCode>{pixCode}</S.PixCode>
-                                            <S.CopyButton type="button" onClick={() => handleCopyPix(pixCode)}>
-                                                Copiar
-                                            </S.CopyButton>
-                                        </S.PixBlock>
                                     )}
 
                                     <S.BubbleTime $isOwn={isOwn} $isSystem={msg.isSystem}>

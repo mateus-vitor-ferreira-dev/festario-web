@@ -18,8 +18,6 @@ const Login             = lazy(() => import("../pages/Login"));
 const NegotiationChat   = lazy(() => import("../pages/NegotiationChat"));
 const Negotiations      = lazy(() => import("../pages/Negotiations"));
 const NotFound          = lazy(() => import("../pages/NotFound"));
-const PaymentCancel     = lazy(() => import("../pages/PaymentCancel"));
-const PaymentSuccess    = lazy(() => import("../pages/PaymentSuccess"));
 const Profile           = lazy(() => import("../pages/Profile"));
 const Promotions        = lazy(() => import("../pages/Promotions"));
 const Referrals         = lazy(() => import("../pages/Referrals"));
@@ -109,8 +107,6 @@ export function AppRoutes({ introFinished }: AppRoutesProps) {
                                     </ErrorBoundary>
                                 }
                             />
-                            <Route path="/payment/success" element={<PaymentSuccess />} />
-                            <Route path="/payment/cancel" element={<PaymentCancel />} />
                             <Route path="/admin" element={<LegacyAdminRedirect />} />
                             <Route element={<RoleRoute roles={["OWNER", "ADMIN"]} />}>
                                 <Route

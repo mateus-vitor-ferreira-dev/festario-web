@@ -52,6 +52,7 @@ const SETTINGS = {
     cancellationPolicy: { tiers: [{ minDays: 30, percentage: 100 }, { minDays: 0, percentage: 0 }], notes: "Remarcação grátis", isDefault: false, summary: [] },
     address: "Rua A, 1", contactPhone: null, contactWhatsapp: "(35) 99999-0000", contactEmail: "a@b.com", instagram: "@salao",
     legalName: null, documentNumber: null, chatbotFaq: null,
+    depositPercent: null, balanceDueDays: null, paymentInstructions: null,
 };
 
 const clause = (over: Record<string, unknown> = {}) => ({
@@ -297,6 +298,33 @@ describe("Reserva e cancelamento", () => {
 
         await user.click(screen.getByRole("button", { name: "Usar a política padrão" }));
         await waitFor(() => expect(bodies[1]).toEqual({ cancellationPolicy: null }));
+    });
+
+    it("configura o sinal, o prazo do restante e como pagar (#48)", async () => {
+        const bodies: Record<string, unknown>[] = [];
+        server.use(
+            http.get(`${BASE}/tenant/settings`, () => HttpResponse.json({ data: SETTINGS })),
+            http.put(`${BASE}/tenant/settings`, async ({ request }) => {
+                bodies.push((await request.json()) as Record<string, unknown>);
+                return HttpResponse.json({ data: SETTINGS });
+            }),
+        );
+        const user = userEvent.setup();
+        renderAt("/painel?tab=rules&section=booking");
+        expect(await screen.findByText(/sem sinal: a reserva só é confirmada com o valor total/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/restante até/i)).toBeDisabled();
+
+        await user.type(screen.getByLabelText(/sinal para confirmar/i), "130");
+        await user.click(screen.getByRole("button", { name: "Salvar regras" }));
+        expect(await screen.findByText(/o sinal vai de 1% a 100%/i)).toBeInTheDocument();
+
+        await user.clear(screen.getByLabelText(/sinal para confirmar/i));
+        await user.type(screen.getByLabelText(/sinal para confirmar/i), "30");
+        await user.type(screen.getByLabelText(/restante até/i), "7");
+        expect(screen.getByText(/confirma com/i)).toHaveTextContent(/R\$\s?300,00 e paga o restante até 7 dias antes do evento/);
+        await user.type(screen.getByLabelText(/como pagar/i), "PIX: chave e-mail");
+        await user.click(screen.getByRole("button", { name: "Salvar regras" }));
+        await waitFor(() => expect(bodies[0]).toMatchObject({ depositPercent: 30, balanceDueDays: 7, paymentInstructions: "PIX: chave e-mail" }));
     });
 
     it("rejects a lead time beyond the booking horizon and shows API errors", async () => {

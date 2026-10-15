@@ -395,55 +395,23 @@ describe("NegotiationChat page", () => {
         );
     });
 
-    it("renders PIX block when message contains PIX code", async () => {
+    it("hides the expired PIX code of old messages (payment is combined with the salon now)", async () => {
         setLocalStorage("USER");
         const pixMsg = {
             ...userMessage,
             id: "msg-pix",
             isSystem: true,
-            content: "Pagamento confirmado!\n\nPIX copia e cola:\nABCD1234PIXCODE",
+            content: "Proposta aceita!\n\nPIX copia e cola:\nABCD1234PIXCODE",
         };
         server.use(
             http.get(`${BASE}/negotiations/neg-1`, () =>
-                HttpResponse.json({
-                    success: true,
-                    data: { ...userNegotiation, messages: [pixMsg] },
-                })
+                HttpResponse.json({ success: true, data: { ...userNegotiation, messages: [pixMsg] } })
             )
         );
         renderPage();
-        await waitFor(() =>
-            expect(screen.getByText("PIX copia e cola")).toBeInTheDocument()
-        );
-        expect(screen.getByText("ABCD1234PIXCODE")).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /copiar/i })).toBeInTheDocument();
-    });
-
-    it("copies PIX code to clipboard", async () => {
-        setLocalStorage("USER");
-        const pixMsg = {
-            ...userMessage,
-            id: "msg-pix",
-            isSystem: true,
-            content: "Pague via PIX:\n\nPIX copia e cola:\nMYPIXCODE123",
-        };
-        server.use(
-            http.get(`${BASE}/negotiations/neg-1`, () =>
-                HttpResponse.json({
-                    success: true,
-                    data: { ...userNegotiation, messages: [pixMsg] },
-                })
-            )
-        );
-        const user = userEvent.setup();
-        renderPage();
-        await waitFor(() =>
-            expect(screen.getByRole("button", { name: /copiar/i })).toBeInTheDocument()
-        );
-        await user.click(screen.getByRole("button", { name: /copiar/i }));
-        await waitFor(() =>
-            expect(screen.getByText(/código pix copiado/i)).toBeInTheDocument()
-        );
+        expect(await screen.findByText("Proposta aceita!")).toBeInTheDocument();
+        expect(screen.queryByText(/ABCD1234PIXCODE/)).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /copiar/i })).not.toBeInTheDocument();
     });
 
     it("shows unknown status as raw value", async () => {

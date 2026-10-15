@@ -48,19 +48,68 @@ export interface Venue {
   updatedAt?: string;
 }
 
+/** Resumo do dinheiro da reserva (#48): `amount` = total recebido pelo salão; `refundAmount` = devolvido. */
 export interface Payment {
   id: string;
-  reservationId: string;
-  amount: number;
+  reservationId?: string;
+  amount: number | string;
   status: PaymentStatus;
   paidAt?: string | null;
-  qrCode?: string;
-  copyPaste?: string;
-  expiresAt?: string;
-  pixTxId?: string | null;
-  pixQrCode?: string | null;
-  pixCopyPaste?: string | null;
-  pixExpiresAt?: string | null;
+  refundAmount?: number | string | null;
+  /** Devolução devida pela política ao cancelar; o salão devolve e registra. */
+  refundDueAmount?: number | string | null;
+}
+
+export type PaymentMethod = "PIX" | "CASH" | "CARD" | "TRANSFER" | "OTHER";
+export type PaymentEntryKind = "PAYMENT" | "REFUND";
+
+/** Lançamento registrado pelo dono do salão: pagamento recebido ou devolução. */
+export interface PaymentEntry {
+  id: string;
+  kind: PaymentEntryKind;
+  method: PaymentMethod;
+  amountCents: number;
+  paidAt: string;
+  note: string | null;
+  createdAt: string;
+  recordedBy: { id: string; name: string } | null;
+}
+
+/** GET /payments/reservation/:id — pagamento combinado com o salão (#48). Valores em centavos. */
+export interface ReservationPayment {
+  reservationId: string;
+  reservationStatus: ReservationStatus;
+  mode: "MANUAL";
+  summary: {
+    totalCents: number;
+    /** Valor que confirma a reserva: o sinal ou o total. */
+    requiredCents: number;
+    paidCents: number;
+    refundedCents: number;
+    netCents: number;
+    balanceCents: number;
+    missingToConfirmCents: number;
+    confirmed: boolean;
+  };
+  depositCents: number | null;
+  balanceDueAt: string | null;
+  /** Até quando o salão precisa registrar o pagamento da reserva pendente. */
+  confirmBy: string | null;
+  refundDueCents: number | null;
+  refundPercentage: number | null;
+  entries: PaymentEntry[];
+  instructions: { text: string | null; whatsapp: string | null; phone: string | null; email: string | null; instagram: string | null } | null;
+  venue: { id: string; name: string } | null;
+  tenant: { slug: string; name: string } | null;
+}
+
+export interface PaymentEntryInput {
+  kind: PaymentEntryKind;
+  method: PaymentMethod;
+  /** Em reais. */
+  amount: number;
+  paidAt?: string;
+  note?: string;
 }
 
 export interface Reservation {
@@ -85,7 +134,9 @@ export interface Reservation {
   endDate: string;
   totalPrice: number;
   notes?: string | null;
-  checkoutUrl?: string | null;
+  /** Sinal que confirma a reserva (#48); nulo = o total. */
+  depositAmount?: number | string | null;
+  balanceDueAt?: string | null;
   payment?: Payment | null;
   kidsMonitorExtraHours?: number;
   createdAt?: string;
@@ -362,6 +413,8 @@ export interface QuoteResult {
   discountCents: number;
   totalCents: number;
   discountApplied: { percentOff: number; campaignName: string } | null;
+  /** Como o salão recebe (#48): sinal que confirma a reserva e prazo do restante. */
+  paymentTerms?: { depositCents: number | null; depositPercent: number | null; balanceDueDays: number | null };
 }
 
 /** Item do pacote como a vitrine recebe (GET /venues/:id/packages). */
@@ -414,18 +467,6 @@ export interface PublicTenant {
   cancellationPolicy: ReservationPolicy;
 }
 
-export interface PixChargeResult {
-  txid: string;
-  qrCode: string;
-  copyPaste: string;
-  expiresAt: string;
-}
-
-export interface PaymentStatusResult {
-  payment: { status: PaymentStatus };
-  reservationStatus: ReservationStatus;
-}
-
 export interface ContactPayload {
   name: string;
   email: string;
@@ -441,10 +482,10 @@ export interface ReservationSummary {
   paidReservations: number;
   cancelledReservations: number;
   expiredReservations: number;
-  revenueByMethod?: {
-    stripe?: { amount: number; count: number } | null;
-    pix?: { amount: number; count: number } | null;
-  } | null;
+  grossRevenue?: number;
+  totalRefunded?: number;
+  /** Recebido menos devolvido, por forma de pagamento (#48). */
+  revenueByMethod?: Partial<Record<PaymentMethod, { amount: number; count: number }>> | null;
 }
 
 export interface MonthlyRevenue {
@@ -453,8 +494,8 @@ export interface MonthlyRevenue {
     month: number;
     revenue: number;
     count: number;
-    stripe: number;
-    pix: number;
+    refunded?: number;
+    byMethod?: Partial<Record<PaymentMethod, number>>;
   }>;
 }
 
@@ -584,6 +625,10 @@ export interface TenantSettings {
   legalName: string | null;
   documentNumber: string | null;
   chatbotFaq: string | null;
+  /** Pagamento combinado com o salão (#48): sinal que confirma (nulo = total), prazo do restante e como pagar. */
+  depositPercent: number | null;
+  balanceDueDays: number | null;
+  paymentInstructions: string | null;
 }
 
 export type TenantSettingsInput = Partial<Omit<TenantSettings, "slug" | "name" | "effectivePaymentHoldMinutes" | "cancellationPolicy">> & {

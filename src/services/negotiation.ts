@@ -19,7 +19,6 @@ import type {
     NegotiationStatus,
     Reservation,
     ContactInfo,
-    PixChargeResult,
     PaginatedResult,
     ListParams,
 } from "../types";
@@ -46,7 +45,6 @@ export interface RespondToProposalResult {
     reservation?: Pick<Reservation, "id" | "totalPrice" | "startDate" | "endDate"> & {
         venue?: { name: string } | null;
     };
-    pix?: PixChargeResult | null;
 }
 
 /**

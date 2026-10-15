@@ -36,6 +36,7 @@ import {
     type ReservationFilterKey,
 } from "./reservationFilters";
 import { ModalHeader } from "../ModalHeader";
+import { PaymentsModal } from "./PaymentsModal";
 import * as S from "../styles";
 
 interface CancelModal {
@@ -57,6 +58,7 @@ export function ReservationsTab() {
     const [cancelModal, setCancelModal] = useState<CancelModal | null>(null);
     const [venueOptions, setVenueOptions] = useState([{ value: "", label: "Todos os espaços" }]);
     const [packageOptions, setPackageOptions] = useState([ALL_PACKAGES_OPTION]);
+    const [paymentsFor, setPaymentsFor] = useState<Reservation | null>(null);
     const topRef = useRef<HTMLDivElement | null>(null);
 
     const list = useListParams<ReservationFilterKey>(RESERVATION_FILTER_KEYS, {
@@ -101,10 +103,12 @@ export function ReservationsTab() {
     const hasFilters = activeKeys.length > 0;
 
     function handleCancelClick(r: Reservation) {
-        if (r.status === "PENDING") {
+        // A devolução é sobre o que o salão já recebeu (#48: pode ser só o sinal, mesmo em reserva pendente).
+        const received = Number(r.payment?.amount ?? 0) - Number(r.payment?.refundAmount ?? 0);
+        if (!(received > 0)) {
             setCancelModal({ id: r.id, status: r.status, startDate: r.startDate, totalPrice: r.totalPrice });
         } else {
-            const { daysBeforeEvent, percentage: refundPct, refundAmount } = refundEstimate(Number(r.totalPrice), r.cancellationPolicy?.tiers ?? [], r.startDate);
+            const { daysBeforeEvent, percentage: refundPct, refundAmount } = refundEstimate(Math.max(0, received), r.cancellationPolicy?.tiers ?? [], r.startDate);
             setCancelModal({ id: r.id, status: r.status, startDate: r.startDate, totalPrice: r.totalPrice, daysBeforeEvent, refundPct, refundAmount, policy: r.cancellationPolicy?.summary });
         }
     }
@@ -235,13 +239,22 @@ export function ReservationsTab() {
                                         <S.Td>{formatDateTime(r.startDate)}</S.Td>
                                         <S.Td>{formatDateTime(r.endDate)}</S.Td>
                                         <S.Td>{packageLabel(r)}</S.Td>
-                                        <S.Td $num>{formatCurrency(r.totalPrice ?? 0)}</S.Td>
+                                        <S.Td $num>
+                                            {formatCurrency(r.totalPrice ?? 0)}
+                                            {Number(r.payment?.amount ?? 0) > 0 && (
+                                                <S.MonthlyCount>{formatCurrency(Number(r.payment!.amount) - Number(r.payment!.refundAmount ?? 0))} recebido</S.MonthlyCount>
+                                            )}
+                                        </S.Td>
                                         <S.Td>
                                             <S.StatusBadge $status={r.status}>
                                                 {STATUS_LABELS[r.status as keyof typeof STATUS_LABELS] ?? r.status}
                                             </S.StatusBadge>
                                         </S.Td>
                                         <S.Td>
+                                            <S.InlineGroup style={{ flexWrap: "nowrap" }}>
+                                            <S.SecondaryButton $size="sm" onClick={() => setPaymentsFor(r)} aria-label={`Pagamentos de ${r.user?.name ?? "cliente"} em ${formatDateTime(r.startDate)}`}>
+                                                Pagamentos
+                                            </S.SecondaryButton>
                                             {(r.status === "PENDING" || r.status === "PAID") && (
                                                 <S.DangerButton
                                                     $size="sm"
@@ -251,6 +264,7 @@ export function ReservationsTab() {
                                                     {cancellingId === r.id ? "..." : "Cancelar"}
                                                 </S.DangerButton>
                                             )}
+                                            </S.InlineGroup>
                                         </S.Td>
                                     </S.Tr>
                                 ))}
@@ -275,14 +289,18 @@ export function ReservationsTab() {
                 </S.ListRegion>
             )}
 
+            {paymentsFor && (
+                <PaymentsModal reservation={paymentsFor} onClose={() => setPaymentsFor(null)} onChanged={refresh} />
+            )}
+
             {cancelModal && (
                 <S.ModalOverlay onClick={() => setCancelModal(null)}>
                     <S.ModalBox onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                         <ModalHeader onClose={() => setCancelModal(null)}>Cancelar reserva</ModalHeader>
 
-                        {cancelModal.status === "PAID" ? (
+                        {cancelModal.refundPct !== undefined ? (
                             <>
-                                <S.ModalText>Esta reserva já foi <strong>paga</strong>. O reembolso segue a política gravada nela:</S.ModalText>
+                                <S.ModalText>O salão já recebeu por esta reserva. A devolução segue a política gravada nela, e você a registra em <strong>Pagamentos</strong> depois de devolver:</S.ModalText>
                                 {cancelModal.policy && cancelModal.policy.length > 0 && (
                                     <S.ModalNote as="ul">{cancelModal.policy.map((line) => <li key={line}>{line}</li>)}</S.ModalNote>
                                 )}
@@ -292,18 +310,18 @@ export function ReservationsTab() {
                                         <dd>{cancelModal.daysBeforeEvent}</dd>
                                     </div>
                                     <div>
-                                        <dt>Percentual de reembolso</dt>
+                                        <dt>Percentual de devolução</dt>
                                         <dd>{cancelModal.refundPct}%</dd>
                                     </div>
                                     <div>
-                                        <dt>Valor a reembolsar</dt>
+                                        <dt>Valor a devolver</dt>
                                         <dd>{formatCurrency(cancelModal.refundAmount ?? 0)}</dd>
                                     </div>
                                 </S.RefundSummary>
                                 {cancelModal.refundPct === 0 && (
-                                    <S.RefundWarning>Cancelamento fora do prazo: não há reembolso.</S.RefundWarning>
+                                    <S.RefundWarning>Cancelamento fora do prazo: não há devolução.</S.RefundWarning>
                                 )}
-                                <S.ModalNote>O reembolso é processado automaticamente na forma de pagamento original.</S.ModalNote>
+                                <S.ModalNote>Não há estorno automático: devolva ao cliente e registre a devolução em Pagamentos. Ele recebe um aviso.</S.ModalNote>
                             </>
                         ) : (
                             <S.ModalText>

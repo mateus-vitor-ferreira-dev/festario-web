@@ -1,192 +1,113 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import Checkout from "../../pages/Checkout";
+import type { ReservationPayment } from "../../types";
 import { server } from "../mocks/server";
 
 const BASE = "http://localhost:3000";
 
-const mockReservation = {
-    id: "res-1",
+const reservation = {
+    id: "res-1a2b3c4d",
     status: "PENDING",
-    planCode: "ESSENCIAL",
-    totalPrice: 850,
-    startDate: "2026-06-01T10:00:00.000Z",
-    endDate: "2026-06-01T18:00:00.000Z",
+    packageSnapshot: { name: "Sábado à tarde" },
+    totalPrice: 1200,
+    guestCount: 80,
+    startDate: "2026-12-12T17:00:00.000Z",
+    endDate: "2026-12-12T22:00:00.000Z",
     venue: { name: "Salão Principal" },
 };
 
-function renderPage(reservationId = "res-1") {
+function payment(over: Partial<ReservationPayment> = {}, summary: Partial<ReservationPayment["summary"]> = {}): ReservationPayment {
+    return {
+        reservationId: reservation.id, reservationStatus: "PENDING", mode: "MANUAL",
+        summary: { totalCents: 120000, requiredCents: 36000, paidCents: 0, refundedCents: 0, netCents: 0, balanceCents: 120000, missingToConfirmCents: 36000, confirmed: false, ...summary },
+        depositCents: 36000, balanceDueAt: "2026-12-05T17:00:00.000Z", confirmBy: "2026-11-20T21:30:00.000Z",
+        refundDueCents: null, refundPercentage: null, entries: [],
+        instructions: { text: "PIX (chave e-mail): financeiro@exemplo.com.br", whatsapp: "(35) 99999-0000", phone: null, email: "contato@exemplo.com.br", instagram: "@salao" },
+        venue: { id: "v1", name: "Salão Principal" }, tenant: { slug: "salao", name: "Salão das Flores" },
+        ...over,
+    };
+}
+
+function mock(res: Record<string, unknown>, pay: ReservationPayment) {
+    server.use(
+        http.get(`${BASE}/reservations/${reservation.id}`, () => HttpResponse.json({ data: res })),
+        http.get(`${BASE}/payments/reservation/${reservation.id}`, () => HttpResponse.json({ data: pay })),
+    );
+}
+
+function renderPage() {
     return render(
-        <MemoryRouter initialEntries={[`/checkout/${reservationId}`]}>
+        <MemoryRouter initialEntries={[`/checkout/${reservation.id}`]}>
             <Routes>
                 <Route path="/checkout/:reservationId" element={<Checkout />} />
                 <Route path="/reservations" element={<div>Reservations Page</div>} />
             </Routes>
             <ToastContainer />
-        </MemoryRouter>
+        </MemoryRouter>,
     );
 }
 
-describe("Checkout page", () => {
-    afterEach(() => vi.unstubAllGlobals());
-
-    it("shows loading then reservation details", async () => {
-        server.use(
-            http.get(`${BASE}/reservations/res-1`, () =>
-                HttpResponse.json({ success: true, data: mockReservation })
-            )
-        );
+describe("Pagamento da reserva (combinado com o salão, #48)", () => {
+    it("pendente: quanto confirma, prazo, como pagar e o WhatsApp com a mensagem pronta", async () => {
+        mock(reservation, payment());
         renderPage();
         expect(screen.getByText(/carregando dados da reserva/i)).toBeInTheDocument();
-        await waitFor(() =>
-            expect(screen.getByText("Salão Principal")).toBeInTheDocument()
-        );
-        expect(screen.getByText(/aguardando pagamento/i)).toBeInTheDocument();
-        expect(screen.getAllByText(/850/).length).toBeGreaterThan(0);
+        expect(await screen.findByRole("heading", { name: "Combine o pagamento com o salão" })).toBeInTheDocument();
+        expect(screen.getByText(/precisa receber R\$\s?360,00 de sinal/)).toBeInTheDocument();
+        expect(screen.getByText(/financeiro@exemplo\.com\.br/)).toBeInTheDocument();
+        expect(screen.getByText(/se o salão não registrar o pagamento até lá/i)).toBeInTheDocument();
+        expect(screen.getByRole("meter", { name: /pagamento da reserva/i })).toHaveAttribute("aria-valuetext", expect.stringMatching(/sinal de R\$\s?360,00 confirma/));
+
+        const wa = screen.getByRole("link", { name: /combinar pelo whatsapp/i });
+        const href = decodeURIComponent(wa.getAttribute("href")!);
+        expect(href).toMatch(/^https:\/\/wa\.me\/5535999990000\?text=/);
+        expect(href).toMatch(/pagar o sinal de R\$\s?360,00 da minha reserva no Salão Principal/);
+        expect(href).toContain("Código: res-1a2b");
+        expect(screen.getByRole("link", { name: /instagram @salao/i })).toHaveAttribute("href", "https://instagram.com/salao");
+        expect(screen.getByText(/nenhum ainda/i)).toBeInTheDocument();
     });
 
-    it("shows planCode when present", async () => {
-        server.use(
-            http.get(`${BASE}/reservations/res-1`, () =>
-                HttpResponse.json({ success: true, data: mockReservation })
-            )
-        );
+    it("confirmada com o sinal: mostra o saldo e o prazo do restante", async () => {
+        mock({ ...reservation, status: "PAID" }, payment({
+            reservationStatus: "PAID", confirmBy: null,
+            entries: [{ id: "e1", kind: "PAYMENT", method: "PIX", amountCents: 36000, paidAt: "2026-11-19T15:00:00.000Z", note: "Sinal", createdAt: "2026-11-19T15:00:00.000Z", recordedBy: { id: "o", name: "Dona" } }],
+        }, { paidCents: 36000, netCents: 36000, balanceCents: 84000, missingToConfirmCents: 0, confirmed: true }));
         renderPage();
-        await waitFor(() =>
-            expect(screen.getByText("Essencial")).toBeInTheDocument()
-        );
+        expect(await screen.findByRole("heading", { name: "Reserva confirmada" })).toBeInTheDocument();
+        expect(screen.getByText(/falta o restante: R\$\s?840,00, até 05\/12\/2026/i)).toBeInTheDocument();
+        const entries = screen.getByRole("region", { name: /pagamentos registrados/i });
+        expect(within(entries).getByText(/pagamento · PIX/i)).toBeInTheDocument();
+        expect(within(entries).getByText(/sinal/i)).toBeInTheDocument();
+        expect(screen.getByRole("link", { name: /combinar pelo whatsapp/i })).toBeInTheDocument();
     });
 
-    it("creates checkout session and redirects on payment button click", async () => {
-        server.use(
-            http.get(`${BASE}/reservations/res-1`, () =>
-                HttpResponse.json({ success: true, data: mockReservation })
-            ),
-            http.post(`${BASE}/payments/checkout/res-1`, () =>
-                HttpResponse.json({
-                    message: "Checkout session created successfully",
-                    sessionId: "cs_test_123",
-                    url: "https://stripe.com/pay/session-1",
-                })
-            )
-        );
+    it("quitada: sem como pagar", async () => {
+        mock({ ...reservation, status: "PAID" }, payment({ reservationStatus: "PAID", confirmBy: null }, { paidCents: 120000, netCents: 120000, balanceCents: 0, missingToConfirmCents: 0, confirmed: true }));
         renderPage();
-        await waitFor(() =>
-            expect(screen.getByRole("button", { name: /pagar com cartão/i })).toBeInTheDocument()
-        );
-
-        vi.stubGlobal("location", { href: "http://localhost/" });
-        const user = userEvent.setup();
-        await user.click(screen.getByRole("button", { name: /pagar com cartão/i }));
-        await waitFor(() =>
-            expect(window.location.href).toBe("https://stripe.com/pay/session-1")
-        );
+        expect(await screen.findByRole("heading", { name: "Reserva confirmada e quitada" })).toBeInTheDocument();
+        expect(screen.queryByRole("heading", { name: "Como pagar" })).not.toBeInTheDocument();
     });
 
-    it("opens the card checkout on the reservation's own salon (#35)", async () => {
-        let checkoutTenant: string | null = null;
-        server.use(
-            http.get(`${BASE}/reservations/res-1`, () =>
-                HttpResponse.json({ success: true, data: { ...mockReservation, tenant: { slug: "casa-pampulha-eventos", name: "Casa Pampulha Eventos" } } })
-            ),
-            http.post(`${BASE}/payments/checkout/res-1`, ({ request }) => {
-                checkoutTenant = request.headers.get("X-Tenant-Slug");
-                return HttpResponse.json({ url: "https://stripe.com/pay/session-2" });
-            })
-        );
+    it("cancelada: a devolução pela política, que o salão faz", async () => {
+        mock({ ...reservation, status: "CANCELLED" }, payment({ reservationStatus: "CANCELLED", confirmBy: null, refundDueCents: 28800, refundPercentage: 80 }, { paidCents: 36000, netCents: 36000, confirmed: true }));
         renderPage();
-        const button = await screen.findByRole("button", { name: /pagar com cartão/i });
-
-        vi.stubGlobal("location", { href: "http://localhost/" });
-        await userEvent.setup().click(button);
-        await waitFor(() => expect(window.location.href).toBe("https://stripe.com/pay/session-2"));
-        expect(checkoutTenant).toBe("casa-pampulha-eventos");
+        expect(await screen.findByText(/você recebe R\$\s?288,00 de volta \(80%\)\. O salão faz a devolução/)).toBeInTheDocument();
+        expect(screen.queryByRole("link", { name: /whatsapp/i })).not.toBeInTheDocument();
     });
 
-    it("shows 409 specific error when payment session already exists", async () => {
-        server.use(
-            http.get(`${BASE}/reservations/res-1`, () =>
-                HttpResponse.json({ success: true, data: mockReservation })
-            ),
-            http.post(`${BASE}/payments/checkout/res-1`, () =>
-                HttpResponse.json({ success: false }, { status: 409 })
-            )
-        );
+    it("sem instruções e sem contatos: diz para falar com o salão", async () => {
+        mock(reservation, payment({ instructions: { text: null, whatsapp: null, phone: null, email: null, instagram: null } }));
         renderPage();
-        await waitFor(() =>
-            expect(screen.getByRole("button", { name: /pagar com cartão/i })).toBeInTheDocument()
-        );
-
-        const user = userEvent.setup();
-        await user.click(screen.getByRole("button", { name: /pagar com cartão/i }));
-        await waitFor(() =>
-            expect(screen.getByText(/já existe uma sessão de pagamento/i)).toBeInTheDocument()
-        );
+        expect(await screen.findByText(/o salão combina a forma de pagamento com você/i)).toBeInTheDocument();
     });
 
-    it("shows InfoBox when reservation is not PENDING", async () => {
-        server.use(
-            http.get(`${BASE}/reservations/res-1`, () =>
-                HttpResponse.json({
-                    success: true,
-                    data: { ...mockReservation, status: "PAID" },
-                })
-            )
-        );
+    it("volta para as reservas quando não consegue carregar", async () => {
+        server.use(http.get(`${BASE}/reservations/${reservation.id}`, () => HttpResponse.json({ message: "não encontrada" }, { status: 404 })));
         renderPage();
-        await waitFor(() =>
-            expect(screen.getByText(/esta reserva não está disponível para pagamento/i)).toBeInTheDocument()
-        );
-    });
-
-    it("navigates to /reservations on cancel link click", async () => {
-        server.use(
-            http.get(`${BASE}/reservations/res-1`, () =>
-                HttpResponse.json({ success: true, data: mockReservation })
-            )
-        );
-        const user = userEvent.setup();
-        renderPage();
-        await waitFor(() =>
-            expect(screen.getByText(/voltar para minhas reservas/i)).toBeInTheDocument()
-        );
-        await user.click(screen.getByText(/voltar para minhas reservas/i));
-        expect(screen.getByText("Reservations Page")).toBeInTheDocument();
-    });
-
-    it("shows generic error toast when payment POST fails with non-409 status", async () => {
-        server.use(
-            http.get(`${BASE}/reservations/res-1`, () =>
-                HttpResponse.json({ success: true, data: mockReservation })
-            ),
-            http.post(`${BASE}/payments/checkout/res-1`, () =>
-                HttpResponse.json({ success: false, message: "Erro ao iniciar o pagamento." }, { status: 500 })
-            )
-        );
-        renderPage();
-        await waitFor(() =>
-            expect(screen.getByRole("button", { name: /pagar com cartão/i })).toBeInTheDocument()
-        );
-        const user = userEvent.setup();
-        await user.click(screen.getByRole("button", { name: /pagar com cartão/i }));
-        await waitFor(() =>
-            expect(screen.getByText(/erro ao iniciar o pagamento/i)).toBeInTheDocument()
-        );
-    });
-
-    it("redirects to /reservations when loading reservation fails", async () => {
-        server.use(
-            http.get(`${BASE}/reservations/res-1`, () =>
-                HttpResponse.json({ success: false }, { status: 404 })
-            )
-        );
-        renderPage();
-        await waitFor(() =>
-            expect(screen.getByText("Reservations Page")).toBeInTheDocument()
-        );
+        await waitFor(() => expect(screen.getByText("Reservations Page")).toBeInTheDocument());
     });
 });

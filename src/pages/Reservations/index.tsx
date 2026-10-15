@@ -20,7 +20,8 @@ import * as S from "./styles";
  * Página que lista as reservas do usuário autenticado com paginação.
  *
  * Exibe status (PENDING/PAID/CANCELLED/EXPIRED), datas, duração e valor.
- * Reservas PENDING têm botão "Pagar" que navega para `/checkout/:reservationId`.
+ * O pagamento é combinado com o salão (#48): "Como pagar" leva a `/checkout/:reservationId`, com o
+ * valor, o prazo e os contatos do salão.
  * Reservas PENDING ou PAID podem ser canceladas com confirmação inline.
  *
  * Filtro de status e página ficam na URL (`?status=PAID&page=2`).
@@ -33,11 +34,14 @@ import * as S from "./styles";
  * @component
  */
 
-/** Reembolso de uma reserva paga pela política gravada nela (#46); nulo se não foi paga. */
+/**
+ * Devolução pela política gravada na reserva (#46), sobre o que o salão já recebeu (#48: pode ser só o
+ * sinal). Nula quando nada foi recebido.
+ */
 function calcRefundEstimate(reservation: Reservation) {
-    if (reservation.status !== "PAID") return null;
-    const totalPaid = Number(reservation.payment?.amount ?? reservation.totalPrice ?? 0);
-    return refundEstimate(totalPaid, reservation.cancellationPolicy?.tiers ?? [], reservation.startDate);
+    const received = Number(reservation.payment?.amount ?? 0) - Number(reservation.payment?.refundAmount ?? 0);
+    if (!(received > 0)) return null;
+    return refundEstimate(received, reservation.cancellationPolicy?.tiers ?? [], reservation.startDate);
 }
 
 /** Faixas da política da reserva em duas partes ("Com 30 dias ou mais de antecedência" / "100% de reembolso"). */
@@ -184,29 +188,32 @@ export default function Reservations() {
 
                         {refundEstimate ? (
                             <S.RefundCard>
-                                <S.RefundCardTitle>Seu reembolso estimado</S.RefundCardTitle>
+                                <S.RefundCardTitle>Sua devolução pela política</S.RefundCardTitle>
                                 <S.RefundRow>
                                     <span>Dias até o evento</span>
                                     <strong>{refundEstimate.daysBeforeEvent} dia{refundEstimate.daysBeforeEvent !== 1 ? "s" : ""}</strong>
                                 </S.RefundRow>
                                 <S.RefundRow>
-                                    <span>Valor pago</span>
+                                    <span>Recebido pelo salão</span>
                                     <strong>{formatCurrency(refundEstimate.totalPaid)}</strong>
                                 </S.RefundRow>
                                 <S.RefundRow $accent={refundEstimate.refundAmount > 0}>
-                                    <span>Valor do reembolso</span>
+                                    <span>Você recebe de volta</span>
                                     <strong>
                                         {refundEstimate.refundAmount > 0
                                             ? `${formatCurrency(refundEstimate.refundAmount)} (${refundEstimate.percentage}%)`
-                                            : "Sem reembolso"}
+                                            : "Sem devolução"}
                                     </strong>
                                 </S.RefundRow>
+                                {refundEstimate.refundAmount > 0 && (
+                                    <S.ModalBody>O salão faz a devolução e registra aqui. Você recebe um aviso quando ela for feita.</S.ModalBody>
+                                )}
                             </S.RefundCard>
                         ) : (
                             <S.RefundCard $neutral>
-                                <S.RefundCardTitle>Sem cobrança</S.RefundCardTitle>
+                                <S.RefundCardTitle>Nada a devolver</S.RefundCardTitle>
                                 <S.ModalBody>
-                                    Esta reserva ainda não foi paga, portanto o cancelamento não gera nenhuma cobrança.
+                                    O salão ainda não registrou pagamento desta reserva, então o cancelamento não envolve dinheiro.
                                 </S.ModalBody>
                             </S.RefundCard>
                         )}
@@ -309,11 +316,14 @@ export default function Reservations() {
                                     {contractId === reservation.id ? "Gerando contrato..." : "Baixar contrato"}
                                 </S.ContractButton>
                                 {reservation.status === "PENDING" && (
-                                    <S.PayButton
-                                        onClick={() => navigate(`/checkout/${reservation.id}`)}
-                                    >
-                                        Ir para pagamento
+                                    <S.PayButton onClick={() => navigate(`/checkout/${reservation.id}`)}>
+                                        Como pagar
                                     </S.PayButton>
+                                )}
+                                {reservation.status !== "PENDING" && Number(reservation.payment?.amount ?? 0) > 0 && (
+                                    <S.ContractButton type="button" onClick={() => navigate(`/checkout/${reservation.id}`)}>
+                                        Ver pagamento
+                                    </S.ContractButton>
                                 )}
 
                                 {canCancel && (

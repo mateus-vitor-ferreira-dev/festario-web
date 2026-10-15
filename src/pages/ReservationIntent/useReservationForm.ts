@@ -238,7 +238,7 @@ export function useReservationForm({ venueId }: { venueId: string | undefined })
                 termsAccepted: true,
                 ...(notes.trim() && { notes: notes.trim() }),
             });
-            toast.success("Reserva criada! Agora é só pagar para garantir a data.");
+            toast.success("Reserva criada! Combine o pagamento com o salão para garantir a data.");
             navigate(`/checkout/${reservation.id}`);
         } catch (error) {
             toast.error(getErrorMessage(error, "Erro ao confirmar a reserva."));
