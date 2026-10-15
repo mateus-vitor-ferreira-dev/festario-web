@@ -249,13 +249,13 @@ export function ContractRulesSection() {
                             <span>{c.rendered}</span>
                         </S.ItemName>
                         <A.InlineGroup>
-                            <A.SecondaryButton type="button" $size="sm" onClick={() => openClause(c.id, draftOf(c))}>Editar</A.SecondaryButton>
-                            <A.SecondaryButton type="button" $size="sm" onClick={() => run(() => updateClause(c.id, { isActive: !c.isActive }), c.isActive ? "Regra tirada do contrato." : "Regra de volta ao contrato.")}>
+                            <A.SecondaryButton type="button" $size="sm" onClick={() => openClause(c.id, draftOf(c))} aria-label={`Editar ${c.title}`}>Editar</A.SecondaryButton>
+                            <A.SecondaryButton type="button" $size="sm" onClick={() => run(() => updateClause(c.id, { isActive: !c.isActive }), c.isActive ? "Regra tirada do contrato." : "Regra de volta ao contrato.")} aria-label={`${c.isActive ? "Tirar do contrato" : "Pôr no contrato"}: ${c.title}`}>
                                 {c.isActive ? "Tirar do contrato" : "Pôr no contrato"}
                             </A.SecondaryButton>
                             <A.SecondaryButton type="button" $size="sm" disabled={i === 0} onClick={() => move(i, -1)} aria-label={`Subir ${c.title} na ordem`} title="Subir na ordem">↑</A.SecondaryButton>
                             <A.SecondaryButton type="button" $size="sm" disabled={i === clauses.length - 1} onClick={() => move(i, 1)} aria-label={`Descer ${c.title} na ordem`} title="Descer na ordem">↓</A.SecondaryButton>
-                            <A.DangerButton type="button" $size="sm" onClick={() => { if (window.confirm(`Excluir a regra "${c.title}"? Contratos já aceitos não mudam.`)) run(() => deleteClause(c.id), "Regra excluída."); }}>Excluir</A.DangerButton>
+                            <A.DangerButton type="button" $size="sm" onClick={() => { if (window.confirm(`Excluir a regra "${c.title}"? Contratos já aceitos não mudam.`)) run(() => deleteClause(c.id), "Regra excluída."); }} aria-label={`Excluir ${c.title}`}>Excluir</A.DangerButton>
                         </A.InlineGroup>
                         {openId === c.id && clauseEditor(() => saveClause(() => updateClause(c.id, clausePayload()), "Regra salva."), "Salvar regra")}
                     </S.ItemRow>
@@ -272,7 +272,7 @@ export function ContractRulesSection() {
                                     <strong>{t.title}</strong>
                                     <span>{render({ title: t.title, body: t.body, fine: "", time: "" })}</span>
                                 </S.ItemName>
-                                <A.SecondaryButton type="button" $size="sm" onClick={() => openClause(t.key, draftOf(t))}>Usar este modelo</A.SecondaryButton>
+                                <A.SecondaryButton type="button" $size="sm" onClick={() => openClause(t.key, draftOf(t))} aria-label={`Usar o modelo ${t.title}`}>Usar este modelo</A.SecondaryButton>
                                 {openId === t.key && clauseEditor(() => saveClause(() => createClause({ key: t.key, ...clausePayload() }), "Regra adicionada ao contrato."), "Adicionar ao contrato")}
                             </S.ItemRow>
                         ))}
