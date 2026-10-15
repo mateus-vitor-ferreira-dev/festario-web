@@ -2,7 +2,7 @@
  * Formatação e conversões das regras do salão (#42–#46): minutos ↔ "HH:MM", dias da semana, moeda,
  * forma de cobrança e frases da política de cancelamento (as mesmas da API).
  */
-import type { ItemChargeType, RefundTier } from "../../../types";
+import type { ItemChargeType } from "../types";
 
 /** Semana a partir da segunda, como se fala. Índices do JS: 0 = domingo. */
 export const WEEK = [
@@ -60,25 +60,10 @@ export const CHARGE_LABELS: Record<ItemChargeType, string> = {
     PER_GUEST: "por convidado",
 };
 
-/** "R$ 30,00 por hora", "R$ 450,00". */
+/** "R$ 45,00 por hora", "R$ 450,00". */
 export function describePrice(unitPrice: number | string, chargeType: ItemChargeType): string {
     if (Number(unitPrice) === 0) return "Sem custo";
     return chargeType === "FIXED" ? formatBRL(unitPrice) : `${formatBRL(unitPrice)} ${CHARGE_LABELS[chargeType]}`;
 }
 
-/** Política em frases, como a API e o contrato mostram (maior antecedência primeiro). */
-export function describeTiers(tiers: RefundTier[]): string[] {
-    const sorted = [...tiers].sort((a, b) => b.minDays - a.minDays);
-    const days = (n: number) => `${n} dia${n === 1 ? "" : "s"}`;
-    return sorted.map((t, i) => {
-        const upper = i > 0 ? sorted[i - 1].minDays - 1 : null;
-        const when = upper === null
-            ? (t.minDays === 0 ? "A qualquer momento" : `Com ${days(t.minDays)} ou mais de antecedência`)
-            : t.minDays === 0 ? `Com menos de ${days(upper + 1)} de antecedência` : `De ${days(t.minDays)} a ${days(upper)} de antecedência`;
-        return `${when}: ${t.percentage === 0 ? "sem reembolso" : `${t.percentage}% de reembolso`}`;
-    });
-}
-
-export function refundFor(tiers: RefundTier[], daysBefore: number): number {
-    return [...tiers].sort((a, b) => b.minDays - a.minDays).find((t) => daysBefore >= t.minDays)?.percentage ?? 0;
-}
+export { describeTiers, refundFor } from "./cancellationPolicy";

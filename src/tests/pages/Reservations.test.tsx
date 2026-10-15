@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -222,16 +222,35 @@ describe("Reservations page", () => {
         );
     });
 
-    it("shows raw planCode when not in PLAN_LABELS", async () => {
+    it("shows the contracted package name from the reservation copy", async () => {
         server.use(
             http.get(`${BASE}/reservations`, () =>
-                HttpResponse.json({ success: true, data: [{ ...mockReservation, planCode: "CUSTOM_PLAN" }] })
+                HttpResponse.json({ success: true, data: [{ ...mockReservation, planCode: null, packageSnapshot: { name: "Sábado à tarde" } }] })
             )
         );
         renderPage();
-        await waitFor(() =>
-            expect(screen.getByText("CUSTOM_PLAN")).toBeInTheDocument()
+        expect(await screen.findByText("Sábado à tarde")).toBeInTheDocument();
+    });
+
+    it("estimates the refund with the policy saved in the reservation", async () => {
+        const policy = {
+            tiers: [{ minDays: 30, percentage: 80 }, { minDays: 0, percentage: 10 }],
+            notes: "Remarcação grátis uma vez.",
+            summary: ["Com 30 dias ou mais de antecedência: 80% de reembolso", "Com menos de 30 dias de antecedência: 10% de reembolso"],
+        };
+        server.use(
+            http.get(`${BASE}/reservations`, () =>
+                HttpResponse.json({ success: true, data: [{ ...mockReservation, status: "PAID", totalPrice: 1000, payment: { amount: 1000 }, cancellationPolicy: policy }] })
+            )
         );
+        const user = userEvent.setup();
+        renderPage();
+        await user.click(await screen.findByRole("button", { name: /cancelar reserva/i }));
+        const dialog = screen.getByRole("dialog");
+        expect(within(dialog).getByText("Com menos de 30 dias de antecedência")).toBeInTheDocument();
+        expect(within(dialog).getByText("10% de reembolso")).toBeInTheDocument();
+        expect(within(dialog).getByText(/remarcação grátis/i)).toBeInTheDocument();
+        expect(within(dialog).getByText(/R\$\s?100,00 \(10%\)/)).toBeInTheDocument();
     });
 
     it("shows '—' when planCode is null", async () => {

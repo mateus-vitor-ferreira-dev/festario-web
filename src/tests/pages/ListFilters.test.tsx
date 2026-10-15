@@ -72,14 +72,17 @@ function renderAt(url: string) {
     describe("Admin › Reservas — filtros e paginação", () => {
         it("restores filters and page from the URL and sends them as query params", async () => {
             const urls: string[] = [];
-            server.use(paginatedReservations(48, urls));
-            renderAt("/admin?tab=reservations&status=PAID&planCode=COMPLETA&minPrice=500&startDate=2026-01-01&page=2");
+            server.use(
+                paginatedReservations(48, urls),
+                http.get(`${BASE}/admin/plans`, () => HttpResponse.json({ data: [{ id: "pkg-1", name: "Sábado à tarde" }] })),
+            );
+            renderAt("/admin?tab=reservations&status=PAID&packageId=pkg-1&minPrice=500&startDate=2026-01-01&page=2");
 
             await waitFor(() => expect(screen.getByText("Mostrando 16–30 de 48")).toBeInTheDocument());
             const sent = new URL(urls.at(-1)!);
             expect(Object.fromEntries(sent.searchParams)).toMatchObject({
                 status: "PAID",
-                planCode: "COMPLETA",
+                packageId: "pkg-1",
                 minPrice: "500",
                 startDate: "2026-01-01",
                 sort: "startDate:desc",
@@ -89,7 +92,8 @@ function renderAt(url: string) {
 
             // controles refletem a URL e há um chip por filtro ativo
             expect(screen.getByLabelText("Status")).toHaveValue("PAID");
-            expect(screen.getByLabelText("Plano")).toHaveValue("COMPLETA");
+            await waitFor(() => expect(screen.getByLabelText("Pacote")).toHaveValue("pkg-1"));
+            expect(screen.getByRole("button", { name: /remover filtro pacote: sábado à tarde/i })).toBeInTheDocument();
             const chips = screen.getByRole("list", { name: "Filtros ativos" });
             expect(within(chips).getAllByRole("button")).toHaveLength(4);
             expect(screen.getByRole("button", { name: /remover filtro valor mínimo: r\$\s?500,00/i })).toBeInTheDocument();

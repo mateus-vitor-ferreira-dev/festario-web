@@ -1,6 +1,5 @@
 import type { Campaign, NegotiationStatus, RaffleWinnerResult } from "../../../types";
 // Constantes e helpers compartilhados entre as abas do painel admin
-export { REFUND_TIERS, getRefundPercentage } from "../../../constants/reservation";
 
 export const TABS = [
     { key: "dashboard", label: "Dashboard" },

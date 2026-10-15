@@ -5,9 +5,9 @@ import { createPackage, updatePackage } from "../../../services/salonRules";
 import type { PackageItemInput, SalonItem, SalonPackage, SalonPackageInput, Venue } from "../../../types";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
 import * as A from "../styles";
-import { CHARGE_LABELS, WEEK, clockToMinutes, describePrice, formatBRL, formatHours, minutesToClock } from "./format";
+import { CHARGE_LABELS, WEEK, clockToMinutes, describePrice, formatBRL, formatHours, minutesToClock } from "../../../utils/packageFormat";
 import * as S from "./styles";
-import { TimeWindow, WeekStrip } from "./Visuals";
+import { TimeWindow, WeekStrip } from "../../../components/PackageVisuals";
 
 type Mode = "NONE" | "INCLUDED" | "OPTIONAL";
 

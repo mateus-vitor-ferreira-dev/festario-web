@@ -4,7 +4,7 @@
  */
 import api from "./api";
 import { cleanParams, toPaginated } from "./pagination";
-import type { ListParams, PaginatedResult, Venue } from "../types";
+import type { ListParams, PaginatedResult, PublicTenant, Venue, VenuePackages } from "../types";
 
 /** Limite usado para popular selects com todos os espaços (máximo da API). */
 export const ALL_VENUES_LIMIT = 100;
@@ -41,6 +41,27 @@ export async function getVenue(
     signal?: AbortSignal,
 ): Promise<Venue> {
     const { data } = await api.get(`/venues/${venueId}`, { signal });
+    return data.data;
+}
+
+/**
+ * Pacotes ativos do espaço, na ordem do salão, com os itens inclusos e adicionais. Com `date`
+ * (`YYYY-MM-DD`), cada pacote diz se vale naquele dia e a resposta diz se o dia é feriado.
+ *
+ * @see GET /venues/:id/packages?date=
+ */
+export async function getVenuePackages(venueId: string, date?: string, signal?: AbortSignal): Promise<VenuePackages> {
+    const { data } = await api.get(`/venues/${venueId}/packages`, { params: date ? { date } : undefined, signal });
+    return data.data;
+}
+
+/**
+ * Regras do salão que o cliente precisa para reservar: antecedência, horizonte e política vigente.
+ *
+ * @see GET /tenant
+ */
+export async function getPublicTenant(signal?: AbortSignal): Promise<PublicTenant> {
+    const { data } = await api.get("/tenant", { signal });
     return data.data;
 }
 

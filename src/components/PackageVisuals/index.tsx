@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-import { WEEK, describeDays, describeWindow, minutesToClock } from "./format";
+import { WEEK, describeDays, describeWindow, minutesToClock } from "../../utils/packageFormat";
 
 /**
  * Faixa da semana do pacote: os dias em que ele vale ficam em anil, e o feriado aparece em milho.
