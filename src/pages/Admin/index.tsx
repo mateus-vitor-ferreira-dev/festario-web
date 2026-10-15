@@ -13,6 +13,7 @@ import { ReservationsTab } from "./tabs/ReservationsTab";
 import { UsersTab } from "./tabs/UsersTab";
 import { VenueTab } from "./tabs/VenueTab";
 import { RulesTab } from "./rules/RulesTab";
+import { BrandTab } from "./brand/BrandTab";
 import * as S from "./styles";
 
 const TAB_COMPONENTS = {
@@ -24,6 +25,7 @@ const TAB_COMPONENTS = {
     holidays:     HolidaysTab,
     blockedDates: BlockedDatesTab,
     rules:        RulesTab,
+    brand:        BrandTab,
     venues:       VenueTab,
 };
 

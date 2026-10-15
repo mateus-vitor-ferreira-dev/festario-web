@@ -8,6 +8,7 @@ import { useListParams } from "../../hooks/useListParams";
 import { ActiveFilterChips, FilterBar, NoResults, Pagination, TextField } from "../../components";
 import { parseMoney } from "../../components/FilterBar";
 import { animateFadeInUp } from "../../utils/animations";
+import VenueCover from "../../components/VenueCover";
 import * as S from "./styles";
 
 /**
@@ -146,8 +147,16 @@ export default function Venues() {
             )}
 
             <S.Grid aria-busy={isFetching} $busy={isFetching}>
-                {venues.map((venue) => (
+                {venues.map((venue, index) => (
                     <S.Card className="anim-card" key={venue.id}>
+                        <S.CoverSlot>
+                            <VenueCover
+                                venueName={venue.name}
+                                photo={venue.photos?.[0]}
+                                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 420px"
+                                priority={index === 0}
+                            />
+                        </S.CoverSlot>
                         <S.CardContent>
                             <S.CardHeader>
                                 <S.CardTitle>{venue.name}</S.CardTitle>

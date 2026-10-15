@@ -103,6 +103,18 @@ export const Card = styled.article`
   }
 `;
 
+/* Capa encostada nas bordas do card, com o filete da cor do salão embaixo. */
+export const CoverSlot = styled.div`
+  margin: -24px -24px 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  overflow: hidden;
+  border-bottom: 3px solid var(--salon-accent);
+
+  ${media.sm} {
+    margin: -16px -16px 0;
+  }
+`;
+
 export const CardContent = styled.div`
   display: flex;
   flex-direction: column;

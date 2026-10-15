@@ -164,9 +164,13 @@ export const GlobalStyle = createGlobalStyle`
     --shadow-lg: 0 18px 40px -12px rgba(20, 25, 54, 0.22), 0 4px 10px rgba(20, 25, 54, 0.06);
     --focus-ring: 0 0 0 3px rgba(39, 53, 126, 0.24);
     --overlay: rgba(15, 19, 48, 0.55);
+
+    /* Cor do salão (vem da API): só acento — selo, filete da capa. Sem cor própria, é o anil da marca. */
+    --salon-accent: var(--salon-color, var(--brand));
   }
 
   [data-theme="dark"] {
+    --salon-accent: var(--salon-color-dark, var(--brand-mid));
     /* ── Noite — anil profundo, nunca preto neutro ── */
     --bg-page:    #0f1330;
     --bg-surface: #1a1f45;
