@@ -282,28 +282,6 @@ export const OptionItem = styled.div`
   }
 `;
 
-export const KidsInput = styled.input`
-  width: 80px;
-  min-height: 44px;
-  padding: 0 10px;
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-md);
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  font-weight: 600;
-  font-variant-numeric: lining-nums tabular-nums;
-  text-align: center;
-  outline: none;
-  flex-shrink: 0;
-
-  &:focus {
-    border-color: var(--brand);
-    box-shadow: var(--focus-ring);
-  }
-`;
-
 /* ─── Plan selector — lista de opções, o selecionado ganha marca ─── */
 
 export const PlanGrid = styled.div`
@@ -317,7 +295,8 @@ export const PlanCard = styled.div<{ $selected?: boolean; $disabled?: boolean }>
   grid-template-columns: 20px minmax(0, 1fr) auto;
   grid-template-areas:
     "radio label price"
-    "radio days  price";
+    "radio days  price"
+    ".     details details";
   column-gap: 14px;
   row-gap: 2px;
   align-items: center;
@@ -391,6 +370,160 @@ export const PlanPrice = styled.div`
 
   ${media.sm} {
     font-size: var(--text-lg);
+  }
+`;
+
+/** O que o pacote traz: semana, horário e o que vem incluso. */
+export const PlanDetails = styled.div`
+  grid-area: details;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  min-width: 0;
+
+  p {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    line-height: 1.45;
+  }
+`;
+
+export const PlanUnavailable = styled.span`
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+`;
+
+export const Hint = styled.p`
+  margin-top: 8px;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.45;
+`;
+
+export const AddonList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+/* Adicional: nome e preço à esquerda, a escolha (marcar ou horas) à direita. */
+export const AddonRow = styled.label`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  min-height: 56px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-page);
+  cursor: pointer;
+
+  & > div:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  strong {
+    color: var(--text-primary);
+    font-size: var(--text-base);
+    font-weight: 700;
+  }
+
+  span {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+
+  input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    accent-color: var(--brand);
+  }
+
+  &:has(input:focus-visible) {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+`;
+
+export const Stepper = styled.div`
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+
+  button {
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: transparent;
+    color: var(--brand);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: var(--radius-md);
+
+    &:disabled {
+      color: var(--text-muted);
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: -2px;
+    }
+  }
+
+  output {
+    min-width: 44px;
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+`;
+
+export const QuoteError = styled.p`
+  padding: 12px 14px;
+  border: 1px solid var(--status-error-border);
+  border-radius: var(--radius-md);
+  background: var(--status-error-bg);
+  color: var(--status-error-text);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+`;
+
+export const PolicyBox = styled.div`
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-default);
+
+  h3 {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 4px;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    line-height: 1.45;
   }
 `;
 

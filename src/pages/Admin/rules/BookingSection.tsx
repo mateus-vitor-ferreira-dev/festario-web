@@ -6,7 +6,7 @@ import type { RefundTier, TenantSettings, TenantSettingsInput } from "../../../t
 import { isAbortError } from "../../../utils/errors";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
 import * as A from "../styles";
-import { describeTiers, refundFor } from "./format";
+import { describeTiers, refundFor } from "../../../utils/packageFormat";
 import * as S from "./styles";
 
 const UFS = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"];

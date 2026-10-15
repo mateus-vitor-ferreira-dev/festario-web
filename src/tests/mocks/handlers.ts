@@ -65,6 +65,20 @@ export const venueHandlers = [
             },
         })
     ),
+
+    http.get(`${BASE_URL}/venues/:id/packages`, () =>
+        HttpResponse.json({ success: true, data: { date: null, holiday: null, packages: [] } })
+    ),
+
+    http.get(`${BASE_URL}/tenant`, () =>
+        HttpResponse.json({
+            success: true,
+            data: {
+                slug: "recanto", name: "Recanto", timezone: "America/Sao_Paulo", minLeadHours: null, maxAdvanceDays: null,
+                cancellationPolicy: { tiers: [{ minDays: 0, percentage: 0 }], notes: null, isDefault: true, summary: [] },
+            },
+        })
+    ),
 ];
 
 // ─── Reservations ────────────────────────────────────────────────────────────
@@ -94,13 +108,16 @@ export const reservationHandlers = [
         HttpResponse.json({
             success: true,
             data: {
-                totalCents: 85000,
-                subtotalCents: 85000,
-                discountCents: 0,
-                discountApplied: false,
-                items: [{ description: "Aluguel do salão", amountCents: 85000 }],
-                planCode: "ESSENCIAL",
                 currency: "BRL",
+                packageId: "pkg-sab",
+                packageName: "Sábado",
+                guestCount: 80,
+                items: [{ type: "PLAN_BASE", description: "Sábado", quantity: 1, unitAmountCents: 120000, totalAmountCents: 120000 }],
+                cancellationPolicy: { tiers: [{ minDays: 30, percentage: 100 }, { minDays: 0, percentage: 0 }], notes: null, summary: ["Com 30 dias ou mais de antecedência: 100% de reembolso", "Com menos de 30 dias de antecedência: sem reembolso"] },
+                subtotalCents: 120000,
+                discountCents: 0,
+                totalCents: 120000,
+                discountApplied: null,
             },
         })
     ),

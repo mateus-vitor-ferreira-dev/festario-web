@@ -7,7 +7,7 @@ import { getReservation } from "../../services/reservation";
 import { createCheckoutSession, getPaymentStatus } from "../../services/payment";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { isAbortError, getHttpStatus } from "../../utils/errors";
-import { PLAN_LABELS, formatDateFull, formatTime, formatCurrency, calcDuration } from "../../utils/reservationFormat";
+import { packageLabel, formatDateFull, formatTime, formatCurrency, calcDuration } from "../../utils/reservationFormat";
 import { animateFadeInUp } from "../../utils/animations";
 import type { Reservation, PixChargeResult } from "../../types";
 import * as S from "./styles";
@@ -213,10 +213,10 @@ export default function Checkout() {
                     <S.Divider />
 
                     <S.DetailList>
-                        {reservation.planCode && (
+                        {(reservation.packageSnapshot?.name || reservation.planCode) && (
                             <S.DetailItem>
-                                <S.DetailLabel>Plano</S.DetailLabel>
-                                <S.DetailValue>{PLAN_LABELS[reservation.planCode] || reservation.planCode}</S.DetailValue>
+                                <S.DetailLabel>Pacote</S.DetailLabel>
+                                <S.DetailValue>{packageLabel(reservation)}</S.DetailValue>
                             </S.DetailItem>
                         )}
 

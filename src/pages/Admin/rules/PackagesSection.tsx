@@ -7,10 +7,10 @@ import type { SalonItem, SalonPackage, SalonPackageInput, Venue } from "../../..
 import { isAbortError } from "../../../utils/errors";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
 import * as A from "../styles";
-import { describeDays, describeWindow, formatBRL, formatHours } from "./format";
+import { describeDays, describeWindow, formatBRL, formatHours } from "../../../utils/packageFormat";
 import { PackageEditor } from "./PackageEditor";
 import * as S from "./styles";
-import { TimeWindow, WeekStrip } from "./Visuals";
+import { TimeWindow, WeekStrip } from "../../../components/PackageVisuals";
 
 /** Pacote → corpo de criação (para duplicar). */
 function asInput(p: SalonPackage, overrides: Partial<SalonPackageInput>): SalonPackageInput {

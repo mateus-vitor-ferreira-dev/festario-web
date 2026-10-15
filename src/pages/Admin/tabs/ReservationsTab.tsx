@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { cancelAdminReservation, listAdminReservationsPage } from "../../../services/admin";
 import { listVenues } from "../../../services/venue";
+import { listPackages } from "../../../services/salonRules";
 import {
     ActiveFilterChips,
     DateField,
@@ -16,17 +17,17 @@ import { useListParams } from "../../../hooks/useListParams";
 import { usePaginatedQuery } from "../../../hooks/usePaginatedQuery";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
 import { isAbortError } from "../../../utils/errors";
-import { PLAN_LABELS } from "../../../utils/reservationFormat";
+import { packageLabel } from "../../../utils/reservationFormat";
+import { refundEstimate } from "../../../utils/cancellationPolicy";
 import type { Reservation } from "../../../types";
 import {
     formatCurrency,
     formatDateTime,
-    getRefundPercentage,
     STATUS_LABELS,
 } from "./constants";
 import {
+    ALL_PACKAGES_OPTION,
     describeReservationChip,
-    PLAN_OPTIONS,
     RESERVATION_FILTER_DEFAULTS,
     RESERVATION_FILTER_KEYS,
     RESERVATION_NON_FILTER_KEYS,
@@ -45,6 +46,8 @@ interface CancelModal {
     daysBeforeEvent?: number;
     refundPct?: number;
     refundAmount?: number;
+    /** Frases da política gravada na reserva (#46). */
+    policy?: string[];
 }
 
 export const ADMIN_RESERVATIONS_PAGE_SIZE = 15;
@@ -53,6 +56,7 @@ export function ReservationsTab() {
     const [cancellingId, setCancellingId] = useState<string | null>(null);
     const [cancelModal, setCancelModal] = useState<CancelModal | null>(null);
     const [venueOptions, setVenueOptions] = useState([{ value: "", label: "Todos os espaços" }]);
+    const [packageOptions, setPackageOptions] = useState([ALL_PACKAGES_OPTION]);
     const topRef = useRef<HTMLDivElement | null>(null);
 
     const list = useListParams<ReservationFilterKey>(RESERVATION_FILTER_KEYS, {
@@ -82,18 +86,26 @@ export function ReservationsTab() {
         return () => controller.abort();
     }, []);
 
-    const chips = activeKeys.map((key) => ({ key, label: describeReservationChip(key, values, venueOptions) }));
+    useEffect(() => {
+        const controller = new AbortController();
+        listPackages(controller.signal)
+            .then((packages) => setPackageOptions([ALL_PACKAGES_OPTION, ...packages.map((p) => ({ value: p.id, label: p.name }))]))
+            // sem a lista o filtro fica só com "Todos os pacotes"
+            .catch((error) => {
+                if (!isAbortError(error)) toast.error(getErrorMessage(error, "Erro ao carregar os pacotes."));
+            });
+        return () => controller.abort();
+    }, []);
+
+    const chips = activeKeys.map((key) => ({ key, label: describeReservationChip(key, values, venueOptions, packageOptions) }));
     const hasFilters = activeKeys.length > 0;
 
     function handleCancelClick(r: Reservation) {
         if (r.status === "PENDING") {
             setCancelModal({ id: r.id, status: r.status, startDate: r.startDate, totalPrice: r.totalPrice });
         } else {
-            const msPerDay = 1000 * 60 * 60 * 24;
-            const daysBeforeEvent = Math.max(0, Math.floor((new Date(r.startDate).getTime() - Date.now()) / msPerDay));
-            const refundPct = getRefundPercentage(daysBeforeEvent);
-            const refundAmount = (Number(r.totalPrice) * refundPct) / 100;
-            setCancelModal({ id: r.id, status: r.status, startDate: r.startDate, totalPrice: r.totalPrice, daysBeforeEvent, refundPct, refundAmount });
+            const { daysBeforeEvent, percentage: refundPct, refundAmount } = refundEstimate(Number(r.totalPrice), r.cancellationPolicy?.tiers ?? [], r.startDate);
+            setCancelModal({ id: r.id, status: r.status, startDate: r.startDate, totalPrice: r.totalPrice, daysBeforeEvent, refundPct, refundAmount, policy: r.cancellationPolicy?.summary });
         }
     }
 
@@ -157,10 +169,10 @@ export function ReservationsTab() {
                     options={venueOptions}
                 />
                 <SelectField
-                    label="Plano"
-                    value={values.planCode}
-                    onChange={(v) => setFilter("planCode", v)}
-                    options={PLAN_OPTIONS}
+                    label="Pacote"
+                    value={values.packageId}
+                    onChange={(v) => setFilter("packageId", v)}
+                    options={packageOptions}
                 />
                 <DateField
                     label="Evento a partir de"
@@ -209,7 +221,7 @@ export function ReservationsTab() {
                                     <S.Th>Espaço</S.Th>
                                     <S.Th>Início</S.Th>
                                     <S.Th>Fim</S.Th>
-                                    <S.Th>Plano</S.Th>
+                                    <S.Th>Pacote</S.Th>
                                     <S.Th $num>Valor</S.Th>
                                     <S.Th>Status</S.Th>
                                     <S.Th><S.VisuallyHidden>Ação</S.VisuallyHidden></S.Th>
@@ -222,7 +234,7 @@ export function ReservationsTab() {
                                         <S.Td>{r.venue?.name ?? r.venueId}</S.Td>
                                         <S.Td>{formatDateTime(r.startDate)}</S.Td>
                                         <S.Td>{formatDateTime(r.endDate)}</S.Td>
-                                        <S.Td>{r.planCode ? (PLAN_LABELS[r.planCode] ?? r.planCode) : "—"}</S.Td>
+                                        <S.Td>{packageLabel(r)}</S.Td>
                                         <S.Td $num>{formatCurrency(r.totalPrice ?? 0)}</S.Td>
                                         <S.Td>
                                             <S.StatusBadge $status={r.status}>
@@ -270,7 +282,10 @@ export function ReservationsTab() {
 
                         {cancelModal.status === "PAID" ? (
                             <>
-                                <S.ModalText>Esta reserva já foi <strong>paga</strong>. O reembolso segue a política de cancelamento:</S.ModalText>
+                                <S.ModalText>Esta reserva já foi <strong>paga</strong>. O reembolso segue a política gravada nela:</S.ModalText>
+                                {cancelModal.policy && cancelModal.policy.length > 0 && (
+                                    <S.ModalNote as="ul">{cancelModal.policy.map((line) => <li key={line}>{line}</li>)}</S.ModalNote>
+                                )}
                                 <S.RefundSummary>
                                     <div>
                                         <dt>Dias até o evento</dt>

@@ -7,7 +7,7 @@ import { getErrorMessage } from "../../../utils/getErrorMessage";
 import * as S from "../styles";
 
 interface ContractSectionProps {
-    /** Mesmo corpo do orçamento; nulo enquanto faltam data, horário ou pacote. */
+    /** Mesmo corpo do orçamento; nulo enquanto faltam data, pacote, horário ou convidados. */
     payload: QuotePayload | null;
     acceptedContract: boolean;
     onAcceptedChange: (value: boolean) => void;
@@ -51,7 +51,7 @@ export function ContractSection({ payload, acceptedContract, onAcceptedChange }:
                 </S.ContractDownloadWrapper>
             ) : (
                 <S.ContractDescription style={{ fontStyle: "italic" }}>
-                    Escolha a data, o horário e o pacote para gerar o contrato.
+                    Escolha a data, o pacote, o horário e os convidados para gerar o contrato.
                 </S.ContractDescription>
             )}
 

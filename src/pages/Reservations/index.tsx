@@ -9,8 +9,9 @@ import { usePaginatedQuery } from "../../hooks/usePaginatedQuery";
 import { useListParams } from "../../hooks/useListParams";
 import { NoResults, Pagination, SelectField } from "../../components";
 import { getErrorMessage } from "../../utils/getErrorMessage";
-import { PLAN_LABELS, formatDate, formatTime, formatCurrency, calcDuration } from "../../utils/reservationFormat";
-import { STATUS_MAP, REFUND_TIERS, getRefundPercentage } from "../../constants/reservation";
+import { packageLabel, formatDate, formatTime, formatCurrency, calcDuration } from "../../utils/reservationFormat";
+import { describeTiers, refundEstimate } from "../../utils/cancellationPolicy";
+import { STATUS_MAP } from "../../constants/reservation";
 import { animateFadeInUp } from "../../utils/animations";
 import type { Reservation } from "../../types";
 import * as S from "./styles";
@@ -32,18 +33,23 @@ import * as S from "./styles";
  * @component
  */
 
+/** Reembolso de uma reserva paga pela política gravada nela (#46); nulo se não foi paga. */
 function calcRefundEstimate(reservation: Reservation) {
     if (reservation.status !== "PAID") return null;
-
     const totalPaid = Number(reservation.payment?.amount ?? reservation.totalPrice ?? 0);
-    const now = new Date();
-    const startDate = new Date(reservation.startDate);
-    const msPerDay = 1000 * 60 * 60 * 24;
-    const daysBeforeEvent = Math.max(0, Math.floor((startDate.getTime() - now.getTime()) / msPerDay));
-    const percentage = getRefundPercentage(daysBeforeEvent);
-    const refundAmount = Number((totalPaid * percentage / 100).toFixed(2));
+    return refundEstimate(totalPaid, reservation.cancellationPolicy?.tiers ?? [], reservation.startDate);
+}
 
-    return { daysBeforeEvent, percentage, refundAmount, totalPaid };
+/** Faixas da política da reserva em duas partes ("Com 30 dias ou mais de antecedência" / "100% de reembolso"). */
+function policyRows(reservation: Reservation): { when: string; refund: string }[] {
+    const policy = reservation.cancellationPolicy;
+    if (!policy) return [];
+    const lines = policy.summary?.length ? policy.summary : describeTiers(policy.tiers);
+    return lines.map((line) => {
+        const cut = line.lastIndexOf(": ");
+        const refund = cut >= 0 ? line.slice(cut + 2) : "";
+        return { when: cut >= 0 ? line.slice(0, cut) : line, refund: refund.charAt(0).toUpperCase() + refund.slice(1) };
+    });
 }
 
 const PAGE_SIZE = 10;
@@ -159,19 +165,22 @@ export default function Reservations() {
                     >
                         <S.ModalTitle id="modal-cancel-title">Cancelar reserva</S.ModalTitle>
 
-                        <S.PolicySection>
-                            <S.PolicyTitle>Política de reembolso</S.PolicyTitle>
-                            <S.PolicyList>
-                                {REFUND_TIERS.map((tier) => (
-                                    <S.PolicyTier key={tier.percentage} $highlighted={refundEstimate?.percentage === tier.percentage}>
-                                        <span>{tier.label}</span>
-                                        <strong>
-                                            {tier.percentage === 0 ? "Sem reembolso" : `${tier.percentage}% de reembolso`}
-                                        </strong>
-                                    </S.PolicyTier>
-                                ))}
-                            </S.PolicyList>
-                        </S.PolicySection>
+                        {policyRows(confirmCancelReservation).length > 0 && (
+                            <S.PolicySection>
+                                <S.PolicyTitle>Política de reembolso desta reserva</S.PolicyTitle>
+                                <S.PolicyList>
+                                    {policyRows(confirmCancelReservation).map((row, i) => (
+                                        <S.PolicyTier key={row.when} $highlighted={refundEstimate?.tierIndex === i}>
+                                            <span>{row.when}</span>
+                                            <strong>{row.refund}</strong>
+                                        </S.PolicyTier>
+                                    ))}
+                                </S.PolicyList>
+                                {confirmCancelReservation.cancellationPolicy?.notes && (
+                                    <S.ModalBody>{confirmCancelReservation.cancellationPolicy.notes}</S.ModalBody>
+                                )}
+                            </S.PolicySection>
+                        )}
 
                         {refundEstimate ? (
                             <S.RefundCard>
@@ -275,10 +284,8 @@ export default function Reservations() {
 
                             <S.CardBody>
                                 <div>
-                                    <span>Plano</span>
-                                    <strong>
-                                        {reservation.planCode ? (PLAN_LABELS[reservation.planCode] || reservation.planCode) : "—"}
-                                    </strong>
+                                    <span>Pacote</span>
+                                    <strong>{packageLabel(reservation)}</strong>
                                 </div>
 
                                 <div>

@@ -6,7 +6,7 @@ import type { ItemChargeType, ItemTemplate, SalonItem } from "../../../types";
 import { isAbortError } from "../../../utils/errors";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
 import * as A from "../styles";
-import { CHARGE_LABELS, describePrice } from "./format";
+import { CHARGE_LABELS, describePrice } from "../../../utils/packageFormat";
 import * as S from "./styles";
 
 interface Draft {

@@ -13,8 +13,6 @@ export type ReferralStatus = "PENDING" | "CONVERTED" | "REWARDED";
 export type CampaignType = "REFERRAL_NEXT_BOOKING" | "LOYALTY_ALWAYS_HERE" | "RAFFLE_VIP";
 export type PromotionStatusValue = "active" | "scheduled" | "ended" | "disabled" | "not_configured";
 export type Theme = "light" | "dark";
-export type PlanCode = "PROMOCIONAL" | "ESSENCIAL" | "COMPLETA";
-
 // ─── Domínio ─────────────────────────────────────────────────────────────────
 
 export interface User {
@@ -75,7 +73,14 @@ export interface Reservation {
   /** Salão da reserva: o cliente tem uma conta só e reserva em vários salões. */
   tenant?: TenantRef | null;
   status: ReservationStatus;
-  planCode?: PlanCode;
+  /** Código do pacote (reservas antigas); o nome contratado está em `packageSnapshot`. */
+  planCode?: string | null;
+  packageId?: string | null;
+  /** Cópia do pacote contratado (#42): mudar o pacote depois não altera a reserva. */
+  packageSnapshot?: { name?: string; description?: string | null } | null;
+  guestCount?: number | null;
+  /** Política que vale para esta reserva (a gravada ou o padrão), com as frases (#46). */
+  cancellationPolicy?: ReservationPolicy;
   startDate: string;
   endDate: string;
   totalPrice: number;
@@ -85,25 +90,6 @@ export interface Reservation {
   kidsMonitorExtraHours?: number;
   createdAt?: string;
   updatedAt?: string;
-}
-
-export interface ReservationPlan {
-  id: string;
-  venueId: string;
-  /** Presente em respostas expandidas do admin */
-  venue?: Pick<Venue, "id" | "name"> | null;
-  code: PlanCode;
-  name: string;
-  currency: string;
-  basePriceAmount: string;
-  validWeekdays: number[];
-  validOnHolidays: boolean;
-  partyDurationHours: number;
-  endsAtHour: number;
-  keyDeliveryOffsetHours: number;
-  includedKidsMonitorHours: number;
-  includesPool: boolean;
-  includesCleaning: boolean;
 }
 
 export interface Campaign {
@@ -337,10 +323,12 @@ export interface ListParams {
 
 export interface QuotePayload {
   venueId: string;
-  planCode: PlanCode;
+  packageId: string;
+  guestCount: number;
+  /** Adicionais escolhidos; em item por hora, `quantity` é o total de horas (contando as inclusas). */
+  items?: { itemId: string; quantity?: number }[];
   startDate: string;
   endDate: string;
-  kidsMonitorExtraHours?: number;
 }
 
 export interface CreateReservationPayload extends QuotePayload {
@@ -348,14 +336,82 @@ export interface CreateReservationPayload extends QuotePayload {
   notes?: string;
 }
 
+/** Política de cancelamento como a API devolve: faixas da maior antecedência para a menor e as frases. */
+export interface ReservationPolicy {
+  tiers: RefundTier[];
+  notes?: string | null;
+  summary: string[];
+}
+
+export interface QuoteLine {
+  type: "PLAN_BASE" | "INCLUDED_ITEM" | "EXTRA_ITEM" | string;
+  description: string;
+  quantity: number;
+  unitAmountCents: number;
+  totalAmountCents: number;
+}
+
 export interface QuoteResult {
-  totalCents: number;
+  currency: string;
+  packageId: string | null;
+  packageName: string | null;
+  guestCount: number | null;
+  items: QuoteLine[];
+  cancellationPolicy: ReservationPolicy;
   subtotalCents: number;
   discountCents: number;
-  discountApplied: boolean;
-  items: Array<{ description: string; amountCents: number }>;
-  planCode: PlanCode;
-  currency: string;
+  totalCents: number;
+  discountApplied: { percentOff: number; campaignName: string } | null;
+}
+
+/** Item do pacote como a vitrine recebe (GET /venues/:id/packages). */
+export interface VenuePackageItem {
+  itemId: string;
+  key: string | null;
+  name: string;
+  description: string | null;
+  chargeType: ItemChargeType;
+  unitPrice: string;
+  minQuantity: number | null;
+  maxQuantity: number | null;
+  mode: PackageItemMode;
+  includedQuantity: number | null;
+}
+
+/** Pacote ativo do espaço; `availableOnDate` vem quando a consulta tem data. */
+export interface VenuePackage {
+  id: string;
+  code: string | null;
+  name: string;
+  description: string | null;
+  basePriceAmount: string;
+  validWeekdays: number[] | null;
+  validOnHolidays: boolean;
+  earliestStartMinute: number | null;
+  latestEndMinute: number | null;
+  minDurationMinutes: number | null;
+  maxDurationMinutes: number | null;
+  minGuests: number | null;
+  maxGuests: number | null;
+  items: VenuePackageItem[];
+  availableOnDate?: boolean;
+}
+
+export interface VenuePackages {
+  date: string | null;
+  /** O dia é feriado (nacional ou do salão); nulo sem data. */
+  holiday: boolean | null;
+  packages: VenuePackage[];
+}
+
+/** O que o cliente precisa do salão para reservar (GET /tenant). */
+export interface PublicTenant {
+  slug: string;
+  name: string;
+  timezone: string;
+  minLeadHours: number | null;
+  maxAdvanceDays: number | null;
+  cancellationPolicy: ReservationPolicy;
 }
 
 export interface PixChargeResult {

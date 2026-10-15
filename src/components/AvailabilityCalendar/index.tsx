@@ -36,8 +36,16 @@ function isDateInRange(dateStr: string, ranges: Array<{ startDate: string; endDa
  * @param {string | null} props.selectedDate - Data selecionada no formato `YYYY-MM-DD`
  * @param {(date: string) => void} props.onChange - Callback chamado ao selecionar um dia disponível
  * @param {string} [props.minDate] - Data mínima selecionável em `YYYY-MM-DD`; padrão: hoje
+ * @param {string} [props.maxDate] - Data máxima selecionável (horizonte de reservas do salão)
  */
-export default function AvailabilityCalendar({ venueId, selectedDate, onChange, minDate }: { venueId: string; selectedDate?: string; onChange: (date: string) => void; minDate?: string }) {
+/** "sábado, 19 de junho de 2027, já reservada" — o leitor de tela ouve a data e se dá para escolher. */
+function dayLabel(dateStr: string, cell: { isBlocked?: boolean; isOccupied?: boolean; isPast?: boolean }): string {
+    const date = new Date(`${dateStr}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    const status = cell.isBlocked ? ", bloqueada" : cell.isOccupied ? ", já reservada" : cell.isPast ? ", indisponível" : "";
+    return `${date}${status}`;
+}
+
+export default function AvailabilityCalendar({ venueId, selectedDate, onChange, minDate, maxDate }: { venueId: string; selectedDate?: string; onChange: (date: string) => void; minDate?: string; maxDate?: string }) {
     const today = toLocalDateString(new Date());
     const effectiveMin = minDate || today;
 
@@ -97,6 +105,8 @@ export default function AvailabilityCalendar({ venueId, selectedDate, onChange, 
     const isPrevDisabled = year < now.getFullYear() ||
         (year === now.getFullYear() && month <= now.getMonth());
 
+    const isNextDisabled = maxDate != null && `${year}-${String(month + 1).padStart(2, "0")}` >= maxDate.slice(0, 7);
+
     const monthLabel = new Date(year, month, 1).toLocaleDateString("pt-BR", {
         month: "long",
         year: "numeric",
@@ -111,7 +121,8 @@ export default function AvailabilityCalendar({ venueId, selectedDate, onChange, 
     }
     for (let d = 1; d <= daysInMonth; d++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-        const isPast = dateStr < effectiveMin;
+        // Antes do mínimo (antecedência) ou depois do horizonte do salão: não selecionável.
+        const isPast = dateStr < effectiveMin || (maxDate != null && dateStr > maxDate);
         const isBlocked = !isPast && isDateInRange(dateStr, blockedRanges);
         const isOccupied = !isPast && !isBlocked && isDateInRange(dateStr, occupiedRanges);
         const isSelected = dateStr === selectedDate;
@@ -134,7 +145,7 @@ export default function AvailabilityCalendar({ venueId, selectedDate, onChange, 
                     <S.NavButton type="button" onClick={prevMonth} disabled={isPrevDisabled} aria-label="Mês anterior">
                         &#8249;
                     </S.NavButton>
-                    <S.NavButton type="button" onClick={nextMonth} aria-label="Próximo mês">
+                    <S.NavButton type="button" onClick={nextMonth} disabled={isNextDisabled} aria-label="Próximo mês">
                         &#8250;
                     </S.NavButton>
                 </S.NavGroup>
@@ -163,6 +174,9 @@ export default function AvailabilityCalendar({ venueId, selectedDate, onChange, 
                                 $selected={cell.isSelected}
                                 $available={cell.isAvailable && !cell.isSelected}
                                 onClick={() => handleDayClick(cell)}
+                                disabled={!cell.isAvailable && !cell.isSelected}
+                                aria-pressed={cell.isSelected}
+                                aria-label={dayLabel(cell.dateStr!, cell)}
                                 title={
                                     cell.isBlocked ? "Data bloqueada" :
                                     cell.isOccupied ? "Data já reservada" :
