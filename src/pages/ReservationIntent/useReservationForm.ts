@@ -52,7 +52,7 @@ function dayFromToday(days: number): string {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-/** Primeiro e último dia que o salão aceita (#45: antecedência mínima e horizonte). */
+/** Primeiro e último dia que o salão aceita (antecedência mínima e horizonte). */
 export function bookingDateRange(tenant: PublicTenant | null): { min: string; max?: string } {
     const leadDays = tenant?.minLeadHours ? Math.ceil(tenant.minLeadHours / 24) : 0;
     return {
@@ -85,7 +85,7 @@ function itemsPayload(pkg: VenuePackage, addons: Record<string, AddonChoice>): Q
 }
 
 /**
- * Estado da reserva (web#37): pacotes do espaço vindos da API, data, horário, convidados, adicionais e o
+ * Estado da reserva: pacotes do espaço vindos da API, data, horário, convidados, adicionais e o
  * orçamento. Nenhum valor é calculado aqui: o total e as linhas são os do `POST /reservations/quote`, e as
  * regras (dias, horário, convidados, antecedência) quem confere é a API, com a mensagem do problema.
  */

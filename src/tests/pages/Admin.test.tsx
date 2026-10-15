@@ -35,7 +35,7 @@ describe("Admin - Dashboard tab", () => {
         expect(screen.getAllByText("Receita").length).toBeGreaterThan(0);
     });
 
-    it("breaks the revenue down by the payment methods the salon registered (#48)", async () => {
+    it("breaks the revenue down by the payment methods the salon registered", async () => {
         server.use(
             http.get(`${BASE}/admin/reservations/summary`, () =>
                 HttpResponse.json({

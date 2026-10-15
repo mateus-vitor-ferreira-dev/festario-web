@@ -24,7 +24,7 @@ function formatEventDate(value: string): string {
 }
 
 /**
- * Coluna direita: o que foi escolhido e o orçamento itemizado da API (web#37). Nenhum valor é somado
+ * Coluna direita: o que foi escolhido e o orçamento itemizado da API. Nenhum valor é somado
  * aqui; quando a API recusa (horário fora do pacote, convidados demais, antecedência), mostra o motivo.
  */
 export function ReservationSummary({

@@ -37,7 +37,7 @@ api.interceptors.request.use((config) => {
         config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Uma chamada pode fixar o próprio salão (ex.: cancelar a reserva de outro salão, #35).
+    // Uma chamada pode fixar o próprio salão (ex.: cancelar a reserva de outro salão).
     const tenantSlug = readTenant()?.slug;
     if (tenantSlug && !config.headers["X-Tenant-Slug"]) {
         config.headers["X-Tenant-Slug"] = tenantSlug;

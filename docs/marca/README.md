@@ -1,6 +1,6 @@
 # Festário — guia da marca
 
-Nome escolhido na [api#31](https://github.com/mateus-vitor-ferreira-dev/recanto-vila-rica-api/issues/31). **Festário** junta *festa* ao sufixo de *calendário*, *diário* e *horário*: é a agenda das festas. Domínios livres na escolha (14/10/2026): `festario.com.br` e `festario.app`. O `festario.com` já estava registrado.
+**Festário** junta *festa* ao sufixo de *calendário*, *diário* e *horário*: é a agenda das festas. Domínios livres na escolha (14/10/2026): `festario.com.br` e `festario.app`. O `festario.com` já estava registrado.
 
 ## O símbolo
 Um calendário cujo topo é um **varal de bandeirinhas** de festa junina, com o **check** da data confirmada. A festa brasileira e a reserva garantida aparecem na mesma forma.

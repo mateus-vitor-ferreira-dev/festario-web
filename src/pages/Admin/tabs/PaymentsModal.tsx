@@ -34,7 +34,7 @@ function suggested(kind: PaymentEntryKind, p: ReservationPayment): string {
 }
 
 /**
- * Pagamentos da reserva (#48), no painel do dono: quanto entrou, quanto falta, o histórico e o registro de
+ * Pagamentos da reserva, no painel do dono: quanto entrou, quanto falta, o histórico e o registro de
  * um pagamento recebido ou de uma devolução. Ao chegar no sinal (ou no total), a reserva é confirmada e o
  * cliente recebe o aviso.
  */

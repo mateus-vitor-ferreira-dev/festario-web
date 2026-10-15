@@ -1,6 +1,6 @@
 /**
  * @module services/contract
- * @description Contrato de locação montado pela API com os dados do salão (#47).
+ * @description Contrato de locação montado pela API com os dados do salão.
  */
 import api from "./api";
 import { tenantHeaderFor } from "../config/tenantStorage";

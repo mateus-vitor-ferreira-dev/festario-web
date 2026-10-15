@@ -20,7 +20,7 @@ import * as S from "./styles";
  * Página que lista as reservas do usuário autenticado com paginação.
  *
  * Exibe status (PENDING/PAID/CANCELLED/EXPIRED), datas, duração e valor.
- * O pagamento é combinado com o salão (#48): "Como pagar" leva a `/checkout/:reservationId`, com o
+ * O pagamento é combinado com o salão: "Como pagar" leva a `/checkout/:reservationId`, com o
  * valor, o prazo e os contatos do salão.
  * Reservas PENDING ou PAID podem ser canceladas com confirmação inline.
  *
@@ -35,7 +35,7 @@ import * as S from "./styles";
  */
 
 /**
- * Devolução pela política gravada na reserva (#46), sobre o que o salão já recebeu (#48: pode ser só o
+ * Devolução pela política gravada na reserva, sobre o que o salão já recebeu (pode ser só o
  * sinal). Nula quando nada foi recebido.
  */
 function calcRefundEstimate(reservation: Reservation) {
@@ -85,7 +85,7 @@ export default function Reservations() {
     const [cancellingId, setCancellingId] = useState<string | null>(null);
     const [contractId, setContractId] = useState<string | null>(null);
 
-    /** Contrato aceito da reserva (#47), gerado em PDF no navegador. */
+    /** Contrato aceito da reserva, gerado em PDF no navegador. */
     async function handleDownloadContract(reservation: Reservation) {
         try {
             setContractId(reservation.id);

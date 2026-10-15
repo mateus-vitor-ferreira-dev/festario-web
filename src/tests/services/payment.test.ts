@@ -5,7 +5,7 @@ import { server } from "../mocks/server";
 
 const BASE = "http://localhost:3000";
 
-describe("payment service (pagamento combinado com o salão, #48)", () => {
+describe("payment service (pagamento combinado com o salão)", () => {
     it("getReservationPayment sends the reservation's salon and returns data.data", async () => {
         let tenant: string | null = null;
         server.use(http.get(`${BASE}/payments/reservation/res-1`, ({ request }) => {

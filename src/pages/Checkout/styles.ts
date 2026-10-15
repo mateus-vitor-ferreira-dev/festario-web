@@ -248,7 +248,7 @@ export const CancelLink = styled.button`
   }
 `;
 
-/* ─── Pagamento combinado com o salão (#48) ─── */
+/* ─── Pagamento combinado com o salão ─── */
 
 export const Column = styled.div`
   display: flex;

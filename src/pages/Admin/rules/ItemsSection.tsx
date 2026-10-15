@@ -89,7 +89,7 @@ function draftError(d: Draft, needName: boolean): string | null {
 }
 
 /**
- * Itens e adicionais do salão (#44): os prontos da plataforma (ligar, preço, limites) e os próprios.
+ * Itens e adicionais do salão: os prontos da plataforma (ligar, preço, limites) e os próprios.
  * Em cada pacote, o item vira incluso ou adicional.
  */
 export function ItemsSection() {

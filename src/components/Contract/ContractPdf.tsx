@@ -11,7 +11,7 @@ import { BRAND_NAME } from "../../config/brand";
 import type { ContractDocument } from "../../types";
 
 /**
- * Contrato de locação em PDF (#47), desenhado a partir do documento que a API monta com os dados do
+ * Contrato de locação em PDF, desenhado a partir do documento que a API monta com os dados do
  * salão. Nada aqui é de um salão específico. Fontes do design system (Alegreya + Alegreya Sans) em TTF,
  * empacotadas localmente: o PDF não depende da rede, e o react-pdf erra os acentos com WOFF.
  */

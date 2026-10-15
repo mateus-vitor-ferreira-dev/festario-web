@@ -52,7 +52,7 @@ function headline(p: ReservationPayment): { title: string; text: string; tone: "
 }
 
 /**
- * Pagamento da reserva (#48). Não há cobrança online: o cliente paga direto ao salão, que registra o que
+ * Pagamento da reserva. Não há cobrança online: o cliente paga direto ao salão, que registra o que
  * recebeu. A tela mostra quanto confirma a reserva (o sinal ou o total), o prazo, como pagar (o texto do
  * salão e os contatos) e os pagamentos já registrados.
  *

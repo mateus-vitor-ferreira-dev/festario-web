@@ -48,7 +48,7 @@ beforeEach(() => {
     vi.restoreAllMocks();
 });
 
-describe("Painel → Reservas → Pagamentos (#48)", () => {
+describe("Painel → Reservas → Pagamentos", () => {
     it("registra o sinal sugerido e avisa que a reserva foi confirmada", async () => {
         listWith(reservation());
         let body: Record<string, unknown> | null = null;

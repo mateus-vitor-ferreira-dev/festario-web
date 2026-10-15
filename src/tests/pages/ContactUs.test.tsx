@@ -20,7 +20,7 @@ function renderPage() {
 }
 
 describe("ContactUs page", () => {
-    it("mostra o nome do salão no título (#47)", async () => {
+    it("mostra o nome do salão no título", async () => {
         renderPage();
         expect(await screen.findByRole("heading", { name: "Fale com Salão Lagoa" })).toBeInTheDocument();
     });

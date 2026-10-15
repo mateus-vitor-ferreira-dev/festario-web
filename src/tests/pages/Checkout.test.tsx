@@ -51,7 +51,7 @@ function renderPage() {
     );
 }
 
-describe("Pagamento da reserva (combinado com o salão, #48)", () => {
+describe("Pagamento da reserva (combinado com o salão)", () => {
     it("pendente: quanto confirma, prazo, como pagar e o WhatsApp com a mensagem pronta", async () => {
         mock(reservation, payment());
         renderPage();

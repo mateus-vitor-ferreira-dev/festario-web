@@ -1,6 +1,6 @@
 /**
  * @module services/payment
- * @description Pagamento combinado com o salão (#48). Não há cobrança online: o cliente paga direto ao
+ * @description Pagamento combinado com o salão. Não há cobrança online: o cliente paga direto ao
  * salão (PIX, dinheiro, cartão na maquininha) e o dono registra o que recebeu no painel. A reserva é
  * confirmada quando o recebido chega ao sinal (ou ao total).
  */
