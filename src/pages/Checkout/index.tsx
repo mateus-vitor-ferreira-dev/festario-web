@@ -142,7 +142,7 @@ export default function Checkout() {
                 return;
             }
 
-            const session = await createCheckoutSession(reservationId!);
+            const session = await createCheckoutSession(reservationId!, reservation.tenant?.slug);
             window.location.href = session.url;
         } catch (error) {
             const status = getHttpStatus(error);

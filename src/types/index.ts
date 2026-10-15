@@ -72,6 +72,8 @@ export interface Reservation {
   venue?: Pick<Venue, "id" | "name" | "location">;
   /** Presente em respostas do admin */
   user?: Pick<User, "id" | "name" | "email">;
+  /** Salão da reserva: o cliente tem uma conta só e reserva em vários salões. */
+  tenant?: TenantRef | null;
   status: ReservationStatus;
   planCode?: PlanCode;
   startDate: string;

@@ -23,6 +23,9 @@ import * as S from "./styles";
  *
  * Filtro de status e página ficam na URL (`?status=PAID&page=2`).
  *
+ * O cliente tem uma conta só para todos os salões: cada card mostra o salão da reserva,
+ * e cancelar/pagar vai para o salão dela (`X-Tenant-Slug` do item).
+ *
  * @see GET /reservations?page=&limit=&status=
  * @see PATCH /reservations/:id/cancel
  * @component
@@ -84,7 +87,7 @@ export default function Reservations() {
         if (!reservation) return;
         try {
             setCancellingId(reservation.id);
-            await cancelReservation(reservation.id);
+            await cancelReservation(reservation.id, reservation.tenant?.slug);
             toast.success("Reserva cancelada com sucesso.");
             refresh();
         } catch (error) {
@@ -240,6 +243,7 @@ export default function Reservations() {
                             <S.CardHeader>
                                 <div>
                                     <strong>{reservation.venue?.name || "Salão"}</strong>
+                                    {reservation.tenant?.name && <S.SalonName>{reservation.tenant.name}</S.SalonName>}
                                     <span>
                                         {formatDate(reservation.startDate)} •{" "}
                                         {formatTime(reservation.startDate)}

@@ -100,6 +100,15 @@ export const CardHeader = styled.div`
   }
 `;
 
+/* Salão da reserva: o cliente reserva em vários salões com a mesma conta */
+export const SalonName = styled.small`
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+`;
+
 /* Linha quieta de fatos, divididos por hairlines */
 export const CardBody = styled.div`
   display: grid;
