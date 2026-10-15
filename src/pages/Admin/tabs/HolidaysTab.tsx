@@ -5,33 +5,33 @@ import {
     deleteHoliday,
     listHolidaysPage,
     syncHolidays,
-    syncMunicipalHolidays,
 } from "../../../services/admin";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
 import { useAuth } from "../../../contexts/AuthContext";
 import { DatePickerInput, Pagination, SelectField } from "../../../components";
 import { useListParams } from "../../../hooks/useListParams";
 import { usePaginatedQuery } from "../../../hooks/usePaginatedQuery";
-import { formatDate, getMunicipalHolidaysSeed, HOLIDAY_TYPE_OPTIONS } from "./constants";
 import type { Holiday } from "../../../types";
 import { ModalHeader } from "../ModalHeader";
 import * as S from "../styles";
 
-const HOLIDAY_TYPE_LABELS: Record<string, string> = Object.fromEntries(
-    HOLIDAY_TYPE_OPTIONS.map((o) => [o.value, o.label]),
-);
-
 export const HOLIDAYS_PAGE_SIZE = 20;
+
+/** Feriado é uma data sem hora (vem como meia-noite UTC): formatar no fuso local mostraria o dia anterior. */
+const formatDate = (date: string) => new Date(date).toLocaleDateString("pt-BR", { timeZone: "UTC" });
 
 const HOLIDAY_KEYS = ["year"] as const;
 
+type Scope = "salon" | "national";
+const EMPTY_FORM = { date: "", name: "", scope: "salon" as Scope };
+
 /**
- * Feriados são globais (afetam o preço de todos os espaços): só o ADMIN da
- * plataforma cria, sincroniza ou remove. O OWNER apenas consulta.
+ * Feriados que valem para o salão: os nacionais (mantidos pela plataforma, só o ADMIN cria e sincroniza)
+ * e os do próprio salão (municipais, padroeiro...), que o dono cria e remove. Pacotes podem valer ou não em feriado.
  */
 export function HolidaysTab() {
     const { user } = useAuth();
-    const canEdit = user?.role === "ADMIN";
+    const isPlatformAdmin = user?.role === "ADMIN";
     const currentYear = new Date().getFullYear();
     const topRef = useRef<HTMLDivElement | null>(null);
     const { values, page, setFilter, setPage } = useListParams(HOLIDAY_KEYS, {
@@ -41,10 +41,9 @@ export function HolidaysTab() {
     const parsedYear = Number.parseInt(values.year, 10);
     const year = Number.isFinite(parsedYear) ? parsedYear : currentYear;
     const [isSyncing, setIsSyncing] = useState(false);
-    const [isSyncingMunicipal, setIsSyncingMunicipal] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false);
-    const [form, setForm] = useState({ date: "", name: "", type: "national" });
+    const [form, setForm] = useState(EMPTY_FORM);
     const [isSaving, setIsSaving] = useState(false);
 
     const params = useMemo(() => ({ year, page, limit: HOLIDAYS_PAGE_SIZE }), [year, page]);
@@ -53,14 +52,16 @@ export function HolidaysTab() {
         params,
         { errorMessage: "Erro ao carregar feriados.", onPageOutOfRange: setPage },
     );
-    const load = refresh;
+
+    const scopeOf = (h: Holiday): Scope => h.scope ?? (h.type === "national" ? "national" : "salon");
+    const canDelete = (h: Holiday) => isPlatformAdmin || scopeOf(h) === "salon";
 
     async function handleSync() {
         try {
             setIsSyncing(true);
             const result = await syncHolidays(year);
             toast.success(`${result.synced} feriados nacionais sincronizados para ${year}.`);
-            load();
+            refresh();
         } catch (error) {
             toast.error(getErrorMessage(error, "Erro ao sincronizar feriados nacionais."));
         } finally {
@@ -68,24 +69,11 @@ export function HolidaysTab() {
         }
     }
 
-    async function handleSyncMunicipal() {
+    async function handleDelete(h: Holiday) {
+        if (!window.confirm(`Remover o feriado "${h.name}" (${formatDate(h.date)})?`)) return;
         try {
-            setIsSyncingMunicipal(true);
-            const seed = getMunicipalHolidaysSeed(year);
-            const result = await syncMunicipalHolidays(year, seed);
-            toast.success(`${result.synced} feriados municipais de Lavras sincronizados para ${year}.`);
-            load();
-        } catch (error) {
-            toast.error(getErrorMessage(error, "Erro ao sincronizar feriados municipais."));
-        } finally {
-            setIsSyncingMunicipal(false);
-        }
-    }
-
-    async function handleDelete(id: string) {
-        try {
-            setDeletingId(id);
-            await deleteHoliday(id);
+            setDeletingId(h.id);
+            await deleteHoliday(h.id);
             toast.success("Feriado removido.");
             refresh();
         } catch (error) {
@@ -99,11 +87,12 @@ export function HolidaysTab() {
         e.preventDefault();
         try {
             setIsSaving(true);
-            await createHoliday(form);
-            toast.success("Feriado criado com sucesso.");
+            const national = isPlatformAdmin && form.scope === "national";
+            await createHoliday({ date: form.date, name: form.name, ...(national ? { type: "national" } : {}) });
+            toast.success("Feriado criado.");
             setShowModal(false);
-            setForm({ date: "", name: "", type: "national" });
-            load();
+            setForm(EMPTY_FORM);
+            refresh();
         } catch (error) {
             toast.error(getErrorMessage(error, "Erro ao criar feriado."));
         } finally {
@@ -130,25 +119,21 @@ export function HolidaysTab() {
                             />
                         </S.YearField>
                     </S.InlineGroup>
-                    {canEdit && (
                     <S.SectionActions>
                         <S.PrimaryButton onClick={() => setShowModal(true)}>+ Novo feriado</S.PrimaryButton>
-                        <S.SecondaryButton onClick={handleSync} disabled={isSyncing}>
-                            {isSyncing ? "Sincronizando..." : "Sincronizar feriados nacionais"}
-                        </S.SecondaryButton>
-                        <S.SecondaryButton onClick={handleSyncMunicipal} disabled={isSyncingMunicipal}>
-                            {isSyncingMunicipal ? "Sincronizando..." : "Sincronizar feriados municipais"}
-                        </S.SecondaryButton>
+                        {isPlatformAdmin && (
+                            <S.SecondaryButton onClick={handleSync} disabled={isSyncing}>
+                                {isSyncing ? "Sincronizando..." : "Sincronizar feriados nacionais"}
+                            </S.SecondaryButton>
+                        )}
                     </S.SectionActions>
-                    )}
                 </S.SectionHeader>
             </S.ScrollAnchor>
 
-            {!canEdit && (
-                <S.ModalNote>
-                    Os feriados valem para todos os espaços e são mantidos pela equipe da plataforma. Se faltar algum, fale com o suporte.
-                </S.ModalNote>
-            )}
+            <S.ModalNote>
+                Os feriados nacionais já vêm cadastrados pela plataforma. Adicione os da sua cidade (aniversário, padroeiro) e
+                outras datas que o salão trata como feriado: os pacotes marcados para feriado passam a valer nelas.
+            </S.ModalNote>
 
             {isLoading ? (
                 <S.LoadingSpinner />
@@ -156,9 +141,9 @@ export function HolidaysTab() {
                 <S.EmptyState>
                     <h3>Nenhum feriado cadastrado para {year}</h3>
                     <p>
-                        {canEdit
+                        {isPlatformAdmin
                             ? "Use “Sincronizar feriados nacionais” ou adicione um feriado manualmente."
-                            : "A equipe da plataforma ainda não cadastrou os feriados deste ano. Escolha outro ano ou fale com o suporte."}
+                            : "Os nacionais deste ano ainda não foram cadastrados pela plataforma. Use “Novo feriado” para adicionar os da sua cidade."}
                     </p>
                 </S.EmptyState>
             ) : (
@@ -171,9 +156,9 @@ export function HolidaysTab() {
                                     <span>{formatDate(h.date)}</span>
                                 </S.HolidayInfo>
                                 <S.InlineGroup>
-                                    {h.type && <S.HolidayType>{HOLIDAY_TYPE_LABELS[h.type] ?? h.type}</S.HolidayType>}
-                                    {canEdit && (
-                                        <S.DangerButton $size="sm" onClick={() => handleDelete(h.id)} disabled={deletingId === h.id}>
+                                    <S.HolidayType>{scopeOf(h) === "national" ? "Nacional" : "Do salão"}</S.HolidayType>
+                                    {canDelete(h) && (
+                                        <S.DangerButton $size="sm" onClick={() => handleDelete(h)} disabled={deletingId === h.id} aria-label={`Remover ${h.name}`}>
                                             {deletingId === h.id ? "Removendo..." : "Remover"}
                                         </S.DangerButton>
                                     )}
@@ -198,14 +183,14 @@ export function HolidaysTab() {
                 </S.ListRegion>
             )}
 
-            {canEdit && showModal && (
+            {showModal && (
                 <S.ModalOverlay onClick={() => setShowModal(false)}>
                     <S.ModalBox onClick={(e) => e.stopPropagation()}>
                         <ModalHeader onClose={() => setShowModal(false)} disabled={isSaving}>Novo feriado</ModalHeader>
                         <S.Form onSubmit={handleCreate}>
                             <S.FormGroup>
-                                <label>Nome</label>
-                                <S.TextInput required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Ex: Consciência Negra" />
+                                <label htmlFor="holiday-name">Nome</label>
+                                <S.TextInput id="holiday-name" required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Ex.: Aniversário da cidade" />
                             </S.FormGroup>
                             <S.FormGroup>
                                 <label>Data</label>
@@ -214,12 +199,15 @@ export function HolidaysTab() {
                                     onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
                                 />
                             </S.FormGroup>
-                            <S.FormGroup>
-                                <label>Tipo</label>
-                                <S.Select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}>
-                                    {HOLIDAY_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                                </S.Select>
-                            </S.FormGroup>
+                            {isPlatformAdmin && (
+                                <S.FormGroup>
+                                    <label htmlFor="holiday-scope">Vale para</label>
+                                    <S.Select id="holiday-scope" value={form.scope} onChange={(e) => setForm((f) => ({ ...f, scope: e.target.value as Scope }))}>
+                                        <option value="salon">Só este salão</option>
+                                        <option value="national">Todos os salões (nacional)</option>
+                                    </S.Select>
+                                </S.FormGroup>
+                            )}
                             <S.ModalActions>
                                 <S.SecondaryButton type="button" onClick={() => setShowModal(false)} disabled={isSaving}>Cancelar</S.SecondaryButton>
                                 <S.PrimaryButton type="submit" disabled={isSaving}>{isSaving ? "Criando..." : "Criar feriado"}</S.PrimaryButton>

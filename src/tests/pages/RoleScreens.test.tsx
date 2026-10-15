@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
@@ -52,20 +52,39 @@ describe("Painel do espaço", () => {
         expect(screen.queryByText(/como equipe da plataforma/i)).not.toBeInTheDocument();
     });
 
-    it("hides holiday write actions for OWNER", async () => {
+    it("lets OWNER manage the salon holidays but not the national ones", async () => {
         setSession("OWNER");
         server.use(http.get(`${BASE}/admin/holidays`, () => HttpResponse.json({
-            data: [{ id: "h1", date: "2026-11-15", name: "Proclamação da República", type: "national" }],
-            pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+            data: [
+                { id: "h1", date: "2026-11-15", name: "Proclamação da República", type: "national", scope: "national" },
+                { id: "h2", date: "2026-09-08", name: "Aniversário da cidade", type: "municipal", scope: "salon" },
+            ],
+            pagination: { page: 1, limit: 20, total: 2, totalPages: 1 },
         })));
-        const user = userEvent.setup();
         renderAt("/painel?tab=holidays");
         expect(await screen.findByText("Proclamação da República")).toBeInTheDocument();
-        expect(screen.getByText(/são mantidos pela equipe da plataforma/i)).toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: /novo feriado/i })).not.toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /novo feriado/i })).toBeInTheDocument();
         expect(screen.queryByRole("button", { name: /sincronizar feriados/i })).not.toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: /^remover$/i })).not.toBeInTheDocument();
-        await user.click(screen.getByRole("button", { name: /^dashboard$/i }));
+        expect(screen.queryByRole("button", { name: /remover proclamação/i })).not.toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /remover aniversário da cidade/i })).toBeInTheDocument();
+        expect(screen.getByText("Do salão")).toBeInTheDocument();
+    });
+
+    it("creates a salon holiday as OWNER without the national option", async () => {
+        setSession("OWNER");
+        let body: Record<string, unknown> | null = null;
+        server.use(http.post(`${BASE}/admin/holidays`, async ({ request }) => {
+            body = await request.json() as Record<string, unknown>;
+            return HttpResponse.json({ data: { id: "h9", ...body, type: "municipal", scope: "salon" } }, { status: 201 });
+        }));
+        const user = userEvent.setup();
+        renderAt("/painel?tab=holidays");
+        await user.click(await screen.findByRole("button", { name: /novo feriado/i }));
+        expect(screen.queryByLabelText(/vale para/i)).not.toBeInTheDocument();
+        await user.type(screen.getByLabelText("Nome"), "Padroeira");
+        fireEvent.change(document.querySelector('input[type="date"]')!, { target: { value: "2026-08-15" } });
+        await user.click(screen.getByRole("button", { name: /criar feriado/i }));
+        await waitFor(() => expect(body).toEqual({ name: "Padroeira", date: "2026-08-15" }));
     });
 
     it("keeps holiday write actions for ADMIN", async () => {
@@ -79,7 +98,7 @@ describe("Painel do espaço", () => {
         setSession("OWNER");
         server.use(http.get(`${BASE}/admin/holidays`, () => HttpResponse.json({ data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 1 } })));
         renderAt("/painel?tab=holidays");
-        expect(await screen.findByText(/ainda não cadastrou os feriados/i)).toBeInTheDocument();
+        expect(await screen.findByText(/adicionar os da sua cidade/i)).toBeInTheDocument();
     });
 
     it("offers only Cliente/Dono in the users role filter", async () => {
