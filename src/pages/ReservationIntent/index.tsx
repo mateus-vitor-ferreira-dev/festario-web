@@ -14,6 +14,7 @@ import { describeWindow, formatBRL, formatHours } from "../../utils/packageForma
 import type { Venue, VenuePackage } from "../../types";
 
 import { bookingDateRange, choosableItems, useReservationForm } from "./useReservationForm";
+import VenueGallery from "../../components/VenueGallery";
 import { AddonsSelector } from "./components/AddonsSelector";
 import { ContractSection } from "./components/ContractSection";
 import { PackageSelector } from "./components/PackageSelector";
@@ -135,7 +136,8 @@ export default function ReservationIntent() {
                 <S.Grid>
                     <S.LeftColumn>
                         <S.Card className="anim-card">
-                            <S.CardTitle>{venue.name}</S.CardTitle>
+                            <VenueGallery venueName={venue.name} photos={venue.photos ?? []} />
+                            <S.CardTitle style={{ marginTop: 16 }}>{venue.name}</S.CardTitle>
                             <S.CardDescription>
                                 {venue.description || "Salão principal para eventos e reservas"}
                             </S.CardDescription>

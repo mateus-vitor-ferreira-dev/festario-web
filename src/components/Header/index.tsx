@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useGSAP } from "@gsap/react";
 import { useAuth } from "../../contexts/AuthContext";
+import { useSalonBrand } from "../../contexts/SalonBrandContext";
+import SalonMark from "../SalonMark";
 import { useTheme } from "../../contexts/ThemeContext";
 import { resendVerification } from "../../services/auth";
 import { animateFadeInUp } from "../../utils/animations";
@@ -79,6 +81,9 @@ export default function Header() {
     const location = useLocation();
     const { theme, toggleTheme } = useTheme();
     const { user, logout: authLogout } = useAuth();
+    const { salon } = useSalonBrand();
+    // Na área da plataforma não há um salão em foco: só a marca do Festário.
+    const showSalon = Boolean(salon) && !location.pathname.startsWith(PLATFORM_PATH);
     const containerRef = useRef(null);
     const [resending, setResending] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
@@ -137,8 +142,16 @@ export default function Header() {
             )}
             <S.Content>
                 <S.BrandWrapper to="/home" title="Ir para o início">
-                    <S.Logo />
+                    <S.Logo $compact={showSalon} />
+                    {showSalon && <S.Symbol title="Festário" />}
                 </S.BrandWrapper>
+
+                {showSalon && salon && (
+                    <S.Salon to="/venues" title={`Espaços de ${salon.name}`}>
+                        <SalonMark name={salon.name} logoVariants={salon.logoVariants} logoUrl={salon.logoUrl} size="sm" decorative />
+                        <S.SalonName>{salon.name}</S.SalonName>
+                    </S.Salon>
+                )}
 
                 <S.Nav id="main-nav" aria-label="Principal" $open={menuOpen}>
                     <S.NavLink $active={location.pathname === "/home"} as={Link} to="/home">

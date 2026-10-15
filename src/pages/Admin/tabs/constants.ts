@@ -10,6 +10,7 @@ export const TABS = [
     { key: "holidays", label: "Feriados" },
     { key: "blockedDates", label: "Datas bloqueadas" },
     { key: "rules", label: "Regras do salão" },
+    { key: "brand", label: "Marca e fotos" },
     { key: "venues", label: "Espaços" },
 ];
 

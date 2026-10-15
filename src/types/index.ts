@@ -46,6 +46,8 @@ export interface Venue {
   mapsUrl?: string | null;
   createdAt?: string;
   updatedAt?: string;
+  /** Fotos do espaço, capa primeiro. */
+  photos?: VenuePhoto[];
 }
 
 /** Resumo do dinheiro da reserva: `amount` = total recebido pelo salão; `refundAmount` = devolvido. */
@@ -465,6 +467,38 @@ export interface PublicTenant {
   minLeadHours: number | null;
   maxAdvanceDays: number | null;
   cancellationPolicy: ReservationPolicy;
+  logoUrl?: string | null;
+  logoVariants?: ImageVariant[] | null;
+  /** Cor da marca do salão (contraste AA com texto branco) e a variante clara para o tema escuro. */
+  primaryColor?: string | null;
+  primaryColorDark?: string | null;
+}
+
+/** Um tamanho de uma imagem guardada pela API (WebP). */
+export interface ImageVariant {
+  width: number;
+  height: number;
+  url: string;
+}
+
+/** Foto de um espaço: capa primeiro; `variants` da menor para a maior. */
+export interface VenuePhoto {
+  id: string;
+  alt: string;
+  sortOrder: number;
+  isCover: boolean;
+  width: number;
+  height: number;
+  variants: ImageVariant[];
+}
+
+/** Marca do salão no painel. */
+export interface SalonBranding {
+  name: string;
+  logoUrl: string | null;
+  logoVariants: ImageVariant[] | null;
+  primaryColor: string | null;
+  primaryColorDark: string | null;
 }
 
 export interface ContactPayload {

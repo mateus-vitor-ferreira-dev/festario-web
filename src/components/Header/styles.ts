@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { media } from "../../styles/breakpoints";
-import { FestarioLogo } from "../Brand";
+import { FestarioLogo, FestarioSymbol } from "../Brand";
 
 export const Container = styled.header`
   width: 100%;
@@ -43,14 +43,70 @@ export const BrandWrapper = styled(Link)`
   border-radius: var(--radius-sm);
 `;
 
+/* Salão em foco: separado da marca da plataforma por um filete na cor do salão. */
+export const Salon = styled(Link)`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 44px;
+  padding-left: 14px;
+  border-left: 2px solid var(--salon-accent);
+  color: var(--text-primary);
+  text-decoration: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  ${media.sm} {
+    padding-left: 10px;
+  }
+`;
+
+export const SalonName = styled.span`
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: 1.2;
+  max-width: 18ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  /* No celular o selo basta: o nome completo está no title e na página de espaços. */
+  ${media.sm} {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+`;
+
 /* logotipo inline (segue o tema). Altura mínima do guia: 24px */
-export const Logo = styled(FestarioLogo)`
+export const Logo = styled(FestarioLogo)<{ $compact?: boolean }>`
   display: block;
   height: 36px;
   width: auto;
 
   ${media.sm} {
     height: 28px;
+    /* Com o selo do salão ao lado, no celular fica só o símbolo da plataforma. */
+    display: ${({ $compact }) => ($compact ? "none" : "block")};
+  }
+`;
+
+export const Symbol = styled(FestarioSymbol)`
+  display: none;
+  height: 32px;
+  width: auto;
+
+  ${media.sm} {
+    display: block;
   }
 `;
 
