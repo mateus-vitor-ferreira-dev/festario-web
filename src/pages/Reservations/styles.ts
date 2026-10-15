@@ -175,7 +175,7 @@ export const CardFooter = styled.div`
   /* mobile: botões com larguras iguais */
   ${media.md} {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 8px;
 
     & > * {
@@ -208,6 +208,37 @@ export const PayButton = styled.button`
 
   &:hover {
     background: var(--brand-dark);
+  }
+`;
+
+/* Ação secundária e quieta: o contrato aceito da reserva (#47). Fica à esquerda, longe de "Cancelar". */
+export const ContractButton = styled.button`
+  background: transparent;
+  color: var(--brand);
+  border: 1px solid var(--border-medium);
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: var(--text-base);
+  cursor: pointer;
+  margin-right: auto;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--brand-subtle);
+    border-color: var(--brand-border);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: progress;
   }
 `;
 

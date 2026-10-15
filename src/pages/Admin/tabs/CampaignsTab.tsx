@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getSalonContact } from "../../../services/contact";
 import { toast } from "react-toastify";
 import {
     createCampaign,
@@ -30,6 +31,13 @@ export function CampaignsTab() {
     const [drawingId, setDrawingId] = useState<string | null>(null);
     const [winnerResult, setWinnerResult] = useState<RaffleWinnerResult | null>(null);
     const [copied, setCopied] = useState(false);
+    const [instagram, setInstagram] = useState<string | null>(null);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        getSalonContact(controller.signal).then((c) => setInstagram(c.instagram?.display ?? null)).catch(() => setInstagram(null));
+        return () => controller.abort();
+    }, []);
     const [form, setForm] = useState({ code: "", type: "REFERRAL_NEXT_BOOKING", name: "", startsAt: "", endsAt: "" });
     const [isSaving, setIsSaving] = useState(false);
 
@@ -206,8 +214,8 @@ export function CampaignsTab() {
                         </S.WinnerCard>
                         <S.MessageBlock>
                             <S.SummaryLabel>Mensagem para enviar ao ganhador</S.SummaryLabel>
-                            <S.MessagePreview>{buildWinnerMessage(winnerResult.winner, winnerResult.campaignName, tenant?.name)}</S.MessagePreview>
-                            <S.CopyButton onClick={() => handleCopyMessage(buildWinnerMessage(winnerResult.winner, winnerResult.campaignName, tenant?.name))}>
+                            <S.MessagePreview>{buildWinnerMessage(winnerResult.winner, winnerResult.campaignName, tenant?.name, instagram)}</S.MessagePreview>
+                            <S.CopyButton onClick={() => handleCopyMessage(buildWinnerMessage(winnerResult.winner, winnerResult.campaignName, tenant?.name, instagram))}>
                                 {copied ? "Copiado!" : "Copiar mensagem"}
                             </S.CopyButton>
                         </S.MessageBlock>
