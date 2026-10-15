@@ -300,7 +300,7 @@ describe("Reserva e cancelamento", () => {
         await waitFor(() => expect(bodies[1]).toEqual({ cancellationPolicy: null }));
     });
 
-    it("configura o sinal, o prazo do restante e como pagar (#48)", async () => {
+    it("configura o sinal, o prazo do restante e como pagar", async () => {
         const bodies: Record<string, unknown>[] = [];
         server.use(
             http.get(`${BASE}/tenant/settings`, () => HttpResponse.json({ data: SETTINGS })),

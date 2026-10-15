@@ -211,7 +211,7 @@ export const PayButton = styled.button`
   }
 `;
 
-/* Ação secundária e quieta: o contrato aceito da reserva (#47). Fica à esquerda, longe de "Cancelar". */
+/* Ação secundária e quieta: o contrato aceito da reserva. Fica à esquerda, longe de "Cancelar". */
 export const ContractButton = styled.button`
   background: transparent;
   color: var(--brand);

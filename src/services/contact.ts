@@ -21,7 +21,7 @@ export async function submitContact(
 }
 
 /**
- * Contato do salão (#47): só os canais que o dono cadastrou (os outros vêm nulos).
+ * Contato do salão: só os canais que o dono cadastrou (os outros vêm nulos).
  *
  * @see GET /contact
  */

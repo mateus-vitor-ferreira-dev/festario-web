@@ -720,7 +720,7 @@ describe("NegotiationChat page", () => {
             expect(screen.queryByText(/carregando disponibilidade/i)).not.toBeInTheDocument()
         );
 
-        // Click a future day — pick a high number to avoid "past" issue
+        // Click a future day — pick a high number to avoid a day in the past
         const dayButtons = screen.getAllByRole("button").filter(
             (btn) => /^\d{1,2}$/.test(btn.textContent) && !btn.disabled && btn.getAttribute("type") === "button"
         );

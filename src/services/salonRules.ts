@@ -1,6 +1,6 @@
 /**
  * @module services/salonRules
- * @description Regras do salão no painel (#42–#47): pacotes, itens, regras da reserva, cancelamento,
+ * @description Regras do salão no painel: pacotes, itens, regras da reserva, cancelamento,
  * perfil do locador e cláusulas do contrato. OWNER do salão (ou ADMIN no painel dele).
  */
 import api from "./api";

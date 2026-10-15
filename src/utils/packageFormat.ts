@@ -1,5 +1,5 @@
 /**
- * Formatação e conversões das regras do salão (#42–#46): minutos ↔ "HH:MM", dias da semana, moeda,
+ * Formatação e conversões das regras do salão: minutos ↔ "HH:MM", dias da semana, moeda,
  * forma de cobrança e frases da política de cancelamento (as mesmas da API).
  */
 import type { ItemChargeType } from "../types";

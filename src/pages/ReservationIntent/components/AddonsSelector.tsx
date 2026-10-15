@@ -10,7 +10,7 @@ interface AddonsSelectorProps {
 }
 
 /**
- * Adicionais do pacote (web#37): os opcionais (marcar ou não) e os itens por hora, em que o cliente
+ * Adicionais do pacote: os opcionais (marcar ou não) e os itens por hora, em que o cliente
  * escolhe o total de horas. O que vem incluso aparece no próprio pacote; o preço final é o do orçamento.
  */
 export function AddonsSelector({ items, addons, onChange }: AddonsSelectorProps) {

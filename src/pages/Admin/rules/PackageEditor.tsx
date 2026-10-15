@@ -117,7 +117,7 @@ interface Props {
 }
 
 /**
- * Editor de pacote (#42–#44): o que é, quando vale, horário, convidados e itens, com a prévia de como
+ * Editor de pacote: o que é, quando vale, horário, convidados e itens, com a prévia de como
  * o cliente vê e um orçamento de exemplo. Abre no lugar da lista (o formulário é longo para um modal).
  */
 export function PackageEditor({ pkg, items, venues, nextSortOrder, onSaved, onCancel }: Props) {

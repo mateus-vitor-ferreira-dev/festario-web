@@ -86,7 +86,7 @@ export function getCampaignDateDisplay(campaign: Campaign) {
 }
 
 /**
- * Mensagem para o ganhador; `venueName` é o nome do salão e `instagram` o perfil dele (#47), quando
+ * Mensagem para o ganhador; `venueName` é o nome do salão e `instagram` o perfil dele, quando
  * cadastrado. Sem Instagram, a mensagem pede só a confirmação.
  */
 export function buildWinnerMessage(winner: RaffleWinnerResult["winner"], campaignName: string, venueName?: string | null, instagram?: string | null) {

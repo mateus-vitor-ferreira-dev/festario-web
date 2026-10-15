@@ -48,7 +48,7 @@ export interface Venue {
   updatedAt?: string;
 }
 
-/** Resumo do dinheiro da reserva (#48): `amount` = total recebido pelo salão; `refundAmount` = devolvido. */
+/** Resumo do dinheiro da reserva: `amount` = total recebido pelo salão; `refundAmount` = devolvido. */
 export interface Payment {
   id: string;
   reservationId?: string;
@@ -75,7 +75,7 @@ export interface PaymentEntry {
   recordedBy: { id: string; name: string } | null;
 }
 
-/** GET /payments/reservation/:id — pagamento combinado com o salão (#48). Valores em centavos. */
+/** GET /payments/reservation/:id — pagamento combinado com o salão. Valores em centavos. */
 export interface ReservationPayment {
   reservationId: string;
   reservationStatus: ReservationStatus;
@@ -125,16 +125,16 @@ export interface Reservation {
   /** Código do pacote (reservas antigas); o nome contratado está em `packageSnapshot`. */
   planCode?: string | null;
   packageId?: string | null;
-  /** Cópia do pacote contratado (#42): mudar o pacote depois não altera a reserva. */
+  /** Cópia do pacote contratado: mudar o pacote depois não altera a reserva. */
   packageSnapshot?: { name?: string; description?: string | null } | null;
   guestCount?: number | null;
-  /** Política que vale para esta reserva (a gravada ou o padrão), com as frases (#46). */
+  /** Política que vale para esta reserva (a gravada ou o padrão), com as frases. */
   cancellationPolicy?: ReservationPolicy;
   startDate: string;
   endDate: string;
   totalPrice: number;
   notes?: string | null;
-  /** Sinal que confirma a reserva (#48); nulo = o total. */
+  /** Sinal que confirma a reserva; nulo = o total. */
   depositAmount?: number | string | null;
   balanceDueAt?: string | null;
   payment?: Payment | null;
@@ -413,7 +413,7 @@ export interface QuoteResult {
   discountCents: number;
   totalCents: number;
   discountApplied: { percentOff: number; campaignName: string } | null;
-  /** Como o salão recebe (#48): sinal que confirma a reserva e prazo do restante. */
+  /** Como o salão recebe: sinal que confirma a reserva e prazo do restante. */
   paymentTerms?: { depositCents: number | null; depositPercent: number | null; balanceDueDays: number | null };
 }
 
@@ -484,7 +484,7 @@ export interface ReservationSummary {
   expiredReservations: number;
   grossRevenue?: number;
   totalRefunded?: number;
-  /** Recebido menos devolvido, por forma de pagamento (#48). */
+  /** Recebido menos devolvido, por forma de pagamento. */
   revenueByMethod?: Partial<Record<PaymentMethod, { amount: number; count: number }>> | null;
 }
 
@@ -507,7 +507,7 @@ export interface RaffleWinnerResult {
 }
 
 /**
- * Contrato de locação montado pela API (#47): o mesmo documento que vira PDF e que a reserva guarda
+ * Contrato de locação montado pela API: o mesmo documento que vira PDF e que a reserva guarda
  * quando o cliente aceita.
  */
 export interface ContractDocument {
@@ -525,7 +525,7 @@ export interface ContractDocument {
   place: string | null;
 }
 
-/** Contato do salão (GET /contact, #47). Canal não cadastrado = null. */
+/** Contato do salão (GET /contact). Canal não cadastrado = null. */
 export interface SalonContact {
   name: string;
   whatsapp: { number: string; display: string } | null;
@@ -535,7 +535,7 @@ export interface SalonContact {
   address: string | null;
 }
 
-// ─── Regras do salão (#42–#47) ────────────────────────────────────────────────
+// ─── Regras do salão ────────────────────────────────────────────────
 
 export type ItemChargeType = "FIXED" | "PER_HOUR" | "PER_GUEST";
 export type PackageItemMode = "INCLUDED" | "OPTIONAL";
@@ -625,7 +625,7 @@ export interface TenantSettings {
   legalName: string | null;
   documentNumber: string | null;
   chatbotFaq: string | null;
-  /** Pagamento combinado com o salão (#48): sinal que confirma (nulo = total), prazo do restante e como pagar. */
+  /** Pagamento combinado com o salão: sinal que confirma (nulo = total), prazo do restante e como pagar. */
   depositPercent: number | null;
   balanceDueDays: number | null;
   paymentInstructions: string | null;

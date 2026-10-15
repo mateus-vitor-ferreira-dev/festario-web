@@ -36,7 +36,7 @@ function render(d: ClauseDraft): string {
 }
 
 /**
- * Contrato e contato do salão (#47): dados do locador (o documento só aparece no painel e no contrato),
+ * Contrato e contato do salão: dados do locador (o documento só aparece no painel e no contrato),
  * contatos públicos, o FAQ do chatbot e as cláusulas do contrato.
  */
 export function ContractRulesSection() {

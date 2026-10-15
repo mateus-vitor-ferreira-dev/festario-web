@@ -26,7 +26,7 @@ function asInput(p: SalonPackage, overrides: Partial<SalonPackageInput>): SalonP
 }
 
 /**
- * Pacotes do salão (#42–#44): lista na ordem em que o cliente vê, com a semana e o horário de cada um,
+ * Pacotes do salão: lista na ordem em que o cliente vê, com a semana e o horário de cada um,
  * e o editor. Salão sem pacote vê o passo a passo de primeiro acesso.
  */
 export function PackagesSection({ onGoTo }: { onGoTo: (section: string) => void }) {

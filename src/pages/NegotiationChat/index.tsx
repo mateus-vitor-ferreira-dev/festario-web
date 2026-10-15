@@ -79,7 +79,7 @@ function SendIcon() {
     );
 }
 
-/** Conversas antigas traziam um código PIX vencido no fim da mensagem; o pagamento agora é combinado com o salão (#48). */
+/** Conversas antigas traziam um código PIX vencido no fim da mensagem; o pagamento agora é combinado com o salão. */
 function withoutLegacyPix(content: string): string {
     return content.replace(/\n\nPIX copia e cola:\n.+/s, "");
 }

@@ -11,7 +11,7 @@ interface PaymentMeterProps {
 }
 
 /**
- * Quanto o salão já recebeu da reserva (#48): a barra enche até o total e marca o sinal, o ponto em que
+ * Quanto o salão já recebeu da reserva: a barra enche até o total e marca o sinal, o ponto em que
  * a reserva é confirmada. É o mesmo desenho para o cliente e para o dono, para os dois lerem igual.
  */
 export default function PaymentMeter({ totalCents, netCents, requiredCents, compact = false }: PaymentMeterProps) {

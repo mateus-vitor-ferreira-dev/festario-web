@@ -16,7 +16,7 @@ const SECTIONS = [
 type SectionKey = (typeof SECTIONS)[number]["key"];
 
 /**
- * Aba "Regras do salão" do painel (web#36): tudo o que define como o salão é reservado. A seção fica na
+ * Aba "Regras do salão" do painel: tudo o que define como o salão é reservado. A seção fica na
  * URL (`?tab=rules&section=items`) para recarregar e compartilhar o link na mesma tela.
  */
 export function RulesTab() {

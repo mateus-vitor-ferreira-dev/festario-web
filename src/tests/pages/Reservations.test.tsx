@@ -127,7 +127,7 @@ describe("Reservations page", () => {
         expect(cancelTenant).toBe("casa-pampulha-eventos");
     });
 
-    it("baixa o contrato aceito da reserva, no salão dela (#47)", async () => {
+    it("baixa o contrato aceito da reserva, no salão dela", async () => {
         let contractTenant: string | null = null;
         server.use(
             http.get(`${BASE}/reservations`, () =>

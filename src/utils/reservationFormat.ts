@@ -4,7 +4,7 @@
  */
 
 /**
- * Nome do pacote contratado: a cópia gravada na reserva (#42) ou, em reserva antiga, o código
+ * Nome do pacote contratado: a cópia gravada na reserva ou, em reserva antiga, o código
  * ("SABADO_TARDE" → "Sabado tarde").
  */
 export function packageLabel(reservation: { packageSnapshot?: { name?: string } | null; planCode?: string | null }): string {

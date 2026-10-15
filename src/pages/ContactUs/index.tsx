@@ -7,7 +7,7 @@ import { useGSAP } from "@gsap/react";
  * @module pages/ContactUs
  * @description Página de contato com formulário e informações de acesso direto.
  *
- * Mostra os canais do salão carregados de `GET /contact` (#47): só os que o dono
+ * Mostra os canais do salão carregados de `GET /contact`: só os que o dono
  * cadastrou. O formulário (nome, e-mail, telefone, assunto, mensagem) envia a
  * mensagem ao e-mail do salão via `POST /contact/message`, com `replyTo` do remetente.
  *

@@ -14,7 +14,7 @@ interface ContractSectionProps {
 }
 
 /**
- * Download e aceite do contrato da reserva (#47). O contrato é montado pela API com as regras e os
+ * Download e aceite do contrato da reserva. O contrato é montado pela API com as regras e os
  * dados do salão; o PDF é gerado no navegador, carregado só quando a pessoa pede.
  */
 export function ContractSection({ payload, acceptedContract, onAcceptedChange }: ContractSectionProps) {

@@ -1,5 +1,5 @@
 /**
- * Pagamento combinado com o salão (#48): nomes das formas de pagamento e links de contato para combinar.
+ * Pagamento combinado com o salão: nomes das formas de pagamento e links de contato para combinar.
  */
 import type { PaymentMethod } from "../types";
 

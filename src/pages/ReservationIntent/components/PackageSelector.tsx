@@ -23,7 +23,7 @@ function includedText(pkg: VenuePackage): string | null {
 }
 
 /**
- * Pacotes do espaço como o salão cadastrou (web#37): nome, preço, a semana e o horário em que valem e o
+ * Pacotes do espaço como o salão cadastrou: nome, preço, a semana e o horário em que valem e o
  * que vem incluso. Com a data escolhida, o pacote que não vale no dia fica desabilitado.
  *
  * Acessível como `radiogroup`: Tab entra no grupo (opção selecionada ou a primeira habilitada), setas

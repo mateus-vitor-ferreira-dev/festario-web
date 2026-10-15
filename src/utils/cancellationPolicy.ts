@@ -1,5 +1,5 @@
 /**
- * Política de cancelamento da reserva (#46). As faixas e as frases vêm da API, gravadas em cada reserva;
+ * Política de cancelamento da reserva. As faixas e as frases vêm da API, gravadas em cada reserva;
  * aqui só se acha a faixa que vale para quem cancela agora.
  */
 import type { RefundTier } from "../types";

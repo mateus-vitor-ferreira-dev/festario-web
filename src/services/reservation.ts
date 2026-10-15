@@ -5,7 +5,7 @@
  * Fluxo principal:
  *   1. `quoteReservation` — calcula preço antes de confirmar
  *   2. `createReservation` — cria a reserva (status PENDING)
- *   3. O cliente combina o pagamento com o salão, que registra o que recebeu (#48)
+ *   3. O cliente combina o pagamento com o salão, que registra o que recebeu
  *   4. `cancelReservation` — cancela; a devolução pela política é feita e registrada pelo salão
  */
 import api from "./api";

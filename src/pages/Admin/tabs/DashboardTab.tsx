@@ -42,7 +42,7 @@ export function DashboardTab() {
     if (isLoading) return <S.LoadingSpinner />;
     if (!summary) return null;
 
-    // Formas de pagamento que o salão registrou (#48), da que mais rendeu para a que menos rendeu.
+    // Formas de pagamento que o salão registrou, da que mais rendeu para a que menos rendeu.
     const methods = (Object.entries(summary.revenueByMethod ?? {}) as [PaymentMethod, { amount: number; count: number }][])
         .filter(([, v]) => v.count > 0 || v.amount !== 0)
         .sort(([, a], [, b]) => b.amount - a.amount);

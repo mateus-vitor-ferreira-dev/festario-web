@@ -55,7 +55,7 @@ function formatExpiry(date: string | null | undefined): string {
 }
 
 export default function Promotions() {
-    // Instagram do salão (#47): o sorteio pede para marcar o perfil dele, não um fixo.
+    // Instagram do salão: o sorteio pede para marcar o perfil dele, não um fixo.
     const [instagram, setInstagram] = useState<{ url: string; display: string } | null>(null);
     useEffect(() => {
         const controller = new AbortController();

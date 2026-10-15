@@ -47,7 +47,7 @@ interface CancelModal {
     daysBeforeEvent?: number;
     refundPct?: number;
     refundAmount?: number;
-    /** Frases da política gravada na reserva (#46). */
+    /** Frases da política gravada na reserva. */
     policy?: string[];
 }
 
@@ -103,7 +103,7 @@ export function ReservationsTab() {
     const hasFilters = activeKeys.length > 0;
 
     function handleCancelClick(r: Reservation) {
-        // A devolução é sobre o que o salão já recebeu (#48: pode ser só o sinal, mesmo em reserva pendente).
+        // A devolução é sobre o que o salão já recebeu (pode ser só o sinal, mesmo em reserva pendente).
         const received = Number(r.payment?.amount ?? 0) - Number(r.payment?.refundAmount ?? 0);
         if (!(received > 0)) {
             setCancelModal({ id: r.id, status: r.status, startDate: r.startDate, totalPrice: r.totalPrice });

@@ -79,7 +79,7 @@ function validate(f: Form): string[] {
 }
 
 /**
- * Regras da reserva e política de cancelamento do salão (#45, #46). Campo vazio = padrão da plataforma.
+ * Regras da reserva e política de cancelamento do salão. Campo vazio = padrão da plataforma.
  * A política vale para as reservas feitas depois de salvar; as anteriores guardam a delas.
  */
 export function BookingSection() {
