@@ -10,7 +10,7 @@ export const TABS = [
     { key: "campaigns", label: "Campanhas" },
     { key: "holidays", label: "Feriados" },
     { key: "blockedDates", label: "Datas bloqueadas" },
-    { key: "plans", label: "Planos" },
+    { key: "rules", label: "Regras do salão" },
     { key: "venues", label: "Espaços" },
 ];
 
@@ -97,36 +97,6 @@ export function buildWinnerMessage(winner: RaffleWinnerResult["winner"], campaig
         : "responda esta mensagem para combinarmos a sua reserva.";
     return `Olá, ${winner.name}! 🎉\n\nVocê foi o grande sorteado do *${campaignName}*${venue}!\n\nPara resgatar seu prêmio, ${redeem}\n\nQualquer dúvida, é só entrar em contato. Parabéns! 🥳`;
 }
-
-export const HOLIDAY_TYPE_OPTIONS = [
-    { value: "national", label: "Nacional" },
-    { value: "state", label: "Estadual" },
-    { value: "municipal", label: "Municipal" },
-];
-
-export function getMunicipalHolidaysSeed(year: number) {
-    return [
-        { name: "Dia de São Sebastião", date: `${year}-01-20` },
-        { name: "Dia de Santo Antônio", date: `${year}-06-13` },
-        { name: "Aniversário de Lavras", date: `${year}-09-08` },
-    ];
-}
-
-export const PLAN_CODES = ["PROMOCIONAL", "ESSENCIAL", "COMPLETA"];
-
-export const EMPTY_PLAN_FORM = {
-    venueId: "",
-    code: "ESSENCIAL",
-    name: "",
-    basePriceAmount: "",
-    partyDurationHours: "",
-    endsAtHour: "",
-    keyDeliveryOffsetHours: "",
-    includedKidsMonitorHours: "",
-    includesPool: false,
-    includesCleaning: false,
-    validOnHolidays: false,
-};
 
 export const MONTH_NAMES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 

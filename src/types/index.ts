@@ -201,6 +201,8 @@ export interface Holiday {
   date: string;
   name: string;
   type: "national" | "state" | "municipal";
+  /** national = vale para todos os salões; salon = cadastrado pelo dono. */
+  scope?: "national" | "salon";
   syncedAt?: string | null;
 }
 
@@ -434,4 +436,121 @@ export interface SalonContact {
   email: string | null;
   instagram: { url: string; display: string } | null;
   address: string | null;
+}
+
+// ─── Regras do salão (#42–#47) ────────────────────────────────────────────────
+
+export type ItemChargeType = "FIXED" | "PER_HOUR" | "PER_GUEST";
+export type PackageItemMode = "INCLUDED" | "OPTIONAL";
+
+/** Item do catálogo do salão: pronto (`key`) ou próprio (`key` nulo). */
+export interface SalonItem {
+  id: string;
+  key: string | null;
+  name: string;
+  description: string | null;
+  chargeType: ItemChargeType;
+  unitPrice: string;
+  minQuantity: number | null;
+  maxQuantity: number | null;
+  isActive: boolean;
+  sortOrder: number;
+  _count?: { packages: number };
+}
+
+/** Modelo de item pronto da plataforma; `itemId` preenchido quando o salão já o ligou. */
+export interface ItemTemplate {
+  key: string;
+  name: string;
+  chargeType: ItemChargeType;
+  description: string | null;
+  itemId: string | null;
+}
+
+/** Pacote do salão como o painel recebe (GET /admin/plans). */
+export interface SalonPackage {
+  id: string;
+  venueId: string | null;
+  venue?: { id: string; name: string } | null;
+  code: string | null;
+  name: string;
+  description: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  basePriceAmount: string;
+  validWeekdays: number[] | null;
+  validOnHolidays: boolean;
+  earliestStartMinute: number | null;
+  latestEndMinute: number | null;
+  minDurationMinutes: number | null;
+  maxDurationMinutes: number | null;
+  minGuests: number | null;
+  maxGuests: number | null;
+  keyDeliveryOffsetHours: number;
+  activeFrom: string | null;
+  activeTo: string | null;
+  items: { mode: PackageItemMode; includedQuantity: number | null; item: Pick<SalonItem, "id" | "key" | "name" | "chargeType" | "unitPrice" | "isActive"> }[];
+}
+
+export interface PackageItemInput {
+  itemId: string;
+  mode: PackageItemMode;
+  includedQuantity?: number | null;
+}
+
+export type SalonPackageInput = Partial<Omit<SalonPackage, "id" | "venue" | "items" | "basePriceAmount">> & {
+  basePriceAmount?: number;
+  items?: PackageItemInput[];
+};
+
+export interface RefundTier {
+  minDays: number;
+  percentage: number;
+}
+
+/** Regras e perfil do salão (GET/PUT /tenant/settings). */
+export interface TenantSettings {
+  slug: string;
+  name: string;
+  timezone: string;
+  city: string | null;
+  state: string | null;
+  paymentHoldMinutes: number | null;
+  effectivePaymentHoldMinutes: number;
+  minLeadHours: number | null;
+  maxAdvanceDays: number | null;
+  cancellationPolicy: { tiers: RefundTier[]; notes: string | null; isDefault: boolean; summary: string[] };
+  address: string | null;
+  contactPhone: string | null;
+  contactWhatsapp: string | null;
+  contactEmail: string | null;
+  instagram: string | null;
+  legalName: string | null;
+  documentNumber: string | null;
+  chatbotFaq: string | null;
+}
+
+export type TenantSettingsInput = Partial<Omit<TenantSettings, "slug" | "name" | "effectivePaymentHoldMinutes" | "cancellationPolicy">> & {
+  cancellationPolicy?: { tiers: RefundTier[]; notes?: string | null } | null;
+};
+
+export interface ContractClause {
+  id: string;
+  key: string | null;
+  title: string;
+  body: string;
+  fineAmount: string | null;
+  timeLimit: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  rendered: string;
+}
+
+export interface ClauseTemplate {
+  key: string;
+  title: string;
+  body: string;
+  usesFine: boolean;
+  usesTime: boolean;
+  clauseId: string | null;
 }

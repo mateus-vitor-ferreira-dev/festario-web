@@ -209,6 +209,22 @@ export const adminHandlers = [
         HttpResponse.json({ success: true, data: [] })
     ),
 
+    http.get(`${BASE_URL}/admin/items`, () =>
+        HttpResponse.json({ success: true, data: [] })
+    ),
+
+    http.get(`${BASE_URL}/admin/items/templates`, () =>
+        HttpResponse.json({ success: true, data: [] })
+    ),
+
+    http.get(`${BASE_URL}/admin/contract/clauses`, () =>
+        HttpResponse.json({ success: true, data: [] })
+    ),
+
+    http.get(`${BASE_URL}/admin/contract/templates`, () =>
+        HttpResponse.json({ success: true, data: [] })
+    ),
+
     http.get(`${BASE_URL}/admin/blocked-dates`, () =>
         HttpResponse.json({ success: true, data: [] })
     ),

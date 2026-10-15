@@ -11,7 +11,6 @@ import type {
     User,
     Campaign,
     Holiday,
-    ReservationPlan,
     BlockedDate,
     ReservationSummary,
     MonthlyRevenue,
@@ -184,21 +183,11 @@ export async function syncHolidays(year: number): Promise<{ synced: number }> {
 }
 
 /**
- * Sincroniza feriados municipais fornecidos manualmente.
- *
- * @see POST /admin/holidays/sync-municipal
- */
-export async function syncMunicipalHolidays(year: number, items: Array<{ date: string; name: string }>): Promise<{ synced: number }> {
-    const { data } = await api.post("/admin/holidays/sync-municipal", { year, items });
-    return data.data;
-}
-
-/**
- * Cria um feriado manualmente.
+ * Cria um feriado do salão; com `type: national` (só ADMIN), um feriado nacional.
  *
  * @see POST /admin/holidays
  */
-export async function createHoliday(payload: { date: string; name: string }): Promise<Holiday> {
+export async function createHoliday(payload: { date: string; name: string; type?: "national" }): Promise<Holiday> {
     const { data } = await api.post("/admin/holidays", payload);
     return data.data;
 }
@@ -210,47 +199,6 @@ export async function createHoliday(payload: { date: string; name: string }): Pr
  */
 export async function deleteHoliday(id: string): Promise<void> {
     await api.delete(`/admin/holidays/${id}`);
-}
-
-// ─── Plans ────────────────────────────────────────────────────────────────────
-
-/**
- * Lista os planos de reserva configurados no sistema.
- *
- * @see GET /admin/plans
- */
-export async function listPlans(filters: Record<string, unknown> = {}, signal?: AbortSignal): Promise<ReservationPlan[]> {
-    const { data } = await api.get("/admin/plans", { params: filters, signal });
-    return data.data;
-}
-
-/**
- * Cria um novo plano de reserva.
- *
- * @see POST /admin/plans
- */
-export async function createPlan(payload: Partial<ReservationPlan>): Promise<ReservationPlan> {
-    const { data } = await api.post("/admin/plans", payload);
-    return data.data;
-}
-
-/**
- * Atualiza um plano de reserva existente.
- *
- * @see PATCH /admin/plans/:id
- */
-export async function updatePlan(id: string, payload: Partial<ReservationPlan>): Promise<ReservationPlan> {
-    const { data } = await api.patch(`/admin/plans/${id}`, payload);
-    return data.data;
-}
-
-/**
- * Remove um plano de reserva.
- *
- * @see DELETE /admin/plans/:id
- */
-export async function deletePlan(id: string): Promise<void> {
-    await api.delete(`/admin/plans/${id}`);
 }
 
 // ─── Blocked Dates ────────────────────────────────────────────────────────────

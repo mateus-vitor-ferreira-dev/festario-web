@@ -9,10 +9,10 @@ import { CampaignsTab } from "./tabs/CampaignsTab";
 import { DashboardTab } from "./tabs/DashboardTab";
 import { HolidaysTab } from "./tabs/HolidaysTab";
 import { NegotiationsTab } from "./tabs/NegotiationsTab";
-import { PlansTab } from "./tabs/PlansTab";
 import { ReservationsTab } from "./tabs/ReservationsTab";
 import { UsersTab } from "./tabs/UsersTab";
 import { VenueTab } from "./tabs/VenueTab";
+import { RulesTab } from "./rules/RulesTab";
 import * as S from "./styles";
 
 const TAB_COMPONENTS = {
@@ -23,7 +23,7 @@ const TAB_COMPONENTS = {
     campaigns:    CampaignsTab,
     holidays:     HolidaysTab,
     blockedDates: BlockedDatesTab,
-    plans:        PlansTab,
+    rules:        RulesTab,
     venues:       VenueTab,
 };
 
@@ -37,7 +37,9 @@ export default function Admin() {
     // a aba fica na URL (?tab=reservations) junto com os filtros/página da aba,
     // para que recarregar, voltar ou compartilhar o link reabra a mesma visão
     const [searchParams, setSearchParams] = useSearchParams();
-    const requestedTab = searchParams.get("tab") ?? "dashboard";
+    // ?tab=plans é o endereço antigo da aba de pacotes: abre "Regras do salão".
+    const rawTab = searchParams.get("tab") ?? "dashboard";
+    const requestedTab = rawTab === "plans" ? "rules" : rawTab;
     const activeTab = requestedTab in TAB_COMPONENTS ? requestedTab : "dashboard";
 
     function setActiveTab(key: string) {
@@ -82,7 +84,7 @@ export default function Admin() {
                     Painel do espaço
                     {tenant?.name && <S.TitleTenant>{tenant.name}</S.TitleTenant>}
                 </S.Title>
-                <S.Description>Gerencie reservas, clientes, campanhas e configurações do espaço.</S.Description>
+                <S.Description>Gerencie reservas, clientes, campanhas e as regras do salão.</S.Description>
             </S.PageHeader>
 
             {isPlatformAdmin && (

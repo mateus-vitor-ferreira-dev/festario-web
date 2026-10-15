@@ -733,6 +733,11 @@ export const HolidayInfo = styled.div`
     color: var(--text-muted);
     font-variant-numeric: lining-nums tabular-nums;
   }
+
+  /* no celular, nome e data ocupam a linha e o tipo e a ação ficam sempre embaixo (antes variava com o tamanho do nome) */
+  ${media.sm} {
+    flex-basis: 100%;
+  }
 `;
 
 /* ─── Sorteio ─── */

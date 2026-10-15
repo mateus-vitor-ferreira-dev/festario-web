@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { MemoryRouter } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import Admin from "../../pages/Admin";
 import { server } from "../mocks/server";
 import { AuthProvider } from "../../contexts/AuthContext";
@@ -611,6 +611,7 @@ describe("Admin - Holidays tab", () => {
         await user.click(screen.getByRole("button", { name: /feriados/i }));
         await waitFor(() => screen.getByRole("button", { name: /remover/i }));
 
+        vi.spyOn(window, "confirm").mockReturnValueOnce(true);
         await user.click(screen.getByRole("button", { name: /remover/i }));
         await waitFor(() =>
             expect(screen.queryByText("Natal")).not.toBeInTheDocument()
@@ -636,25 +637,6 @@ describe("Admin - Holidays tab", () => {
         );
     });
 
-    it("syncs municipal holidays", async () => {
-        server.use(
-            http.post(`${BASE}/admin/holidays/sync-municipal`, () =>
-                HttpResponse.json({ success: true, data: { synced: 3 } })
-            )
-        );
-        const user = userEvent.setup();
-        renderPage();
-        await waitFor(() => screen.getByText(/total de reservas/i));
-
-        await user.click(screen.getByRole("button", { name: /feriados/i }));
-        await waitFor(() => screen.getByRole("button", { name: /sincronizar feriados municipais/i }));
-
-        await user.click(screen.getByRole("button", { name: /sincronizar feriados municipais/i }));
-        await waitFor(() =>
-            expect(screen.getByText(/3 feriados municipais de lavras sincronizados/i)).toBeInTheDocument()
-        );
-    });
-
     it("opens create holiday modal and creates a holiday", async () => {
         server.use(
             http.post(`${BASE}/admin/holidays`, () =>
@@ -669,7 +651,7 @@ describe("Admin - Holidays tab", () => {
         await waitFor(() => screen.getByRole("button", { name: /\+ novo feriado/i }));
 
         await user.click(screen.getByRole("button", { name: /\+ novo feriado/i }));
-        await user.type(screen.getByPlaceholderText(/ex: consciência negra/i), "Feriado Teste");
+        await user.type(screen.getByLabelText("Nome"), "Feriado Teste");
 
         const dateInput = document.querySelector('input[type="date"]');
         const { fireEvent: fe } = await import("@testing-library/react");
@@ -677,7 +659,7 @@ describe("Admin - Holidays tab", () => {
 
         await user.click(screen.getByRole("button", { name: /^criar feriado$/i }));
         await waitFor(() =>
-            expect(screen.getByText(/feriado criado com sucesso/i)).toBeInTheDocument()
+            expect(screen.getByText(/^feriado criado\.$/i)).toBeInTheDocument()
         );
     });
 
@@ -740,6 +722,7 @@ describe("Admin - Holidays tab", () => {
             name: /remover/i,
         });
 
+        vi.spyOn(window, "confirm").mockReturnValueOnce(true);
         await user.click(deleteButton);
 
         await waitFor(() => {
@@ -768,27 +751,6 @@ describe("Admin - Holidays tab", () => {
         });
     });
 
-    it("shows error toast when syncing municipal holidays fails", async () => {
-        server.use(
-            http.post(`${BASE}/admin/holidays/sync-municipal`, () =>
-                HttpResponse.json({ success: false }, { status: 500 })
-            )
-        );
-
-        const user = userEvent.setup();
-        renderPage();
-
-        await user.click(screen.getByRole("button", { name: /feriados/i }));
-
-        await user.click(
-            screen.getByRole("button", { name: /sincronizar feriados municipais/i })
-        );
-
-        await waitFor(() => {
-            expect(screen.getByRole("alert")).toHaveTextContent(/500/i);
-        });
-    });
-
     it("shows error toast when creating holiday fails", async () => {
         server.use(
             http.post(`${BASE}/admin/holidays`, () =>
@@ -802,10 +764,7 @@ describe("Admin - Holidays tab", () => {
         await user.click(screen.getByRole("button", { name: /feriados/i }));
         await user.click(screen.getByRole("button", { name: /novo feriado/i }));
 
-        await user.type(
-            screen.getByPlaceholderText(/consciência negra/i),
-            "Feriado Teste"
-        );
+        await user.type(screen.getByLabelText("Nome"), "Feriado Teste");
 
         const dateInput = document.querySelector("input[type='date']");
         await user.type(dateInput, "2026-12-25");
@@ -827,16 +786,16 @@ describe("Admin - Holidays tab", () => {
         await user.click(screen.getByRole("button", { name: /\+ novo feriado/i }));
 
         await waitFor(() =>
-            expect(screen.getByPlaceholderText(/consciência negra/i)).toBeInTheDocument()
+            expect(screen.getByLabelText("Nome")).toBeInTheDocument()
         );
         await user.click(screen.getByRole("button", { name: /^cancelar$/i }));
 
         await waitFor(() =>
-            expect(screen.queryByPlaceholderText(/consciência negra/i)).not.toBeInTheDocument()
+            expect(screen.queryByLabelText("Nome")).not.toBeInTheDocument()
         );
     });
 
-    it("changes holiday type in modal", async () => {
+    it("lets the platform admin create a national holiday", async () => {
         const user = userEvent.setup();
         renderPage();
         await waitFor(() => screen.getByText(/total de reservas/i));
@@ -846,12 +805,12 @@ describe("Admin - Holidays tab", () => {
         await user.click(screen.getByRole("button", { name: /\+ novo feriado/i }));
 
         await waitFor(() =>
-            expect(screen.getByPlaceholderText(/consciência negra/i)).toBeInTheDocument()
+            expect(screen.getByLabelText("Nome")).toBeInTheDocument()
         );
 
-        const typeSelect = screen.getAllByRole("combobox").at(-1);
-        await user.selectOptions(typeSelect, "municipal");
-        expect(typeSelect).toHaveValue("municipal");
+        const scopeSelect = screen.getByLabelText(/vale para/i);
+        await user.selectOptions(scopeSelect, "national");
+        expect(scopeSelect).toHaveValue("national");
     });
 
     it("shows error toast when holidays fail to load", async () => {
@@ -1169,399 +1128,6 @@ describe("Admin - Blocked Dates tab", () => {
     });
 });
 
-// ─── Plans Tab ────────────────────────────────────────────────────────────────
-
-describe("Admin - Plans tab", () => {
-    it("shows empty state when no plans", async () => {
-        const user = userEvent.setup();
-        renderPage();
-        await waitFor(() => screen.getByText(/total de reservas/i));
-
-        await user.click(screen.getByRole("button", { name: /^planos$/i }));
-
-        await waitFor(() =>
-            expect(screen.getByText(/nenhum plano cadastrado/i)).toBeInTheDocument()
-        );
-    });
-
-    it("shows plans list when data is loaded", async () => {
-        server.use(
-            http.get(`${BASE}/admin/plans`, () =>
-                HttpResponse.json({
-                    success: true,
-                    data: [
-                        {
-                            id: "p-1",
-                            code: "ESSENCIAL",
-                            name: "Plano Essencial",
-                            basePriceAmount: 2500,
-                            partyDurationHours: 6,
-                            venueId: null,
-                            venue: null,
-                            includesPool: false,
-                            includesCleaning: true,
-                            validOnHolidays: false,
-                        },
-                    ],
-                })
-            )
-        );
-        const user = userEvent.setup();
-        renderPage();
-        await waitFor(() => screen.getByText(/total de reservas/i));
-
-        await user.click(screen.getByRole("button", { name: /^planos$/i }));
-
-        await waitFor(() =>
-            expect(screen.getByText("Plano Essencial")).toBeInTheDocument()
-        );
-        expect(screen.getByText("ESSENCIAL")).toBeInTheDocument();
-        expect(screen.getByText("Global")).toBeInTheDocument();
-        expect(screen.getByText("6h")).toBeInTheDocument();
-    });
-
-    it("shows venue name when plan has venue", async () => {
-        server.use(
-            http.get(`${BASE}/admin/plans`, () =>
-                HttpResponse.json({
-                    success: true,
-                    data: [
-                        {
-                            id: "p-2",
-                            code: "COMPLETA",
-                            name: "Plano Completo",
-                            basePriceAmount: 5000,
-                            partyDurationHours: 8,
-                            venueId: "venue-1",
-                            venue: { name: "Salão Principal" },
-                            includesPool: true,
-                            includesCleaning: true,
-                            validOnHolidays: true,
-                        },
-                    ],
-                })
-            )
-        );
-        const user = userEvent.setup();
-        renderPage();
-        await waitFor(() => screen.getByText(/total de reservas/i));
-
-        await user.click(screen.getByRole("button", { name: /^planos$/i }));
-
-        await waitFor(() =>
-            expect(screen.getByText("Salão Principal")).toBeInTheDocument()
-        );
-    });
-
-    it("opens create modal and closes via Cancelar", async () => {
-        const user = userEvent.setup();
-        renderPage();
-        await waitFor(() => screen.getByText(/total de reservas/i));
-
-        await user.click(screen.getByRole("button", { name: /^planos$/i }));
-        await waitFor(() => screen.getByRole("button", { name: /novo plano/i }));
-
-        await user.click(screen.getByRole("button", { name: /novo plano/i }));
-        expect(screen.getByText(/novo plano/i, { selector: "h2, h3, [class*='ModalTitle']" })).toBeInTheDocument();
-
-        await user.click(screen.getByRole("button", { name: /^cancelar$/i }));
-        await waitFor(() =>
-            expect(screen.queryByRole("button", { name: /^cancelar$/i })).not.toBeInTheDocument()
-        );
-    });
-
-    it("closes modal via overlay click", async () => {
-        const user = userEvent.setup();
-        renderPage();
-        await waitFor(() => screen.getByText(/total de reservas/i));
-
-        await user.click(screen.getByRole("button", { name: /^planos$/i }));
-        await waitFor(() => screen.getByRole("button", { name: /novo plano/i }));
-
-        await user.click(screen.getByRole("button", { name: /novo plano/i }));
-        const cancelBtn = await screen.findByRole("button", { name: /^cancelar$/i });
-
-        const overlay = cancelBtn.closest("form")?.parentElement?.parentElement;
-        if (overlay) {
-            const { fireEvent: fe } = await import("@testing-library/react");
-            fe.click(overlay);
-        }
-
-        await waitFor(() =>
-            expect(screen.queryByRole("button", { name: /^cancelar$/i })).not.toBeInTheDocument()
-        );
-    });
-
-    it("creates a plan successfully", async () => {
-        server.use(
-            http.post(`${BASE}/admin/plans`, () =>
-                HttpResponse.json({ success: true, data: { id: "p-new", name: "Novo Plano" } }, { status: 201 })
-            )
-        );
-        const user = userEvent.setup();
-        renderPage();
-        await waitFor(() => screen.getByText(/total de reservas/i));
-
-        await user.click(screen.getByRole("button", { name: /^planos$/i }));
-        await waitFor(() => screen.getByRole("button", { name: /novo plano/i }));
-
-        await user.click(screen.getByRole("button", { name: /novo plano/i }));
-        await screen.findByRole("button", { name: /^cancelar$/i });
-
-        await user.type(screen.getByPlaceholderText(/pacote essencial/i), "Plano Teste");
-        await user.type(screen.getByPlaceholderText(/ex: 2500.00/i), "2500");
-        await user.type(screen.getByPlaceholderText(/ex: 6/i), "6");
-
-        await user.click(screen.getByRole("button", { name: /^criar plano$/i }));
-
-        await waitFor(() =>
-            expect(screen.getByText(/plano criado/i)).toBeInTheDocument()
-        );
-    });
-
-    it("opens edit modal with plan data and updates plan", async () => {
-        const plan = {
-            id: "p-edit",
-            code: "ESSENCIAL",
-            name: "Plano Original",
-            basePriceAmount: 2000,
-            partyDurationHours: 5,
-            endsAtHour: 22,
-            keyDeliveryOffsetHours: 2,
-            includedKidsMonitorHours: 4,
-            venueId: null,
-            venue: null,
-            includesPool: false,
-            includesCleaning: false,
-            validOnHolidays: false,
-        };
-        server.use(
-            http.get(`${BASE}/admin/plans`, () =>
-                HttpResponse.json({ success: true, data: [plan] })
-            ),
-            http.put(`${BASE}/admin/plans/p-edit`, () =>
-                HttpResponse.json({ success: true, data: { ...plan, name: "Plano Editado" } })
-            ),
-            http.patch(`${BASE}/admin/plans/p-edit`, () =>
-                HttpResponse.json({ success: true, data: { ...plan, name: "Plano Editado" } })
-            )
-        );
-        const user = userEvent.setup();
-        renderPage();
-        await waitFor(() => screen.getByText(/total de reservas/i));
-
-        await user.click(screen.getByRole("button", { name: /^planos$/i }));
-        await waitFor(() => screen.getByRole("button", { name: /^editar$/i }));
-
-        await user.click(screen.getByRole("button", { name: /^editar$/i }));
-        expect(screen.getByText(/editar plano/i, { selector: "h2, h3, [class*='ModalTitle']" })).toBeInTheDocument();
-
-        // Code select should be disabled in edit mode
-        const codeSelect = screen.getAllByRole("combobox").find(
-            (el) => el.disabled
-        );
-        expect(codeSelect).toBeInTheDocument();
-
-        await user.click(screen.getByRole("button", { name: /salvar alterações/i }));
-
-        await waitFor(() =>
-            expect(screen.getByText(/plano atualizado/i)).toBeInTheDocument()
-        );
-    });
-
-    it("deletes a plan", async () => {
-        server.use(
-            http.get(`${BASE}/admin/plans`, () =>
-                HttpResponse.json({
-                    success: true,
-                    data: [
-                        {
-                            id: "p-del",
-                            code: "PROMOCIONAL",
-                            name: "Plano a Remover",
-                            basePriceAmount: 1000,
-                            partyDurationHours: 4,
-                            venueId: null,
-                            venue: null,
-                            includesPool: false,
-                            includesCleaning: false,
-                            validOnHolidays: false,
-                        },
-                    ],
-                })
-            ),
-            http.delete(`${BASE}/admin/plans/p-del`, () =>
-                HttpResponse.json({ success: true, data: {} })
-            )
-        );
-        const user = userEvent.setup();
-        renderPage();
-        await waitFor(() => screen.getByText(/total de reservas/i));
-
-        await user.click(screen.getByRole("button", { name: /^planos$/i }));
-        await waitFor(() => screen.getByText("Plano a Remover"));
-
-        await user.click(screen.getByRole("button", { name: /^remover$/i }));
-        await waitFor(() =>
-            expect(screen.queryByText("Plano a Remover")).not.toBeInTheDocument()
-        );
-    });
-
-    it("toggles checkboxes in the create modal", async () => {
-        const user = userEvent.setup();
-        renderPage();
-        await waitFor(() => screen.getByText(/total de reservas/i));
-
-        await user.click(screen.getByRole("button", { name: /^planos$/i }));
-        await waitFor(() => screen.getByRole("button", { name: /novo plano/i }));
-
-        await user.click(screen.getByRole("button", { name: /novo plano/i }));
-        await screen.findByRole("button", { name: /^cancelar$/i });
-
-        const poolCheckbox = screen.getByRole("checkbox", { name: /inclui piscina/i });
-        const cleaningCheckbox = screen.getByRole("checkbox", { name: /inclui limpeza/i });
-        const holidaysCheckbox = screen.getByRole("checkbox", { name: /válido em feriados/i });
-
-        expect(poolCheckbox).not.toBeChecked();
-        await user.click(poolCheckbox);
-        expect(poolCheckbox).toBeChecked();
-
-        await user.click(cleaningCheckbox);
-        expect(cleaningCheckbox).toBeChecked();
-
-        await user.click(holidaysCheckbox);
-        expect(holidaysCheckbox).toBeChecked();
-    });
-
-    it("shows error toast when plans fail to load", async () => {
-        server.use(
-            http.get(`${BASE}/admin/plans`, () =>
-                HttpResponse.json({ success: false }, { status: 500 })
-            )
-        );
-        const user = userEvent.setup();
-        renderPage();
-        await waitFor(() => screen.getByText(/total de reservas/i));
-
-        await user.click(screen.getByRole("button", { name: /^planos$/i }));
-
-        await waitFor(() =>
-            expect(screen.getByRole("alert")).toBeInTheDocument()
-        );
-    });
-
-    it("shows error toast when creating plan fails", async () => {
-        server.use(
-            http.post(`${BASE}/admin/plans`, () =>
-                HttpResponse.json({ success: false }, { status: 500 })
-            )
-        );
-        const user = userEvent.setup();
-        renderPage();
-        await waitFor(() => screen.getByText(/total de reservas/i));
-
-        await user.click(screen.getByRole("button", { name: /^planos$/i }));
-        await waitFor(() => screen.getByRole("button", { name: /novo plano/i }));
-
-        await user.click(screen.getByRole("button", { name: /novo plano/i }));
-        await screen.findByRole("button", { name: /^cancelar$/i });
-
-        await user.type(screen.getByPlaceholderText(/pacote essencial/i), "Plano Erro");
-        await user.type(screen.getByPlaceholderText(/ex: 2500.00/i), "1000");
-        await user.type(screen.getByPlaceholderText(/ex: 6/i), "4");
-
-        await user.click(screen.getByRole("button", { name: /^criar plano$/i }));
-
-        await waitFor(() =>
-            expect(screen.getByRole("alert")).toHaveTextContent(/500/i)
-        );
-    });
-
-    it("shows error toast when deleting plan fails", async () => {
-        server.use(
-            http.get(`${BASE}/admin/plans`, () =>
-                HttpResponse.json({
-                    success: true,
-                    data: [
-                        {
-                            id: "p-err",
-                            code: "ESSENCIAL",
-                            name: "Plano com Erro",
-                            basePriceAmount: 2000,
-                            partyDurationHours: 6,
-                            venueId: null,
-                            venue: null,
-                            includesPool: false,
-                            includesCleaning: false,
-                            validOnHolidays: false,
-                        },
-                    ],
-                })
-            ),
-            http.delete(`${BASE}/admin/plans/p-err`, () =>
-                HttpResponse.json({ success: false }, { status: 500 })
-            )
-        );
-        const user = userEvent.setup();
-        renderPage();
-        await waitFor(() => screen.getByText(/total de reservas/i));
-
-        await user.click(screen.getByRole("button", { name: /^planos$/i }));
-        await waitFor(() => screen.getByText("Plano com Erro"));
-
-        await user.click(screen.getByRole("button", { name: /^remover$/i }));
-
-        await waitFor(() =>
-            expect(screen.getByRole("alert")).toHaveTextContent(/500/i)
-        );
-    });
-
-    it("shows error toast when updating plan fails", async () => {
-        const plan = {
-            id: "p-upd-err",
-            code: "ESSENCIAL",
-            name: "Plano Update Fail",
-            basePriceAmount: 2000,
-            partyDurationHours: 5,
-            endsAtHour: null,
-            keyDeliveryOffsetHours: null,
-            includedKidsMonitorHours: null,
-            venueId: null,
-            venue: null,
-            includesPool: false,
-            includesCleaning: false,
-            validOnHolidays: false,
-        };
-        server.use(
-            http.get(`${BASE}/admin/plans`, () =>
-                HttpResponse.json({ success: true, data: [plan] })
-            ),
-            http.put(`${BASE}/admin/plans/p-upd-err`, () =>
-                HttpResponse.json({ success: false }, { status: 500 })
-            ),
-            http.patch(`${BASE}/admin/plans/p-upd-err`, () =>
-                HttpResponse.json({ success: false }, { status: 500 })
-            )
-        );
-        const user = userEvent.setup();
-        renderPage();
-        await waitFor(() => screen.getByText(/total de reservas/i));
-
-        await user.click(screen.getByRole("button", { name: /^planos$/i }));
-        await waitFor(() => screen.getByRole("button", { name: /^editar$/i }));
-
-        await user.click(screen.getByRole("button", { name: /^editar$/i }));
-        await screen.findByRole("button", { name: /salvar alterações/i });
-
-        await user.click(screen.getByRole("button", { name: /salvar alterações/i }));
-
-        await waitFor(() =>
-            expect(screen.getByRole("alert")).toHaveTextContent(/500/i)
-        );
-    });
-});
-
-// ─── Users Tab ────────────────────────────────────────────────────────────────
 
 describe("Admin - Users tab", () => {
     it("shows empty state when no users", async () => {
