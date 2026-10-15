@@ -24,6 +24,13 @@ export interface User {
   phone?: string | null;
   birthDate?: string | null;
   theme?: "LIGHT" | "DARK" | "SYSTEM";
+  /** Endereço do perfil (opcional), para a vitrine mostrar os salões mais perto. Sem coordenadas no front. */
+  postalCode?: string | null;
+  street?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
+  state?: string | null;
+  hasLocation?: boolean;
 }
 
 export interface Venue {

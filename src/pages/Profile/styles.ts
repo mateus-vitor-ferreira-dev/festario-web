@@ -300,3 +300,16 @@ export const SaveButton = styled.button`
     cursor: not-allowed;
   }
 `;
+
+/* Texto de apoio dos cards (finalidade do endereço, a região encontrada). */
+export const Hint = styled.p`
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.5;
+  max-width: 68ch;
+
+  strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+`;
