@@ -5,14 +5,12 @@ import { useGSAP } from "@gsap/react";
 
 import AvailabilityCalendar from "../../components/AvailabilityCalendar";
 import Input from "../../components/Input";
-import { useAuth } from "../../contexts/AuthContext";
 import { getVenue } from "../../services/venue";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { isAbortError } from "../../utils/errors";
 import { animateFadeInUp } from "../../utils/animations";
 import { formatCents } from "../../utils/reservationFormat";
 import type { Venue } from "../../types";
-import type { ContratoRVRProps } from "../../components/ContratoRVR";
 
 import { useReservationForm } from "./useReservationForm";
 import { ContractSection } from "./components/ContractSection";
@@ -23,7 +21,6 @@ import * as S from "./styles";
 
 export default function ReservationIntent() {
     const { venueId } = useParams();
-    const { user } = useAuth();
     const containerRef = useRef<HTMLDivElement | null>(null);
 
     const [venue, setVenue] = useState<Venue | null>(null);
@@ -81,18 +78,6 @@ export default function ReservationIntent() {
 
     const today = new Date().toISOString().split("T")[0];
 
-    const contratoProps: ContratoRVRProps = {
-        locatario: user?.name ?? "",
-        data: form.eventDate
-            ? new Date(`${form.eventDate}T00:00:00`).toLocaleDateString("pt-BR")
-            : "a definir",
-        horarioInicio: form.startTime || "—",
-        horarioFim: form.endTime || "—",
-        comKids: Boolean(venue.hasKidsArea),
-        comPiscina: form.planCode === "COMPLETA",
-        planCode: (form.planCode || "ESSENCIAL") as ContratoRVRProps["planCode"],
-        totalCents: form.normalizedQuote?.totalCents ?? form.selectedPlan?.priceCents ?? undefined,
-    };
 
     function handleOpenRoutes() {
         if (!venue!.location) {
@@ -236,9 +221,7 @@ export default function ReservationIntent() {
                             </S.ConfirmButton>
 
                             <ContractSection
-                                planCode={form.planCode}
-                                eventDate={form.eventDate}
-                                contratoProps={contratoProps}
+                                payload={form.quotePayload}
                                 acceptedContract={form.acceptedContract}
                                 onAcceptedChange={form.setAcceptedContract}
                             />

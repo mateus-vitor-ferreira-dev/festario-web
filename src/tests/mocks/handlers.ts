@@ -283,9 +283,12 @@ export const negotiationHandlers = [
         HttpResponse.json({
             success: true,
             data: {
-                whatsapp: { number: "5535999718824", display: "(35) 9 9971-8824" },
-                email: "recanto.vilaricafestas@gmail.com",
-                instagram: { url: "https://www.instagram.com/recanto.vilarica", display: "@recanto.vilarica" },
+                name: "Salão Lagoa",
+                whatsapp: { number: "5531997842215", display: "(31) 99784-2215" },
+                phone: "(31) 3333-4444",
+                email: "contato@salaolagoa.com.br",
+                instagram: { url: "https://www.instagram.com/salaolagoa", display: "@salaolagoa" },
+                address: "Av. Otacílio Negrão de Lima, 1000 - Belo Horizonte",
             },
         })
     ),

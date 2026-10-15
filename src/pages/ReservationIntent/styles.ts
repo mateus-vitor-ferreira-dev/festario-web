@@ -527,7 +527,8 @@ export const ContractDownloadWrapper = styled.div`
   font-size: var(--text-sm);
   color: var(--text-muted);
 
-  & > a {
+  & > a,
+  & > button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -543,9 +544,22 @@ export const ContractDownloadWrapper = styled.div`
     text-decoration: none;
     transition: background 0.15s ease, border-color 0.15s ease;
 
-    &:hover {
+    cursor: pointer;
+    font-family: inherit;
+
+    &:hover:not(:disabled) {
       background: var(--brand-subtle);
       border-color: var(--brand-border);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      cursor: progress;
+      opacity: 0.7;
     }
   }
 `;

@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { useGSAP } from "@gsap/react";
 
 import { cancelReservation, listReservationsPaginated } from "../../services/reservation";
+import { getReservationContract } from "../../services/contract";
 import { usePaginatedQuery } from "../../hooks/usePaginatedQuery";
 import { useListParams } from "../../hooks/useListParams";
 import { NoResults, Pagination, SelectField } from "../../components";
@@ -72,6 +73,23 @@ export default function Reservations() {
     const hasFilters = activeKeys.length > 0;
 
     const [cancellingId, setCancellingId] = useState<string | null>(null);
+    const [contractId, setContractId] = useState<string | null>(null);
+
+    /** Contrato aceito da reserva (#47), gerado em PDF no navegador. */
+    async function handleDownloadContract(reservation: Reservation) {
+        try {
+            setContractId(reservation.id);
+            const [contract, { downloadContract }] = await Promise.all([
+                getReservationContract(reservation.id, reservation.tenant?.slug),
+                import("../../components/Contract/download"),
+            ]);
+            await downloadContract(contract);
+        } catch (error) {
+            toast.error(getErrorMessage(error, "Não foi possível baixar o contrato."));
+        } finally {
+            setContractId(null);
+        }
+    }
     const [confirmCancelReservation, setConfirmCancelReservation] = useState<Reservation | null>(null);
 
     useGSAP(() => {
@@ -274,8 +292,15 @@ export default function Reservations() {
                                 </div>
                             </S.CardBody>
 
-                            {canCancel && (
                             <S.CardFooter>
+                                <S.ContractButton
+                                    type="button"
+                                    onClick={() => handleDownloadContract(reservation)}
+                                    disabled={contractId === reservation.id}
+                                    aria-busy={contractId === reservation.id}
+                                >
+                                    {contractId === reservation.id ? "Gerando contrato..." : "Baixar contrato"}
+                                </S.ContractButton>
                                 {reservation.status === "PENDING" && (
                                     <S.PayButton
                                         onClick={() => navigate(`/checkout/${reservation.id}`)}
@@ -293,7 +318,6 @@ export default function Reservations() {
                                     </S.CancelButton>
                                 )}
                             </S.CardFooter>
-                            )}
                         </S.Card>
                     );
                 })}

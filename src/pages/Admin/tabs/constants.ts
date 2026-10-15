@@ -86,10 +86,16 @@ export function getCampaignDateDisplay(campaign: Campaign) {
     return `${formatDate(campaign.startsAt)} → ${formatDate(campaign.endsAt)}`;
 }
 
-/** Mensagem para o ganhador; `venueName` é o nome do espaço (tenant) quando o navegador o conhece. */
-export function buildWinnerMessage(winner: RaffleWinnerResult["winner"], campaignName: string, venueName?: string | null) {
+/**
+ * Mensagem para o ganhador; `venueName` é o nome do salão e `instagram` o perfil dele (#47), quando
+ * cadastrado. Sem Instagram, a mensagem pede só a confirmação.
+ */
+export function buildWinnerMessage(winner: RaffleWinnerResult["winner"], campaignName: string, venueName?: string | null, instagram?: string | null) {
     const venue = venueName ? ` de ${venueName}` : "";
-    return `Olá, ${winner.name}! 🎉\n\nVocê foi o grande sorteado do *${campaignName}*${venue}!\n\nPara resgatar seu prêmio, publique um stories no Instagram marcando @recantovilarica e nos envie a confirmação. 📸\n\nQualquer dúvida, é só entrar em contato. Parabéns! 🥳`;
+    const redeem = instagram
+        ? `publique um stories no Instagram marcando ${instagram} e nos envie a confirmação. 📸`
+        : "responda esta mensagem para combinarmos a sua reserva.";
+    return `Olá, ${winner.name}! 🎉\n\nVocê foi o grande sorteado do *${campaignName}*${venue}!\n\nPara resgatar seu prêmio, ${redeem}\n\nQualquer dúvida, é só entrar em contato. Parabéns! 🥳`;
 }
 
 export const HOLIDAY_TYPE_OPTIONS = [

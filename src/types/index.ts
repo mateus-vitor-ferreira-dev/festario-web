@@ -406,3 +406,32 @@ export interface RaffleWinnerResult {
   totalEntries: number;
   campaignName: string;
 }
+
+/**
+ * Contrato de locação montado pela API (#47): o mesmo documento que vira PDF e que a reserva guarda
+ * quando o cliente aceita.
+ */
+export interface ContractDocument {
+  version: number;
+  generatedAt: string;
+  title: string;
+  landlord: { name: string; tradeName: string; document: string | null; address: string | null; phone: string | null; email: string | null };
+  renter: { name: string; email: string; phone: string | null };
+  event: { venue: string; address: string | null; date: string; start: string; end: string; guests: number | null; keyDelivery: string | null };
+  package: { name: string; description: string | null; included: string[] };
+  charges: { lines: { description: string; amount: string }[]; discount: string | null; total: string };
+  payment: string;
+  clauses: { title: string; text: string }[];
+  cancellation: { summary: string[]; notes: string | null };
+  place: string | null;
+}
+
+/** Contato do salão (GET /contact, #47). Canal não cadastrado = null. */
+export interface SalonContact {
+  name: string;
+  whatsapp: { number: string; display: string } | null;
+  phone: string | null;
+  email: string | null;
+  instagram: { url: string; display: string } | null;
+  address: string | null;
+}

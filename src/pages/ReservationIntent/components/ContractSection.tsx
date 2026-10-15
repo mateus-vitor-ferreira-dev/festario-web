@@ -1,43 +1,57 @@
-import { lazy, Suspense } from "react";
-import ErrorBoundary from "../../../components/ErrorBoundary";
-import type { ContratoRVRProps } from "../../../components/ContratoRVR";
+import { useState } from "react";
+import { toast } from "react-toastify";
+
+import { previewContract } from "../../../services/contract";
+import type { QuotePayload } from "../../../types";
+import { getErrorMessage } from "../../../utils/getErrorMessage";
 import * as S from "../styles";
 
-const ContratoDownloadLink = lazy(() => import("../../../components/ContratoRVR/DownloadLink"));
-
 interface ContractSectionProps {
-    planCode: string;
-    eventDate: string;
-    contratoProps: ContratoRVRProps;
+    /** Mesmo corpo do orçamento; nulo enquanto faltam data, horário ou pacote. */
+    payload: QuotePayload | null;
     acceptedContract: boolean;
     onAcceptedChange: (value: boolean) => void;
 }
 
 /**
- * Card de download e aceite do contrato da reserva.
+ * Download e aceite do contrato da reserva (#47). O contrato é montado pela API com as regras e os
+ * dados do salão; o PDF é gerado no navegador, carregado só quando a pessoa pede.
  */
-export function ContractSection({ planCode, eventDate, contratoProps, acceptedContract, onAcceptedChange }: ContractSectionProps) {
+export function ContractSection({ payload, acceptedContract, onAcceptedChange }: ContractSectionProps) {
+    const [generating, setGenerating] = useState(false);
+
+    async function handleDownload() {
+        if (!payload) return;
+        try {
+            setGenerating(true);
+            const [contract, { downloadContract }] = await Promise.all([
+                previewContract(payload),
+                import("../../../components/Contract/download"),
+            ]);
+            await downloadContract(contract);
+        } catch (error) {
+            toast.error(getErrorMessage(error, "Não foi possível gerar o contrato. Confira a data, o horário e o pacote."));
+        } finally {
+            setGenerating(false);
+        }
+    }
+
     return (
         <S.ContractCard>
             <S.ContractTitle>Contrato da reserva</S.ContractTitle>
             <S.ContractDescription>
-                O contrato é gerado automaticamente com base no plano e data escolhidos. Baixe e leia antes de confirmar.
+                O contrato traz as regras do salão, o pacote, os valores e a política de cancelamento desta reserva. Baixe e leia antes de confirmar.
             </S.ContractDescription>
 
-            {planCode ? (
+            {payload ? (
                 <S.ContractDownloadWrapper>
-                    <ErrorBoundary fallback={<span>Erro ao gerar contrato. Tente novamente.</span>}>
-                        <Suspense fallback={<span>Carregando...</span>}>
-                            <ContratoDownloadLink
-                                contratoProps={contratoProps}
-                                fileName={`contrato-recanto-vila-rica-${eventDate || "reserva"}.pdf`}
-                            />
-                        </Suspense>
-                    </ErrorBoundary>
+                    <button type="button" onClick={handleDownload} disabled={generating} aria-busy={generating}>
+                        {generating ? "Gerando contrato..." : "Baixar contrato em PDF"}
+                    </button>
                 </S.ContractDownloadWrapper>
             ) : (
                 <S.ContractDescription style={{ fontStyle: "italic" }}>
-                    Selecione um plano para gerar o contrato.
+                    Escolha a data, o horário e o pacote para gerar o contrato.
                 </S.ContractDescription>
             )}
 

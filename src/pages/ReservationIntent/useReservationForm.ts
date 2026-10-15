@@ -11,7 +11,7 @@ import {
 import { createReservation, quoteReservation } from "../../services/reservation";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { isAbortError } from "../../utils/errors";
-import type { QuoteResult, PlanCode } from "../../types";
+import type { QuoteResult, PlanCode, QuotePayload } from "../../types";
 
 /** Items da cotação com campos extras retornados pela API */
 interface QuoteItem {
@@ -39,6 +39,8 @@ export interface UseReservationFormReturn {
     notes: string;
     setNotes: Dispatch<SetStateAction<string>>;
     acceptedContract: boolean;
+    /** Corpo do orçamento e da prévia do contrato; nulo enquanto falta data, horário ou pacote. */
+    quotePayload: QuotePayload | null;
     setAcceptedContract: Dispatch<SetStateAction<boolean>>;
     selectedPlan: typeof PLANS[number] | null;
     normalizedQuote: ExtendedQuoteResult | null;
@@ -134,6 +136,18 @@ export function useReservationForm({ venueId, hasKidsArea }: { venueId: string |
         };
     }, [planCode, eventDate, startTime, endTime, kidsMonitorExtraHours, venueId]);
 
+    /** Corpo do orçamento (e da prévia do contrato, #47); nulo enquanto falta algo ou o horário é inválido. */
+    const quotePayload: QuotePayload | null = (() => {
+        if (!planCode || !eventDate || !startTime || !endTime || !venueId) return null;
+        const startDate = new Date(`${eventDate}T${startTime}:00`);
+        const endDate = new Date(`${eventDate}T${endTime}:00`);
+        if (endDate <= startDate) return null;
+        return {
+            venueId, planCode, startDate: startDate.toISOString(), endDate: endDate.toISOString(),
+            ...(kidsMonitorExtraHours > 0 && { kidsMonitorExtraHours }),
+        };
+    })();
+
     const selectedPlan = PLANS.find((p) => p.code === planCode) ?? null;
 
     // O plano COMPLETA tem preço base fixo de R$ 1.000 — normaliza caso a API retorne
@@ -218,6 +232,7 @@ export function useReservationForm({ venueId, hasKidsArea }: { venueId: string |
         kidsMonitorHours, setKidsMonitorHours,
         notes, setNotes,
         acceptedContract, setAcceptedContract,
+        quotePayload,
         selectedPlan,
         normalizedQuote,
         quoteLoading,

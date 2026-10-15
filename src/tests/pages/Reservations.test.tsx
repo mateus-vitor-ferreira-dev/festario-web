@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import Reservations from "../../pages/Reservations";
 import { server } from "../mocks/server";
 
@@ -125,6 +125,27 @@ describe("Reservations page", () => {
         await user.click(await screen.findByRole("button", { name: /sim, cancelar/i }));
         await waitFor(() => expect(screen.getByText(/reserva cancelada com sucesso/i)).toBeInTheDocument());
         expect(cancelTenant).toBe("casa-pampulha-eventos");
+    });
+
+    it("baixa o contrato aceito da reserva, no salão dela (#47)", async () => {
+        let contractTenant: string | null = null;
+        server.use(
+            http.get(`${BASE}/reservations`, () =>
+                HttpResponse.json({ success: true, data: [{ ...mockReservation, tenant: { slug: "casa-pampulha-eventos", name: "Casa Pampulha Eventos" } }] })
+            ),
+            http.get(`${BASE}/reservations/res-1/contract`, ({ request }) => {
+                contractTenant = request.headers.get("X-Tenant-Slug");
+                return HttpResponse.json({ success: true, data: { landlord: { tradeName: "Casa Pampulha Eventos" }, event: { date: "01/01/2030" } } });
+            })
+        );
+        const download = vi.fn();
+        vi.doMock("../../components/Contract/download", () => ({ downloadContract: download }));
+        const user = userEvent.setup();
+        renderPage();
+        await user.click(await screen.findByRole("button", { name: /baixar contrato/i }));
+        await waitFor(() => expect(download).toHaveBeenCalledWith(expect.objectContaining({ landlord: { tradeName: "Casa Pampulha Eventos" } })));
+        expect(contractTenant).toBe("casa-pampulha-eventos");
+        vi.doUnmock("../../components/Contract/download");
     });
 
     it("shows error toast when load fails", async () => {

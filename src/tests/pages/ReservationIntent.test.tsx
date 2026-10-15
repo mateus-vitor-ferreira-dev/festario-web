@@ -413,16 +413,36 @@ describe("ReservationIntent page", () => {
         );
     });
 
-    it("renders contract link", async () => {
+    it("pede data, horário e pacote antes de gerar o contrato (#47)", async () => {
         const user = userEvent.setup();
         renderPage();
-        await waitFor(() =>
-            expect(screen.getByText("Essencial")).toBeInTheDocument()
-        );
+        await waitFor(() => expect(screen.getByText("Essencial")).toBeInTheDocument());
         await user.click(screen.getByText("Essencial"));
-        await waitFor(() =>
-            expect(screen.getByRole("link", { name: /baixar contrato em pdf/i })).toBeInTheDocument()
+        expect(screen.getByText(/escolha a data, o horário e o pacote para gerar o contrato/i)).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /baixar contrato em pdf/i })).not.toBeInTheDocument();
+    });
+
+    it("gera o contrato pela API com o mesmo corpo do orçamento e baixa o PDF (#47)", async () => {
+        let previewBody: Record<string, unknown> | null = null;
+        server.use(
+            http.post(`${BASE}/reservations/contract-preview`, async ({ request }) => {
+                previewBody = (await request.json()) as Record<string, unknown>;
+                return HttpResponse.json({ success: true, data: { landlord: { tradeName: "Salão Principal" }, event: { date: "20/06/2027" } } });
+            }),
         );
+        const download = vi.fn();
+        vi.doMock("../../components/Contract/download", () => ({ downloadContract: download }));
+
+        const { container } = renderPage();
+        const user = userEvent.setup();
+        await waitFor(() => expect(screen.getByText("Essencial")).toBeInTheDocument());
+        await user.click(screen.getByText("Essencial"));
+        fillDateTime(container);
+
+        await user.click(await screen.findByRole("button", { name: /baixar contrato em pdf/i }));
+        await waitFor(() => expect(download).toHaveBeenCalledWith(expect.objectContaining({ landlord: { tradeName: "Salão Principal" } })));
+        expect(previewBody).toMatchObject({ venueId: "venue-1", planCode: "ESSENCIAL" });
+        vi.doUnmock("../../components/Contract/download");
     });
 
     it("confirm button is disabled when page loads (contract not yet accepted)", async () => {
