@@ -1,18 +1,42 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { cancelAdminReservation, listAdminReservations } from "../../../services/admin";
-import { isAbortError } from "../../../utils/errors";
-import { DatePickerInput } from "../../../components";
+import { cancelAdminReservation, listAdminReservationsPage } from "../../../services/admin";
+import { listVenues } from "../../../services/venue";
+import { listPackages } from "../../../services/salonRules";
+import {
+    ActiveFilterChips,
+    DateField,
+    FilterBar,
+    MoneyRangeField,
+    NoResults,
+    Pagination,
+    SelectField,
+    TextField,
+} from "../../../components";
+import { useListParams } from "../../../hooks/useListParams";
+import { usePaginatedQuery } from "../../../hooks/usePaginatedQuery";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
+import { isAbortError } from "../../../utils/errors";
+import { packageLabel } from "../../../utils/reservationFormat";
+import { refundEstimate } from "../../../utils/cancellationPolicy";
 import type { Reservation } from "../../../types";
 import {
     formatCurrency,
     formatDateTime,
-    getRefundPercentage,
     STATUS_LABELS,
-    STATUS_OPTIONS,
 } from "./constants";
+import {
+    ALL_PACKAGES_OPTION,
+    describeReservationChip,
+    RESERVATION_FILTER_DEFAULTS,
+    RESERVATION_FILTER_KEYS,
+    RESERVATION_NON_FILTER_KEYS,
+    RESERVATION_STATUS_OPTIONS,
+    SORT_OPTIONS,
+    type ReservationFilterKey,
+} from "./reservationFilters";
 import { ModalHeader } from "../ModalHeader";
+import { PaymentsModal } from "./PaymentsModal";
 import * as S from "../styles";
 
 interface CancelModal {
@@ -23,62 +47,69 @@ interface CancelModal {
     daysBeforeEvent?: number;
     refundPct?: number;
     refundAmount?: number;
+    /** Frases da política gravada na reserva. */
+    policy?: string[];
 }
 
+export const ADMIN_RESERVATIONS_PAGE_SIZE = 15;
+
 export function ReservationsTab() {
-    const [reservations, setReservations] = useState<Reservation[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [page, setPage] = useState(1);
-    const [hasMore, setHasMore] = useState(false);
-    const [status, setStatus] = useState("");
-    const [startDate, setStartDate] = useState("");
-    const [endDate, setEndDate] = useState("");
     const [cancellingId, setCancellingId] = useState<string | null>(null);
     const [cancelModal, setCancelModal] = useState<CancelModal | null>(null);
-    const limit = 15;
+    const [venueOptions, setVenueOptions] = useState([{ value: "", label: "Todos os espaços" }]);
+    const [packageOptions, setPackageOptions] = useState([ALL_PACKAGES_OPTION]);
+    const [paymentsFor, setPaymentsFor] = useState<Reservation | null>(null);
+    const topRef = useRef<HTMLDivElement | null>(null);
 
-    async function load(currentPage = 1, signal?: AbortSignal) {
-        try {
-            setIsLoading(true);
-            const filters: Record<string, unknown> = { page: currentPage, limit };
-            if (status) filters.status = status;
-            if (startDate) filters.startDate = new Date(startDate).toISOString();
-            if (endDate) filters.endDate = new Date(endDate + "T23:59:59").toISOString();
-            const result = await listAdminReservations(filters, signal);
-            if (signal?.aborted) return;
-            const list = result ?? [];
-            setReservations(list);
-            setHasMore(list.length === limit);
-        } catch (error) {
-            if (isAbortError(error)) return;
-            toast.error(getErrorMessage(error, "Erro ao carregar reservas."));
-        } finally {
-            if (!signal?.aborted) setIsLoading(false);
-        }
-    }
+    const list = useListParams<ReservationFilterKey>(RESERVATION_FILTER_KEYS, {
+        defaults: RESERVATION_FILTER_DEFAULTS,
+        nonFilterKeys: RESERVATION_NON_FILTER_KEYS,
+    });
+    const { values, page, activeKeys, setFilter, setFilters, setPage, clearFilters } = list;
+
+    const params = useMemo(() => ({ ...values, page, limit: ADMIN_RESERVATIONS_PAGE_SIZE }), [values, page]);
+    const { data: reservations, meta, isLoading, isFetching, refresh } = usePaginatedQuery(
+        listAdminReservationsPage,
+        params,
+        { errorMessage: "Erro ao carregar reservas.", onPageOutOfRange: setPage },
+    );
 
     useEffect(() => {
         const controller = new AbortController();
-        setPage(1);
-        load(1, controller.signal);
+        listVenues(controller.signal)
+            .then((venues) => setVenueOptions([
+                { value: "", label: "Todos os espaços" },
+                ...venues.map((v) => ({ value: v.id, label: v.name })),
+            ]))
+            // sem a lista de espaços o filtro fica só com "Todos os espaços"; a tabela segue funcionando
+            .catch((error) => {
+                if (!isAbortError(error)) toast.error(getErrorMessage(error, "Erro ao carregar os espaços."));
+            });
         return () => controller.abort();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [status, startDate, endDate]);
+    }, []);
 
-    function handlePageChange(next: number) {
-        setPage(next);
-        load(next);
-    }
+    useEffect(() => {
+        const controller = new AbortController();
+        listPackages(controller.signal)
+            .then((packages) => setPackageOptions([ALL_PACKAGES_OPTION, ...packages.map((p) => ({ value: p.id, label: p.name }))]))
+            // sem a lista o filtro fica só com "Todos os pacotes"
+            .catch((error) => {
+                if (!isAbortError(error)) toast.error(getErrorMessage(error, "Erro ao carregar os pacotes."));
+            });
+        return () => controller.abort();
+    }, []);
+
+    const chips = activeKeys.map((key) => ({ key, label: describeReservationChip(key, values, venueOptions, packageOptions) }));
+    const hasFilters = activeKeys.length > 0;
 
     function handleCancelClick(r: Reservation) {
-        if (r.status === "PENDING") {
+        // A devolução é sobre o que o salão já recebeu (pode ser só o sinal, mesmo em reserva pendente).
+        const received = Number(r.payment?.amount ?? 0) - Number(r.payment?.refundAmount ?? 0);
+        if (!(received > 0)) {
             setCancelModal({ id: r.id, status: r.status, startDate: r.startDate, totalPrice: r.totalPrice });
         } else {
-            const msPerDay = 1000 * 60 * 60 * 24;
-            const daysBeforeEvent = Math.max(0, Math.floor((new Date(r.startDate).getTime() - Date.now()) / msPerDay));
-            const refundPct = getRefundPercentage(daysBeforeEvent);
-            const refundAmount = (Number(r.totalPrice) * refundPct) / 100;
-            setCancelModal({ id: r.id, status: r.status, startDate: r.startDate, totalPrice: r.totalPrice, daysBeforeEvent, refundPct, refundAmount });
+            const { daysBeforeEvent, percentage: refundPct, refundAmount } = refundEstimate(Math.max(0, received), r.cancellationPolicy?.tiers ?? [], r.startDate);
+            setCancelModal({ id: r.id, status: r.status, startDate: r.startDate, totalPrice: r.totalPrice, daysBeforeEvent, refundPct, refundAmount, policy: r.cancellationPolicy?.summary });
         }
     }
 
@@ -89,7 +120,7 @@ export function ReservationsTab() {
             setCancelModal(null);
             await cancelAdminReservation(cancelModal.id);
             toast.success("Reserva cancelada.");
-            load(page);
+            refresh();
         } catch (error) {
             toast.error(getErrorMessage(error, "Erro ao cancelar reserva."));
         } finally {
@@ -99,41 +130,93 @@ export function ReservationsTab() {
 
     return (
         <S.Section>
-            <S.SectionHeader>
-                <S.SectionTitle>Todas as reservas</S.SectionTitle>
-            </S.SectionHeader>
+            <S.ScrollAnchor ref={topRef} tabIndex={-1}>
+                <S.SectionHeader>
+                    <S.SectionTitle>Todas as reservas</S.SectionTitle>
+                    {meta?.total !== undefined && (
+                        <S.ResultCount aria-live="polite">
+                            {meta.total.toLocaleString("pt-BR")} reserva{meta.total === 1 ? "" : "s"}
+                            {hasFilters ? " com esses filtros" : ""}
+                        </S.ResultCount>
+                    )}
+                </S.SectionHeader>
+            </S.ScrollAnchor>
 
-            <S.FiltersRow>
-                <S.Select value={status} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatus(e.target.value)}>
-                    {STATUS_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                </S.Select>
-                <S.FilterField>
-                    <DatePickerInput
-                        value={startDate}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStartDate(e.target.value)}
-                        placeholder="Data inicial"
+            <FilterBar
+                label="Filtrar reservas"
+                activeCount={activeKeys.length}
+                footer={
+                    <ActiveFilterChips
+                        chips={chips}
+                        onRemove={(key) => setFilter(key as ReservationFilterKey, "")}
+                        onClearAll={clearFilters}
                     />
-                </S.FilterField>
-                <S.FilterField>
-                    <DatePickerInput
-                        value={endDate}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value)}
-                        placeholder="Data final"
-                    />
-                </S.FilterField>
-            </S.FiltersRow>
+                }
+            >
+                <TextField
+                    label="Cliente"
+                    placeholder="Nome ou e-mail"
+                    value={values.q}
+                    onChange={(v) => setFilter("q", v)}
+                    wide
+                />
+                <SelectField
+                    label="Status"
+                    value={values.status}
+                    onChange={(v) => setFilter("status", v)}
+                    options={RESERVATION_STATUS_OPTIONS}
+                />
+                <SelectField
+                    label="Espaço"
+                    value={values.venueId}
+                    onChange={(v) => setFilter("venueId", v)}
+                    options={venueOptions}
+                />
+                <SelectField
+                    label="Pacote"
+                    value={values.packageId}
+                    onChange={(v) => setFilter("packageId", v)}
+                    options={packageOptions}
+                />
+                <DateField
+                    label="Evento a partir de"
+                    value={values.startDate}
+                    maxDate={values.endDate || undefined}
+                    onChange={(v) => setFilter("startDate", v)}
+                />
+                <DateField
+                    label="Evento até"
+                    value={values.endDate}
+                    minDate={values.startDate || undefined}
+                    onChange={(v) => setFilter("endDate", v)}
+                />
+                <MoneyRangeField
+                    label="Valor da reserva"
+                    min={values.minPrice}
+                    max={values.maxPrice}
+                    onChange={({ min, max }) => setFilters({ minPrice: min, maxPrice: max })}
+                />
+                <SelectField
+                    label="Ordenar por"
+                    value={values.sort}
+                    onChange={(v) => setFilter("sort", v)}
+                    options={SORT_OPTIONS}
+                />
+            </FilterBar>
 
             {isLoading ? (
-                <S.LoadingSpinner />
+                <S.LoadingSpinner role="status" aria-label="Carregando reservas" />
             ) : reservations.length === 0 ? (
-                <S.EmptyState>
-                    <h3>Nenhuma reserva encontrada</h3>
-                    <p>Tente ajustar os filtros.</p>
-                </S.EmptyState>
+                hasFilters ? (
+                    <NoResults title="Nenhuma reserva com esses filtros" onClear={clearFilters} />
+                ) : (
+                    <S.EmptyState>
+                        <h3>Nenhuma reserva encontrada</h3>
+                        <p>As reservas feitas pelos clientes aparecem aqui.</p>
+                    </S.EmptyState>
+                )
             ) : (
-                <>
+                <S.ListRegion $busy={isFetching} aria-busy={isFetching}>
                     <S.TableWrapper>
                         <S.Table>
                             <thead>
@@ -142,10 +225,10 @@ export function ReservationsTab() {
                                     <S.Th>Espaço</S.Th>
                                     <S.Th>Início</S.Th>
                                     <S.Th>Fim</S.Th>
-                                    <S.Th>Plano</S.Th>
+                                    <S.Th>Pacote</S.Th>
                                     <S.Th $num>Valor</S.Th>
                                     <S.Th>Status</S.Th>
-                                    <S.Th></S.Th>
+                                    <S.Th><S.VisuallyHidden>Ação</S.VisuallyHidden></S.Th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -155,14 +238,23 @@ export function ReservationsTab() {
                                         <S.Td>{r.venue?.name ?? r.venueId}</S.Td>
                                         <S.Td>{formatDateTime(r.startDate)}</S.Td>
                                         <S.Td>{formatDateTime(r.endDate)}</S.Td>
-                                        <S.Td>{r.planCode ?? "—"}</S.Td>
-                                        <S.Td $num>{formatCurrency(r.totalPrice ?? 0)}</S.Td>
+                                        <S.Td>{packageLabel(r)}</S.Td>
+                                        <S.Td $num>
+                                            {formatCurrency(r.totalPrice ?? 0)}
+                                            {Number(r.payment?.amount ?? 0) > 0 && (
+                                                <S.MonthlyCount>{formatCurrency(Number(r.payment!.amount) - Number(r.payment!.refundAmount ?? 0))} recebido</S.MonthlyCount>
+                                            )}
+                                        </S.Td>
                                         <S.Td>
                                             <S.StatusBadge $status={r.status}>
-                                                {STATUS_LABELS[r.status] ?? r.status}
+                                                {STATUS_LABELS[r.status as keyof typeof STATUS_LABELS] ?? r.status}
                                             </S.StatusBadge>
                                         </S.Td>
                                         <S.Td>
+                                            <S.InlineGroup style={{ flexWrap: "nowrap" }}>
+                                            <S.SecondaryButton $size="sm" onClick={() => setPaymentsFor(r)} aria-label={`Pagamentos de ${r.user?.name ?? "cliente"} em ${formatDateTime(r.startDate)}`}>
+                                                Pagamentos
+                                            </S.SecondaryButton>
                                             {(r.status === "PENDING" || r.status === "PAID") && (
                                                 <S.DangerButton
                                                     $size="sm"
@@ -172,6 +264,7 @@ export function ReservationsTab() {
                                                     {cancellingId === r.id ? "..." : "Cancelar"}
                                                 </S.DangerButton>
                                             )}
+                                            </S.InlineGroup>
                                         </S.Td>
                                     </S.Tr>
                                 ))}
@@ -179,12 +272,25 @@ export function ReservationsTab() {
                         </S.Table>
                     </S.TableWrapper>
 
-                    <S.Pagination>
-                        <S.PageButton onClick={() => handlePageChange(page - 1)} disabled={page === 1}>Anterior</S.PageButton>
-                        <S.PageInfo>Página {page}</S.PageInfo>
-                        <S.PageButton onClick={() => handlePageChange(page + 1)} disabled={!hasMore}>Próxima</S.PageButton>
-                    </S.Pagination>
-                </>
+                    {meta && (
+                        <Pagination
+                            page={meta.page}
+                            totalPages={meta.totalPages}
+                            total={meta.total}
+                            limit={meta.limit}
+                            count={reservations.length}
+                            hasNext={meta.hasNext}
+                            onChange={setPage}
+                            scrollTargetRef={topRef}
+                            disabled={isFetching}
+                            label="Paginação das reservas"
+                        />
+                    )}
+                </S.ListRegion>
+            )}
+
+            {paymentsFor && (
+                <PaymentsModal reservation={paymentsFor} onClose={() => setPaymentsFor(null)} onChanged={refresh} />
             )}
 
             {cancelModal && (
@@ -192,27 +298,30 @@ export function ReservationsTab() {
                     <S.ModalBox onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                         <ModalHeader onClose={() => setCancelModal(null)}>Cancelar reserva</ModalHeader>
 
-                        {cancelModal.status === "PAID" ? (
+                        {cancelModal.refundPct !== undefined ? (
                             <>
-                                <S.ModalText>Esta reserva já foi <strong>paga</strong>. O reembolso segue a política de cancelamento:</S.ModalText>
+                                <S.ModalText>O salão já recebeu por esta reserva. A devolução segue a política gravada nela, e você a registra em <strong>Pagamentos</strong> depois de devolver:</S.ModalText>
+                                {cancelModal.policy && cancelModal.policy.length > 0 && (
+                                    <S.ModalNote as="ul">{cancelModal.policy.map((line) => <li key={line}>{line}</li>)}</S.ModalNote>
+                                )}
                                 <S.RefundSummary>
                                     <div>
                                         <dt>Dias até o evento</dt>
                                         <dd>{cancelModal.daysBeforeEvent}</dd>
                                     </div>
                                     <div>
-                                        <dt>Percentual de reembolso</dt>
+                                        <dt>Percentual de devolução</dt>
                                         <dd>{cancelModal.refundPct}%</dd>
                                     </div>
                                     <div>
-                                        <dt>Valor a reembolsar</dt>
+                                        <dt>Valor a devolver</dt>
                                         <dd>{formatCurrency(cancelModal.refundAmount ?? 0)}</dd>
                                     </div>
                                 </S.RefundSummary>
                                 {cancelModal.refundPct === 0 && (
-                                    <S.RefundWarning>Cancelamento fora do prazo: não há reembolso.</S.RefundWarning>
+                                    <S.RefundWarning>Cancelamento fora do prazo: não há devolução.</S.RefundWarning>
                                 )}
-                                <S.ModalNote>O reembolso é processado automaticamente na forma de pagamento original.</S.ModalNote>
+                                <S.ModalNote>Não há estorno automático: devolva ao cliente e registre a devolução em Pagamentos. Ele recebe um aviso.</S.ModalNote>
                             </>
                         ) : (
                             <S.ModalText>

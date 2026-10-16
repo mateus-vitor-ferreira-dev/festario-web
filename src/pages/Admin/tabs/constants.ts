@@ -1,6 +1,5 @@
 import type { Campaign, NegotiationStatus, RaffleWinnerResult } from "../../../types";
 // Constantes e helpers compartilhados entre as abas do painel admin
-export { REFUND_TIERS, getRefundPercentage } from "../../../constants/reservation";
 
 export const TABS = [
     { key: "dashboard", label: "Dashboard" },
@@ -10,7 +9,8 @@ export const TABS = [
     { key: "campaigns", label: "Campanhas" },
     { key: "holidays", label: "Feriados" },
     { key: "blockedDates", label: "Datas bloqueadas" },
-    { key: "plans", label: "Planos" },
+    { key: "rules", label: "Regras do salão" },
+    { key: "brand", label: "Marca e fotos" },
     { key: "venues", label: "Espaços" },
 ];
 
@@ -86,39 +86,17 @@ export function getCampaignDateDisplay(campaign: Campaign) {
     return `${formatDate(campaign.startsAt)} → ${formatDate(campaign.endsAt)}`;
 }
 
-export function buildWinnerMessage(winner: RaffleWinnerResult["winner"], campaignName: string) {
-    return `Olá, ${winner.name}! 🎉\n\nVocê foi o grande sorteado do *${campaignName}* do Recanto Vila Rica!\n\nPara resgatar seu prêmio, publique um stories no Instagram marcando @recantovilarica e nos envie a confirmação. 📸\n\nQualquer dúvida, é só entrar em contato. Parabéns! 🥳`;
+/**
+ * Mensagem para o ganhador; `venueName` é o nome do salão e `instagram` o perfil dele, quando
+ * cadastrado. Sem Instagram, a mensagem pede só a confirmação.
+ */
+export function buildWinnerMessage(winner: RaffleWinnerResult["winner"], campaignName: string, venueName?: string | null, instagram?: string | null) {
+    const venue = venueName ? ` de ${venueName}` : "";
+    const redeem = instagram
+        ? `publique um stories no Instagram marcando ${instagram} e nos envie a confirmação. 📸`
+        : "responda esta mensagem para combinarmos a sua reserva.";
+    return `Olá, ${winner.name}! 🎉\n\nVocê foi o grande sorteado do *${campaignName}*${venue}!\n\nPara resgatar seu prêmio, ${redeem}\n\nQualquer dúvida, é só entrar em contato. Parabéns! 🥳`;
 }
-
-export const HOLIDAY_TYPE_OPTIONS = [
-    { value: "national", label: "Nacional" },
-    { value: "state", label: "Estadual" },
-    { value: "municipal", label: "Municipal" },
-];
-
-export function getMunicipalHolidaysSeed(year: number) {
-    return [
-        { name: "Dia de São Sebastião", date: `${year}-01-20` },
-        { name: "Dia de Santo Antônio", date: `${year}-06-13` },
-        { name: "Aniversário de Lavras", date: `${year}-09-08` },
-    ];
-}
-
-export const PLAN_CODES = ["PROMOCIONAL", "ESSENCIAL", "COMPLETA"];
-
-export const EMPTY_PLAN_FORM = {
-    venueId: "",
-    code: "ESSENCIAL",
-    name: "",
-    basePriceAmount: "",
-    partyDurationHours: "",
-    endsAtHour: "",
-    keyDeliveryOffsetHours: "",
-    includedKidsMonitorHours: "",
-    includesPool: false,
-    includesCleaning: false,
-    validOnHolidays: false,
-};
 
 export const MONTH_NAMES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 

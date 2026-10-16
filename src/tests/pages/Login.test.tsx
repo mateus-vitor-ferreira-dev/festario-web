@@ -8,13 +8,14 @@ import { AuthProvider } from "../../contexts/AuthContext";
 import Login from "../../pages/Login";
 import { server } from "../mocks/server";
 
-function renderPage() {
+function renderPage(path = "/login") {
     return render(
         <AuthProvider>
-            <MemoryRouter initialEntries={["/login"]}>
+            <MemoryRouter initialEntries={[path]}>
                 <Routes>
                     <Route path="/login" element={<Login />} />
-                    <Route path="/home" element={<div>Home Page</div>} />
+                    <Route path="/saloes" element={<div>Salons Page</div>} />
+                    <Route path="/s/:slug" element={<div>Salon Page</div>} />
                     <Route path="/cadastro" element={<div>Cadastro Page</div>} />
                 </Routes>
                 <ToastContainer />
@@ -42,16 +43,16 @@ describe("Login page", () => {
         );
     });
 
-    it("navigates to /home on successful login", async () => {
+    it("navigates the client to the salon showcase on successful login", async () => {
         const user = userEvent.setup();
         renderPage();
         await user.type(screen.getByPlaceholderText(/digite seu e-mail/i), "mateus@email.com");
         await user.type(screen.getByPlaceholderText(/digite sua senha/i), "123456");
         await user.click(screen.getByRole("button", { name: /^entrar$/i }));
         await waitFor(() =>
-            expect(screen.getByText("Home Page")).toBeInTheDocument()
+            expect(screen.getByText("Salons Page")).toBeInTheDocument()
         );
-        expect(localStorage.getItem("recanto:userData")).not.toBeNull();
+        expect(localStorage.getItem("festario:userData")).not.toBeNull();
     });
 
     it("shows fallback success toast when response has no message", async () => {
@@ -90,5 +91,32 @@ describe("Login page", () => {
         await waitFor(() =>
             expect(screen.getByText(/email ou senha incorretos/i)).toBeInTheDocument()
         );
+    });
+
+    describe("voltar depois de entrar", () => {
+        const okLogin = () => server.use(http.post("http://localhost:3000/auth/login", () =>
+            HttpResponse.json({ success: true, data: { token: "t", user: { id: "u-1", name: "Mateus", email: "m@email.com", role: "USER" } } })));
+
+        async function signIn() {
+            const user = userEvent.setup();
+            await user.type(screen.getByPlaceholderText(/digite seu e-mail/i), "m@email.com");
+            await user.type(screen.getByPlaceholderText(/digite sua senha/i), "senha123");
+            await user.click(screen.getByRole("button", { name: /^entrar$/i }));
+        }
+
+        it("volta para o salão de onde a pessoa veio para reservar", async () => {
+            okLogin();
+            renderPage(`/login?voltar=${encodeURIComponent("/s/jardim?reservar=v1")}`);
+            expect(screen.getByRole("link", { name: "Criar conta" })).toHaveAttribute("href", `/cadastro?voltar=${encodeURIComponent("/s/jardim?reservar=v1")}`);
+            await signIn();
+            expect(await screen.findByText("Salon Page")).toBeInTheDocument();
+        });
+
+        it("ignora endereço externo e segue para a vitrine", async () => {
+            okLogin();
+            renderPage(`/login?voltar=${encodeURIComponent("//site-malicioso.com")}`);
+            await signIn();
+            expect(await screen.findByText("Salons Page")).toBeInTheDocument();
+        });
     });
 });

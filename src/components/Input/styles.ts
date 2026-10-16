@@ -15,7 +15,7 @@ export const Label = styled.label`
 
 export const Input = styled.input<{ $error?: boolean }>`
     width: 100%;
-    height: 48px;
+    height: var(--control-h);
     padding: 0 14px;
     border-radius: var(--radius-md);
     border: 1px solid ${({ $error }) => ($error ? "var(--color-error)" : "var(--border-medium)")};
@@ -52,7 +52,7 @@ export const InputWrapper = styled.div<{ $error?: boolean }>`
     display: flex;
     align-items: center;
     width: 100%;
-    height: 48px;
+    height: var(--control-h);
     padding: 0 14px;
     border-radius: var(--radius-md);
     border: 1px solid ${({ $error }) => ($error ? "var(--color-error)" : "var(--border-medium)")};

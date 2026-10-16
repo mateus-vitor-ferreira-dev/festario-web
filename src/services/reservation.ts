@@ -5,16 +5,19 @@
  * Fluxo principal:
  *   1. `quoteReservation` — calcula preço antes de confirmar
  *   2. `createReservation` — cria a reserva (status PENDING)
- *   3. Usuário paga via Checkout (Stripe ou PIX)
- *   4. `cancelReservation` — cancelamento com reembolso proporcional
+ *   3. O cliente combina o pagamento com o salão, que registra o que recebeu
+ *   4. `cancelReservation` — cancela; a devolução pela política é feita e registrada pelo salão
  */
 import api from "./api";
+import { tenantHeaderFor } from "../config/tenantStorage";
+import { cleanParams, toPaginated } from "./pagination";
 import type {
     QuotePayload,
     QuoteResult,
     CreateReservationPayload,
     Reservation,
     PaginatedResult,
+    ListParams,
 } from "../types";
 
 /**
@@ -56,16 +59,16 @@ export async function listReservations(
 }
 
 /**
- * Lista as reservas do usuário com suporte a paginação.
+ * Lista as reservas do usuário com paginação e filtro de `status`.
  *
- * @see GET /reservations
+ * @see GET /reservations?page=&limit=&status=
  */
 export async function listReservationsPaginated(
+    params: ListParams = {},
     signal?: AbortSignal,
-    { page = 1, limit = 10 }: { page?: number; limit?: number } = {},
 ): Promise<PaginatedResult<Reservation>> {
-    const { data } = await api.get("/reservations", { signal, params: { page, limit } });
-    return { data: data.data || [], meta: data.meta };
+    const { data } = await api.get("/reservations", { signal, params: cleanParams(params) });
+    return toPaginated<Reservation>(data, params);
 }
 
 /**
@@ -90,7 +93,8 @@ export async function getReservation(
  */
 export async function cancelReservation(
     reservationId: string,
+    tenantSlug?: string | null,
 ): Promise<Reservation> {
-    const { data } = await api.patch(`/reservations/${reservationId}/cancel`);
+    const { data } = await api.patch(`/reservations/${reservationId}/cancel`, undefined, { headers: tenantHeaderFor(tenantSlug) });
     return data.data;
 }

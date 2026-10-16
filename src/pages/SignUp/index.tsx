@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
 import { AuthLayout, Button, DatePickerInput, GoogleButton, Input, PhoneInput } from "../../components";
@@ -7,6 +7,8 @@ import { AuthLayout, Button, DatePickerInput, GoogleButton, Input, PhoneInput } 
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { validatePassword } from "../../utils/validatePassword";
+import { RETURN_PARAM, withReturn } from "../../utils/returnPath";
+import { env } from "../../config/env";
 import * as S from "./styles";
 
 /**
@@ -22,6 +24,7 @@ import * as S from "./styles";
  */
 export default function SignUp({ introFinished = true }) {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
     const [form, setForm] = useState({
         firstName: "",
@@ -87,7 +90,8 @@ export default function SignUp({ introFinished = true }) {
             });
 
             toast.success("Cadastro realizado com sucesso.");
-            navigate("/login");
+            // Quem veio de uma reserva entra e volta para ela.
+            navigate(withReturn("/login", searchParams.get(RETURN_PARAM)));
         } catch (error) {
             toast.error(getErrorMessage(error, "Erro ao cadastrar usuário."));
         } finally {
@@ -172,14 +176,18 @@ export default function SignUp({ introFinished = true }) {
                     {isLoading ? "Criando conta..." : "Criar conta"}
                 </Button>
 
-                <S.Divider>
-                    <span>ou continue com</span>
-                </S.Divider>
+                {env.googleLoginEnabled && (
+                    <>
+                        <S.Divider>
+                            <span>ou continue com</span>
+                        </S.Divider>
 
-                <GoogleButton navigate={navigate} />
+                        <GoogleButton navigate={navigate} />
+                    </>
+                )}
 
                 <S.FooterText>
-                    Já tem conta? <Link to="/login">Entrar</Link>
+                    Já tem conta? <Link to={withReturn("/login", searchParams.get(RETURN_PARAM))}>Entrar</Link>
                 </S.FooterText>
             </S.Form>
         </AuthLayout>

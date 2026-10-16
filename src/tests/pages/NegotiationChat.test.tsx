@@ -56,7 +56,7 @@ const proposalMessage = {
 
 function setLocalStorage(role = "USER") {
     localStorage.setItem(
-        "recanto:userData",
+        "festario:userData",
         JSON.stringify({ token: "fake-token", user: { id: "user-1", name: "Mateus", role } })
     );
 }
@@ -68,7 +68,7 @@ function renderPage(id = "neg-1") {
                 <Route path="/negociacoes/:id" element={<NegotiationChat />} />
                 <Route path="/negociacoes" element={<div>Negotiations List</div>} />
                 <Route path="/checkout/:id" element={<div>Checkout Page</div>} />
-                <Route path="/admin" element={<div>Admin Page</div>} />
+                <Route path="/painel" element={<div>Painel Page</div>} />
             </Routes>
             <ToastContainer />
         </MemoryRouter>
@@ -109,7 +109,7 @@ describe("NegotiationChat page", () => {
             expect(screen.getByText("Olá, gostaria de saber mais.")).toBeInTheDocument()
         );
         expect(screen.getByText("Olá! Como posso ajudar?")).toBeInTheDocument();
-        expect(screen.getByText("Recanto Vila Rica")).toBeInTheDocument();
+        expect(screen.getByText("Equipe do espaço")).toBeInTheDocument();
     });
 
     it("sends a message successfully", async () => {
@@ -318,6 +318,22 @@ describe("NegotiationChat page", () => {
         );
     });
 
+    it("owner (dono do espaço) also acts as the venue team", async () => {
+        setLocalStorage("OWNER");
+        server.use(
+            http.get(`${BASE}/negotiations/neg-1`, () =>
+                HttpResponse.json({ success: true, data: userNegotiation })
+            ),
+            http.get(`${BASE}/venues`, () =>
+                HttpResponse.json({ success: true, data: [] })
+            )
+        );
+        renderPage();
+        await waitFor(() =>
+            expect(screen.getByText(/mateus@email\.com/i)).toBeInTheDocument()
+        );
+    });
+
     it("admin sees proposal form in OPEN status", async () => {
         setLocalStorage("ADMIN");
         server.use(
@@ -379,55 +395,23 @@ describe("NegotiationChat page", () => {
         );
     });
 
-    it("renders PIX block when message contains PIX code", async () => {
+    it("hides the expired PIX code of old messages (payment is combined with the salon now)", async () => {
         setLocalStorage("USER");
         const pixMsg = {
             ...userMessage,
             id: "msg-pix",
             isSystem: true,
-            content: "Pagamento confirmado!\n\nPIX copia e cola:\nABCD1234PIXCODE",
+            content: "Proposta aceita!\n\nPIX copia e cola:\nABCD1234PIXCODE",
         };
         server.use(
             http.get(`${BASE}/negotiations/neg-1`, () =>
-                HttpResponse.json({
-                    success: true,
-                    data: { ...userNegotiation, messages: [pixMsg] },
-                })
+                HttpResponse.json({ success: true, data: { ...userNegotiation, messages: [pixMsg] } })
             )
         );
         renderPage();
-        await waitFor(() =>
-            expect(screen.getByText("PIX copia e cola")).toBeInTheDocument()
-        );
-        expect(screen.getByText("ABCD1234PIXCODE")).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /copiar/i })).toBeInTheDocument();
-    });
-
-    it("copies PIX code to clipboard", async () => {
-        setLocalStorage("USER");
-        const pixMsg = {
-            ...userMessage,
-            id: "msg-pix",
-            isSystem: true,
-            content: "Pague via PIX:\n\nPIX copia e cola:\nMYPIXCODE123",
-        };
-        server.use(
-            http.get(`${BASE}/negotiations/neg-1`, () =>
-                HttpResponse.json({
-                    success: true,
-                    data: { ...userNegotiation, messages: [pixMsg] },
-                })
-            )
-        );
-        const user = userEvent.setup();
-        renderPage();
-        await waitFor(() =>
-            expect(screen.getByRole("button", { name: /copiar/i })).toBeInTheDocument()
-        );
-        await user.click(screen.getByRole("button", { name: /copiar/i }));
-        await waitFor(() =>
-            expect(screen.getByText(/código pix copiado/i)).toBeInTheDocument()
-        );
+        expect(await screen.findByText("Proposta aceita!")).toBeInTheDocument();
+        expect(screen.queryByText(/ABCD1234PIXCODE/)).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /copiar/i })).not.toBeInTheDocument();
     });
 
     it("shows unknown status as raw value", async () => {
@@ -736,7 +720,7 @@ describe("NegotiationChat page", () => {
             expect(screen.queryByText(/carregando disponibilidade/i)).not.toBeInTheDocument()
         );
 
-        // Click a future day — pick a high number to avoid "past" issue
+        // Click a future day — pick a high number to avoid a day in the past
         const dayButtons = screen.getAllByRole("button").filter(
             (btn) => /^\d{1,2}$/.test(btn.textContent) && !btn.disabled && btn.getAttribute("type") === "button"
         );

@@ -44,10 +44,16 @@ export const Description = styled.p`
 
 /* ─── Reservation cards ─── */
 
-export const List = styled.div`
+export const List = styled.div<{ $busy?: boolean }>`
   display: flex;
   flex-direction: column;
   gap: 16px;
+  opacity: ${({ $busy }) => ($busy ? 0.55 : 1)};
+  transition: opacity 0.15s ease;
+
+  &:empty {
+    display: none;
+  }
 `;
 
 export const Card = styled.article`
@@ -92,6 +98,15 @@ export const CardHeader = styled.div`
     color: var(--text-muted);
     font-variant-numeric: lining-nums tabular-nums;
   }
+`;
+
+/* Salão da reserva: o cliente reserva em vários salões com a mesma conta */
+export const SalonName = styled.small`
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
 `;
 
 /* Linha quieta de fatos, divididos por hairlines */
@@ -160,7 +175,7 @@ export const CardFooter = styled.div`
   /* mobile: botões com larguras iguais */
   ${media.md} {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 8px;
 
     & > * {
@@ -193,6 +208,37 @@ export const PayButton = styled.button`
 
   &:hover {
     background: var(--brand-dark);
+  }
+`;
+
+/* Ação secundária e quieta: o contrato aceito da reserva. Fica à esquerda, longe de "Cancelar". */
+export const ContractButton = styled.button`
+  background: transparent;
+  color: var(--brand);
+  border: 1px solid var(--border-medium);
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: var(--text-base);
+  cursor: pointer;
+  margin-right: auto;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--brand-subtle);
+    border-color: var(--brand-border);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: progress;
   }
 `;
 
@@ -310,7 +356,7 @@ export const EmptyState = styled.div`
 export const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(10, 18, 14, 0.55);
+  background: var(--overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -511,52 +557,31 @@ export const ModalConfirmBtn = styled.button`
   }
 `;
 
-/* ─── Pagination ─── */
+/* ─── Filtro e contagem ─── */
 
-export const Pagination = styled.div`
+export const Toolbar = styled.div`
   display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 16px;
-  margin-top: 8px;
-  padding-bottom: 8px;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  scroll-margin-top: 96px;
 
-  ${media.sm} {
-    gap: 8px;
+  &:focus {
+    outline: none;
   }
 `;
 
-export const PageInfo = styled.span`
+export const FilterSlot = styled.div`
+  width: min(100%, 280px);
+
+  ${media.sm} {
+    width: 100%;
+  }
+`;
+
+export const ResultCount = styled.p`
   font-size: var(--text-sm);
   color: var(--text-muted);
-  min-width: 100px;
-  text-align: center;
   font-variant-numeric: lining-nums tabular-nums;
-
-  ${media.sm} {
-    min-width: 0;
-  }
-`;
-
-export const PageButton = styled.button`
-  min-height: 44px;
-  padding: 0 16px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-medium);
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-
-  &:hover:not(:disabled) {
-    background: var(--bg-muted);
-    border-color: var(--brand-border);
-  }
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
 `;

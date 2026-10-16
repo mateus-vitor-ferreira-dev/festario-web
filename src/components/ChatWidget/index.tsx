@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { env } from "../../config/env";
+import { tenantHeaders } from "../../config/tenantStorage";
 import { useAuth } from "../../contexts/AuthContext";
 import * as S from "./styles";
 
 const INITIAL_MESSAGE = {
     role: "assistant",
-    content: "Olá! Sou o assistente do Recanto Vila Rica. Como posso te ajudar?",
+    content: "Olá! Sou o assistente deste espaço: tiro dúvidas sobre datas, pacotes e reservas. Como posso te ajudar?",
 };
 
 function ChatIcon() {
@@ -26,7 +27,8 @@ function CloseIcon() {
 }
 
 /**
- * Widget de chat flutuante com o assistente de IA do Recanto Vila Rica.
+ * Widget de chat flutuante com o assistente de IA do espaço (tenant) em uso.
+ * O título leva o nome do espaço quando o navegador já o conhece.
  *
  * Abre um painel de chat no canto da tela e se comunica com `POST /chat` via
  * Server-Sent Events (SSE), fazendo streaming de tokens em tempo real. Mantém
@@ -36,7 +38,8 @@ function CloseIcon() {
  * @component
  */
 export default function ChatWidget() {
-    const { token } = useAuth();
+    const { token, tenant } = useAuth();
+    const assistantTitle = tenant?.name ? `Assistente · ${tenant.name}` : "Assistente de reservas";
     const [open, setOpen] = useState(false);
     const [messages, setMessages] = useState([INITIAL_MESSAGE]);
     const [input, setInput] = useState("");
@@ -88,6 +91,7 @@ export default function ChatWidget() {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    ...tenantHeaders(),
                     ...(token && { Authorization: `Bearer ${token}` }),
                 },
                 body: JSON.stringify({ messages: updatedMessages.slice(-20) }),
@@ -172,10 +176,10 @@ export default function ChatWidget() {
                     id="chat-widget-window"
                     role="dialog"
                     aria-modal="false"
-                    aria-label="Chat — Assistente Recanto Vila Rica"
+                    aria-label={`Chat — ${assistantTitle}`}
                 >
                     <S.Header>
-                        <S.HeaderTitle>Assistente Recanto Vila Rica</S.HeaderTitle>
+                        <S.HeaderTitle>{assistantTitle}</S.HeaderTitle>
                         <S.CloseBtn type="button" onClick={closeWindow} aria-label="Fechar assistente">
                             <CloseIcon />
                         </S.CloseBtn>

@@ -1,9 +1,9 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import Reservations from "../../pages/Reservations";
 import { server } from "../mocks/server";
 
@@ -63,7 +63,7 @@ describe("Reservations page", () => {
         );
         renderPage();
         await waitFor(() =>
-            expect(screen.getByRole("button", { name: /ir para pagamento/i })).toBeInTheDocument()
+            expect(screen.getByRole("button", { name: /como pagar/i })).toBeInTheDocument()
         );
     });
 
@@ -76,9 +76,9 @@ describe("Reservations page", () => {
         const user = userEvent.setup();
         renderPage();
         await waitFor(() =>
-            expect(screen.getByRole("button", { name: /ir para pagamento/i })).toBeInTheDocument()
+            expect(screen.getByRole("button", { name: /como pagar/i })).toBeInTheDocument()
         );
-        await user.click(screen.getByRole("button", { name: /ir para pagamento/i }));
+        await user.click(screen.getByRole("button", { name: /como pagar/i }));
         expect(screen.getByText("Checkout Page")).toBeInTheDocument();
     });
 
@@ -106,6 +106,48 @@ describe("Reservations page", () => {
         );
     });
 
+    it("shows the salon and cancels on the reservation's own salon, not the stored one", async () => {
+        localStorage.setItem("festario:tenant", JSON.stringify({ slug: "recanto-vila-rica", name: "Recanto Vila Rica" }));
+        let cancelTenant: string | null = null;
+        server.use(
+            http.get(`${BASE}/reservations`, () =>
+                HttpResponse.json({ success: true, data: [{ ...mockReservation, tenant: { slug: "casa-pampulha-eventos", name: "Casa Pampulha Eventos" } }] })
+            ),
+            http.patch(`${BASE}/reservations/res-1/cancel`, ({ request }) => {
+                cancelTenant = request.headers.get("X-Tenant-Slug");
+                return HttpResponse.json({ success: true, data: { ...mockReservation, status: "CANCELLED" } });
+            })
+        );
+        const user = userEvent.setup();
+        renderPage();
+        expect(await screen.findByText("Casa Pampulha Eventos")).toBeInTheDocument();
+        await user.click(screen.getByRole("button", { name: /cancelar reserva/i }));
+        await user.click(await screen.findByRole("button", { name: /sim, cancelar/i }));
+        await waitFor(() => expect(screen.getByText(/reserva cancelada com sucesso/i)).toBeInTheDocument());
+        expect(cancelTenant).toBe("casa-pampulha-eventos");
+    });
+
+    it("baixa o contrato aceito da reserva, no salão dela", async () => {
+        let contractTenant: string | null = null;
+        server.use(
+            http.get(`${BASE}/reservations`, () =>
+                HttpResponse.json({ success: true, data: [{ ...mockReservation, tenant: { slug: "casa-pampulha-eventos", name: "Casa Pampulha Eventos" } }] })
+            ),
+            http.get(`${BASE}/reservations/res-1/contract`, ({ request }) => {
+                contractTenant = request.headers.get("X-Tenant-Slug");
+                return HttpResponse.json({ success: true, data: { landlord: { tradeName: "Casa Pampulha Eventos" }, event: { date: "01/01/2030" } } });
+            })
+        );
+        const download = vi.fn();
+        vi.doMock("../../components/Contract/download", () => ({ downloadContract: download }));
+        const user = userEvent.setup();
+        renderPage();
+        await user.click(await screen.findByRole("button", { name: /baixar contrato/i }));
+        await waitFor(() => expect(download).toHaveBeenCalledWith(expect.objectContaining({ landlord: { tradeName: "Casa Pampulha Eventos" } })));
+        expect(contractTenant).toBe("casa-pampulha-eventos");
+        vi.doUnmock("../../components/Contract/download");
+    });
+
     it("shows error toast when load fails", async () => {
         server.use(
             http.get(`${BASE}/reservations`, () =>
@@ -113,8 +155,9 @@ describe("Reservations page", () => {
             )
         );
         renderPage();
+        // 5xx: mesma mensagem genérica das demais listagens
         await waitFor(() =>
-            expect(screen.getByText(/erro ao carregar reservas/i)).toBeInTheDocument()
+            expect(screen.getByText(/erro interno do servidor/i)).toBeInTheDocument()
         );
     });
 
@@ -152,7 +195,7 @@ describe("Reservations page", () => {
         await waitFor(() =>
             expect(screen.getByText("Pago")).toBeInTheDocument()
         );
-        expect(screen.queryByRole("button", { name: /ir para pagamento/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /como pagar/i })).not.toBeInTheDocument();
     });
 
     it("shows raw status when not in STATUS_MAP", async () => {
@@ -179,16 +222,35 @@ describe("Reservations page", () => {
         );
     });
 
-    it("shows raw planCode when not in PLAN_LABELS", async () => {
+    it("shows the contracted package name from the reservation copy", async () => {
         server.use(
             http.get(`${BASE}/reservations`, () =>
-                HttpResponse.json({ success: true, data: [{ ...mockReservation, planCode: "CUSTOM_PLAN" }] })
+                HttpResponse.json({ success: true, data: [{ ...mockReservation, planCode: null, packageSnapshot: { name: "Sábado à tarde" } }] })
             )
         );
         renderPage();
-        await waitFor(() =>
-            expect(screen.getByText("CUSTOM_PLAN")).toBeInTheDocument()
+        expect(await screen.findByText("Sábado à tarde")).toBeInTheDocument();
+    });
+
+    it("estimates the refund with the policy saved in the reservation", async () => {
+        const policy = {
+            tiers: [{ minDays: 30, percentage: 80 }, { minDays: 0, percentage: 10 }],
+            notes: "Remarcação grátis uma vez.",
+            summary: ["Com 30 dias ou mais de antecedência: 80% de reembolso", "Com menos de 30 dias de antecedência: 10% de reembolso"],
+        };
+        server.use(
+            http.get(`${BASE}/reservations`, () =>
+                HttpResponse.json({ success: true, data: [{ ...mockReservation, status: "PAID", totalPrice: 1000, payment: { amount: 1000 }, cancellationPolicy: policy }] })
+            )
         );
+        const user = userEvent.setup();
+        renderPage();
+        await user.click(await screen.findByRole("button", { name: /cancelar reserva/i }));
+        const dialog = screen.getByRole("dialog");
+        expect(within(dialog).getByText("Com menos de 30 dias de antecedência")).toBeInTheDocument();
+        expect(within(dialog).getByText("10% de reembolso")).toBeInTheDocument();
+        expect(within(dialog).getByText(/remarcação grátis/i)).toBeInTheDocument();
+        expect(within(dialog).getByText(/R\$\s?100,00 \(10%\)/)).toBeInTheDocument();
     });
 
     it("shows '—' when planCode is null", async () => {

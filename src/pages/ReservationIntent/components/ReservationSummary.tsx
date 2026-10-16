@@ -1,68 +1,34 @@
 import { formatCents } from "../../../utils/reservationFormat";
-import type { Venue } from "../../../types";
+import type { QuoteResult, Venue, VenuePackage } from "../../../types";
 import * as S from "../styles";
-
-interface QuoteItem {
-    type?: string;
-    description?: string;
-    label?: string;
-    amountCents?: number;
-    totalAmountCents?: number;
-    totalCents?: number;
-    totalAmount?: number;
-    amount?: number;
-}
-
-interface NormalizedQuote {
-    totalCents: number;
-    subtotalCents: number;
-    discountCents: number;
-    discountApplied: boolean;
-    items?: QuoteItem[];
-}
-
-interface Plan {
-    code: string;
-    label: string;
-    days: string;
-    priceCents: number;
-}
 
 interface ReservationSummaryProps {
     venue: Venue;
-    selectedPlan: Plan | null;
+    selectedPackage: VenuePackage | null;
     eventDate: string;
     startTime: string;
     endTime: string;
-    kidsMonitorHours: number;
-    normalizedQuote: NormalizedQuote | null;
+    endsNextDay: boolean;
+    guests: string;
+    quote: QuoteResult | null;
+    quoteError: string | null;
     quoteLoading: boolean;
+    missing: string[];
 }
 
 /** Formata `YYYY-MM-DD` como "sáb., 14 de nov. de 2026". */
 function formatEventDate(value: string): string {
     const date = new Date(`${value}T12:00:00`);
     if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleDateString("pt-BR", {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-    });
+    return date.toLocaleDateString("pt-BR", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
 }
 
 /**
- * Coluna direita: resumo dos campos selecionados e breakdown da cotação.
+ * Coluna direita: o que foi escolhido e o orçamento itemizado da API. Nenhum valor é somado
+ * aqui; quando a API recusa (horário fora do pacote, convidados demais, antecedência), mostra o motivo.
  */
 export function ReservationSummary({
-    venue,
-    selectedPlan,
-    eventDate,
-    startTime,
-    endTime,
-    kidsMonitorHours,
-    normalizedQuote,
-    quoteLoading,
+    venue, selectedPackage, eventDate, startTime, endTime, endsNextDay, guests, quote, quoteError, quoteLoading, missing,
 }: ReservationSummaryProps) {
     return (
         <S.Card className="anim-card">
@@ -70,85 +36,90 @@ export function ReservationSummary({
 
             <S.SummaryList>
                 <S.SummaryItem>
-                    <span>Salão</span>
+                    <span>Espaço</span>
                     <strong>{venue.name}</strong>
                 </S.SummaryItem>
                 <S.SummaryItem>
-                    <span>Plano</span>
-                    <strong>{selectedPlan?.label || "Não selecionado"}</strong>
+                    <span>Pacote</span>
+                    <strong>{selectedPackage?.name || "Não escolhido"}</strong>
                 </S.SummaryItem>
                 <S.SummaryItem>
                     <span>Data</span>
-                    <strong>{eventDate ? formatEventDate(eventDate) : "Não selecionada"}</strong>
+                    <strong>{eventDate ? formatEventDate(eventDate) : "Não escolhida"}</strong>
                 </S.SummaryItem>
                 <S.SummaryItem>
-                    <span>Início</span>
-                    <strong>{startTime || "—"}</strong>
+                    <span>Horário</span>
+                    <strong>{startTime && endTime ? `${startTime} às ${endTime}${endsNextDay ? " (dia seguinte)" : ""}` : "—"}</strong>
                 </S.SummaryItem>
                 <S.SummaryItem>
-                    <span>Término</span>
-                    <strong>{endTime || "—"}</strong>
+                    <span>Convidados</span>
+                    <strong>{guests || "—"}</strong>
                 </S.SummaryItem>
-                {kidsMonitorHours > 0 && (
-                    <S.SummaryItem>
-                        <span>Monitor kids</span>
-                        <strong>{kidsMonitorHours}h</strong>
-                    </S.SummaryItem>
-                )}
             </S.SummaryList>
 
             <S.Divider />
 
-            {quoteLoading && <S.QuoteLoading>Calculando cotação...</S.QuoteLoading>}
+            <div aria-live="polite">
+                {quoteLoading && <S.QuoteLoading>Calculando orçamento...</S.QuoteLoading>}
 
-            {normalizedQuote && !quoteLoading && (
-                <>
-                    <S.QuoteList>
-                    {normalizedQuote.items?.map((item, i) => (
-                        <S.SummaryItem key={i}>
-                            <span>
-                                {item.type === "PLAN_BASE"
-                                    ? `Plano: ${selectedPlan?.label || item.description || item.label}`
-                                    : item.type === "KIDS_MONITOR_EXTRA_HOUR"
-                                        ? "Horas extras área kids"
-                                        : item.description || item.label}
-                            </span>
-                            <strong>
-                                {formatCents(
-                                    item.totalAmountCents ?? item.amountCents ?? item.totalCents ??
-                                    item.totalAmount ?? item.amount ?? 0
-                                )}
-                            </strong>
-                        </S.SummaryItem>
-                    ))}
+                {!quoteLoading && quoteError && (
+                    <S.QuoteError role="alert">{quoteError}</S.QuoteError>
+                )}
 
-                    {normalizedQuote.discountApplied && (
-                        <>
-                            <S.SummaryItem>
-                                <span>Subtotal</span>
-                                <strong>{formatCents(normalizedQuote.subtotalCents)}</strong>
-                            </S.SummaryItem>
-                            <S.SummaryItem>
-                                <span>Desconto</span>
-                                <strong>- {formatCents(normalizedQuote.discountCents)}</strong>
-                            </S.SummaryItem>
-                        </>
-                    )}
-                    </S.QuoteList>
+                {!quoteLoading && !quoteError && !quote && missing.length > 0 && (
+                    <S.QuoteLoading>Para ver o orçamento, falta escolher {missing.join(", ")}.</S.QuoteLoading>
+                )}
 
-                    <S.TotalRow>
-                        <span>Total</span>
-                        <strong>{formatCents(normalizedQuote.totalCents)}</strong>
-                    </S.TotalRow>
-                </>
-            )}
+                {quote && !quoteLoading && !quoteError && (
+                    <>
+                        <S.QuoteList>
+                            {quote.items.map((item, i) => (
+                                <S.SummaryItem key={`${item.type}-${i}`}>
+                                    <span>{item.type === "PLAN_BASE" ? `Pacote ${quote.packageName ?? selectedPackage?.name ?? ""}`.trim() : item.description}</span>
+                                    <strong>{item.type === "INCLUDED_ITEM" ? "Incluso" : formatCents(item.totalAmountCents)}</strong>
+                                </S.SummaryItem>
+                            ))}
 
-            {!normalizedQuote && !quoteLoading && selectedPlan && (
-                <S.TotalRow>
-                    <span>Valor base do plano</span>
-                    <strong>{formatCents(selectedPlan.priceCents)}</strong>
-                </S.TotalRow>
-            )}
+                            {quote.discountApplied && quote.discountCents > 0 && (
+                                <>
+                                    <S.SummaryItem>
+                                        <span>Subtotal</span>
+                                        <strong>{formatCents(quote.subtotalCents)}</strong>
+                                    </S.SummaryItem>
+                                    <S.SummaryItem>
+                                        <span>Desconto ({quote.discountApplied.campaignName})</span>
+                                        <strong>- {formatCents(quote.discountCents)}</strong>
+                                    </S.SummaryItem>
+                                </>
+                            )}
+                        </S.QuoteList>
+
+                        <S.TotalRow>
+                            <span>Total</span>
+                            <strong>{formatCents(quote.totalCents)}</strong>
+                        </S.TotalRow>
+
+                        <S.PolicyBox>
+                            <h3>Como fica o pagamento</h3>
+                            <S.Hint style={{ marginTop: 0 }}>
+                                {quote.paymentTerms?.depositCents != null
+                                    ? `Você combina o pagamento com o salão. A reserva é confirmada com o sinal de ${formatCents(quote.paymentTerms.depositCents)} (${quote.paymentTerms.depositPercent}%); o restante, ${formatCents(quote.totalCents - quote.paymentTerms.depositCents)}, ${quote.paymentTerms.balanceDueDays != null ? `até ${quote.paymentTerms.balanceDueDays} dia${quote.paymentTerms.balanceDueDays === 1 ? "" : "s"} antes do evento` : "até o dia do evento"}.`
+                                    : "Você combina o pagamento com o salão. A reserva é confirmada quando ele registrar o valor total."}
+                            </S.Hint>
+                        </S.PolicyBox>
+
+                        {quote.cancellationPolicy?.summary?.length > 0 && (
+                            <S.PolicyBox>
+                                <h3>Se precisar cancelar</h3>
+                                <ul>
+                                    {quote.cancellationPolicy.summary.map((line) => <li key={line}>{line}</li>)}
+                                </ul>
+                                {quote.cancellationPolicy.notes && <S.Hint>{quote.cancellationPolicy.notes}</S.Hint>}
+                            </S.PolicyBox>
+                        )}
+                    </>
+                )}
+            </div>
         </S.Card>
     );
 }

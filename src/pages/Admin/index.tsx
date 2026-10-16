@@ -1,14 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import ErrorBoundary from "../../components/ErrorBoundary";
+import { useAuth } from "../../contexts/AuthContext";
+import { PLATFORM_PATH } from "../../utils/roles";
 import { TABS } from "./tabs/constants";
 import { BlockedDatesTab } from "./tabs/BlockedDatesTab";
 import { CampaignsTab } from "./tabs/CampaignsTab";
 import { DashboardTab } from "./tabs/DashboardTab";
 import { HolidaysTab } from "./tabs/HolidaysTab";
 import { NegotiationsTab } from "./tabs/NegotiationsTab";
-import { PlansTab } from "./tabs/PlansTab";
 import { ReservationsTab } from "./tabs/ReservationsTab";
 import { UsersTab } from "./tabs/UsersTab";
 import { VenueTab } from "./tabs/VenueTab";
+import { RulesTab } from "./rules/RulesTab";
+import { BrandTab } from "./brand/BrandTab";
+import { AgendaClosedNotice } from "./AgendaClosedNotice";
 import * as S from "./styles";
 
 const TAB_COMPONENTS = {
@@ -19,12 +25,32 @@ const TAB_COMPONENTS = {
     campaigns:    CampaignsTab,
     holidays:     HolidaysTab,
     blockedDates: BlockedDatesTab,
-    plans:        PlansTab,
+    rules:        RulesTab,
+    brand:        BrandTab,
     venues:       VenueTab,
 };
 
+/**
+ * Painel do espaço (`/painel`) — OWNER do próprio espaço e ADMIN da plataforma.
+ * O espaço exibido é o do `X-Tenant-Slug` guardado (ou o padrão).
+ */
 export default function Admin() {
-    const [activeTab, setActiveTab] = useState("dashboard");
+    const { user, tenant, setTenant } = useAuth();
+    const isPlatformAdmin = user?.role === "ADMIN";
+    // a aba fica na URL (?tab=reservations) junto com os filtros/página da aba,
+    // para que recarregar, voltar ou compartilhar o link reabra a mesma visão
+    const [searchParams, setSearchParams] = useSearchParams();
+    // ?tab=plans é o endereço antigo da aba de pacotes: abre "Regras do salão".
+    const rawTab = searchParams.get("tab") ?? "dashboard";
+    const requestedTab = rawTab === "plans" ? "rules" : rawTab;
+    const activeTab = requestedTab in TAB_COMPONENTS ? requestedTab : "dashboard";
+
+    function setActiveTab(key: string) {
+        if (key === activeTab) return;
+        // filtros pertencem a cada aba: trocar de aba começa limpo
+        setSearchParams(key === "dashboard" ? {} : { tab: key });
+    }
+
     const ActiveTab = TAB_COMPONENTS[activeTab as keyof typeof TAB_COMPONENTS] ?? DashboardTab;
 
     // Indicadores de rolagem da barra de abas (fade nas bordas quando há abas escondidas)
@@ -57,9 +83,40 @@ export default function Admin() {
     return (
         <S.Container>
             <S.PageHeader>
-                <S.Title>Painel administrativo</S.Title>
-                <S.Description>Gerencie reservas, usuários, campanhas e configurações.</S.Description>
+                <S.Title>
+                    Painel do espaço
+                    {tenant?.name && <S.TitleTenant>{tenant.name}</S.TitleTenant>}
+                </S.Title>
+                <S.Description>Gerencie reservas, clientes, campanhas e as regras do salão.</S.Description>
             </S.PageHeader>
+
+            {isPlatformAdmin && (
+                <S.ContextBar role="note">
+                    {tenant ? (
+                        <>
+                            <span>
+                                Você está no painel de <strong>{tenant.name || tenant.slug}</strong> como equipe da plataforma.
+                            </span>
+                            <S.InlineGroup>
+                                <S.SecondaryButton type="button" $size="sm" onClick={() => setTenant(null)}>
+                                    Voltar ao espaço padrão
+                                </S.SecondaryButton>
+                                <S.ContextLink to={PLATFORM_PATH}>Ir para a plataforma</S.ContextLink>
+                            </S.InlineGroup>
+                        </>
+                    ) : (
+                        <>
+                            <span>Você está no painel do espaço padrão. Para ver outro espaço, abra-o na plataforma.</span>
+                            <S.ContextLink to={PLATFORM_PATH}>Ir para a plataforma</S.ContextLink>
+                        </>
+                    )}
+                </S.ContextBar>
+            )}
+
+            {/* Na seção de pacotes o passo a passo já orienta: o aviso só aparece nas outras telas. */}
+            {!(activeTab === "rules" && (searchParams.get("section") ?? "packages") === "packages") && (
+                <AgendaClosedNotice refreshKey={searchParams.toString()} onCreatePackage={() => setSearchParams({ tab: "rules" })} />
+            )}
 
             <S.TabBar
                 ref={tabBarRef}
@@ -81,7 +138,17 @@ export default function Admin() {
             </S.TabBar>
 
             <S.TabPanel $active>
-                <ActiveTab />
+                {/* erro em uma aba não derruba o painel inteiro; key reinicia ao trocar de aba */}
+                <ErrorBoundary
+                    key={`${activeTab}:${tenant?.slug ?? "padrao"}`}
+                    fallback={
+                        <S.EmptyState role="alert">
+                            Esta aba não carregou. Tente outra aba ou recarregue a página.
+                        </S.EmptyState>
+                    }
+                >
+                    <ActiveTab />
+                </ErrorBoundary>
             </S.TabPanel>
         </S.Container>
     );

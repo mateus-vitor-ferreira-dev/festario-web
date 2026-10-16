@@ -73,7 +73,7 @@ describe("AvailabilityCalendar", () => {
         const user = userEvent.setup();
         await user.click(screen.getByRole("button", { name: /próximo mês/i }));
 
-        await user.click(screen.getByRole("button", { name: "15" }));
+        await user.click(screen.getByRole("button", { name: new RegExp(", 15 de ") }));
         expect(onChange).toHaveBeenCalledWith(targetDate);
     });
 
@@ -100,7 +100,10 @@ describe("AvailabilityCalendar", () => {
         const user = userEvent.setup();
         await user.click(screen.getByRole("button", { name: /próximo mês/i }));
 
-        await user.click(screen.getByRole("button", { name: "15" }));
+        const blocked = screen.getByRole("button", { name: new RegExp(", 15 de ") });
+        expect(blocked).toBeDisabled();
+        expect(blocked).toHaveAccessibleName(/, bloqueada$/);
+        await user.click(blocked);
         expect(onChange).not.toHaveBeenCalled();
     });
 
@@ -127,7 +130,9 @@ describe("AvailabilityCalendar", () => {
         const user = userEvent.setup();
         await user.click(screen.getByRole("button", { name: /próximo mês/i }));
 
-        await user.click(screen.getByRole("button", { name: "20" }));
+        const occupied = screen.getByRole("button", { name: new RegExp(", 20 de ") });
+        expect(occupied).toHaveAccessibleName(/, já reservada$/);
+        await user.click(occupied);
         expect(onChange).not.toHaveBeenCalled();
     });
 
@@ -191,5 +196,16 @@ describe("AvailabilityCalendar", () => {
             year: "numeric",
         });
         expect(screen.getByText(label)).toBeInTheDocument();
+    });
+    it("does not offer days after the salon horizon", async () => {
+        const nextMonth = CURRENT_MONTH === 11 ? 0 : CURRENT_MONTH + 1;
+        const nextYear = CURRENT_MONTH === 11 ? CURRENT_YEAR + 1 : CURRENT_YEAR;
+        renderCalendar({ onChange: vi.fn(), maxDate: dateStr(nextYear, nextMonth, 10) });
+        await waitFor(() => expect(screen.queryByText(/carregando/i)).not.toBeInTheDocument());
+        const user = userEvent.setup();
+        await user.click(screen.getByRole("button", { name: /próximo mês/i }));
+        expect(screen.getByRole("button", { name: /próximo mês/i })).toBeDisabled();
+        expect(screen.getByRole("button", { name: new RegExp(", 10 de ") })).toBeEnabled();
+        expect(screen.getByRole("button", { name: new RegExp(", 11 de ") })).toBeDisabled();
     });
 });

@@ -1,18 +1,23 @@
 import { useGoogleOAuth } from "@react-oauth/google";
 import { useCallback, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
-import type { NavigateFunction } from "react-router-dom";
+import { useSearchParams, type NavigateFunction } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/getErrorMessage";
+import { homePathFor } from "../../utils/roles";
+import { RETURN_PARAM, safeReturnPath } from "../../utils/returnPath";
 import * as S from "./styles";
 
 interface GoogleButtonProps {
     navigate: NavigateFunction;
 }
 
+/** Entrar com Google. Sem o ID do cliente OAuth (`VITE_GOOGLE_CLIENT_ID`), não renderiza nada. */
 export default function GoogleButton({ navigate }: GoogleButtonProps) {
     const { login } = useAuth();
+    const [searchParams] = useSearchParams();
+    const returnPath = safeReturnPath(searchParams.get(RETURN_PARAM));
     const { clientId, scriptLoadedSuccessfully } = useGoogleOAuth();
     const overlayRef = useRef(null);
 
@@ -26,12 +31,12 @@ export default function GoogleButton({ navigate }: GoogleButtonProps) {
                 const { data } = await api.post("/auth/google", { id_token: credential });
                 login(data.data);
                 toast.success(data.message || "Sucesso com Google.");
-                navigate("/home");
+                navigate(returnPath ?? homePathFor(data.data?.user?.role));
             } catch (error) {
                 toast.error(getErrorMessage(error, "Erro ao autenticar com Google."));
             }
         },
-        [login, navigate]
+        [login, navigate, returnPath]
     );
 
     useEffect(() => {
@@ -48,6 +53,9 @@ export default function GoogleButton({ navigate }: GoogleButtonProps) {
             theme: "outline",
         });
     }, [scriptLoadedSuccessfully, clientId, handleCredentialResponse]);
+
+    // Sem o ID do cliente, o botão do Google nunca montaria: melhor não mostrar um botão que não faz nada.
+    if (!clientId) return null;
 
     return (
         <S.GoogleBtnWrapper style={{ position: "relative" }}>

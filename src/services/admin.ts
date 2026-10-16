@@ -5,17 +5,31 @@
  * automaticamente pelo interceptor do Axios (`services/api.js`).
  */
 import api from "./api";
+import { cleanParams, toPaginated } from "./pagination";
 import type {
     Reservation,
     User,
     Campaign,
     Holiday,
-    ReservationPlan,
     BlockedDate,
     ReservationSummary,
     MonthlyRevenue,
     RaffleWinnerResult,
+    PaginatedResult,
+    ListParams,
 } from "../types";
+
+/**
+ * As listagens paginadas do admin respondem `{ page, limit, total?, data: [...] }`
+ * dentro do envelope `data`. Extrai a lista (e aceita lista direta, por compatibilidade).
+ */
+function unwrapList<T>(payload: unknown): T[] {
+    if (Array.isArray(payload)) return payload as T[];
+    if (payload && typeof payload === "object" && Array.isArray((payload as { data?: unknown }).data)) {
+        return (payload as { data: T[] }).data;
+    }
+    return [];
+}
 
 // ─── Reservations ────────────────────────────────────────────────────────────
 
@@ -36,7 +50,18 @@ export async function getReservationsSummary(filters: Record<string, unknown> = 
  */
 export async function listAdminReservations(filters: Record<string, unknown> = {}, signal?: AbortSignal): Promise<Reservation[]> {
     const { data } = await api.get("/admin/reservations", { params: filters, signal });
-    return data.data;
+    return unwrapList<Reservation>(data.data);
+}
+
+/**
+ * Lista reservas do admin com paginação e filtros (`status`, `startDate`, `endDate`,
+ * `q`, `venueId`, `packageId`, `minPrice`, `maxPrice`, `sort`).
+ *
+ * @see GET /admin/reservations
+ */
+export async function listAdminReservationsPage(params: ListParams = {}, signal?: AbortSignal): Promise<PaginatedResult<Reservation>> {
+    const { data } = await api.get("/admin/reservations", { params: cleanParams(params), signal });
+    return toPaginated<Reservation>(data, params);
 }
 
 /**
@@ -58,7 +83,17 @@ export async function cancelAdminReservation(id: string): Promise<Reservation> {
  */
 export async function listAdminUsers(filters: Record<string, unknown> = {}): Promise<User[]> {
     const { data } = await api.get("/admin/users", { params: filters });
-    return data.data;
+    return unwrapList<User>(data.data);
+}
+
+/**
+ * Lista usuários com paginação e filtros (`q` — nome ou e-mail — e `role`).
+ *
+ * @see GET /admin/users
+ */
+export async function listAdminUsersPage(params: ListParams = {}, signal?: AbortSignal): Promise<PaginatedResult<User>> {
+    const { data } = await api.get("/admin/users", { params: cleanParams(params), signal });
+    return toPaginated<User>(data, params);
 }
 
 // ─── Revenue ──────────────────────────────────────────────────────────────────
@@ -128,6 +163,16 @@ export async function listHolidays(year: number, signal?: AbortSignal): Promise<
 }
 
 /**
+ * Lista feriados de um ano com paginação.
+ *
+ * @see GET /admin/holidays?year=&page=&limit=
+ */
+export async function listHolidaysPage(params: ListParams = {}, signal?: AbortSignal): Promise<PaginatedResult<Holiday>> {
+    const { data } = await api.get("/admin/holidays", { params: cleanParams(params), signal });
+    return toPaginated<Holiday>(data, params);
+}
+
+/**
  * Sincroniza feriados nacionais automaticamente via API externa para o ano informado.
  *
  * @see POST /admin/holidays/sync
@@ -138,21 +183,11 @@ export async function syncHolidays(year: number): Promise<{ synced: number }> {
 }
 
 /**
- * Sincroniza feriados municipais fornecidos manualmente.
- *
- * @see POST /admin/holidays/sync-municipal
- */
-export async function syncMunicipalHolidays(year: number, items: Array<{ date: string; name: string }>): Promise<{ synced: number }> {
-    const { data } = await api.post("/admin/holidays/sync-municipal", { year, items });
-    return data.data;
-}
-
-/**
- * Cria um feriado manualmente.
+ * Cria um feriado do salão; com `type: national` (só ADMIN), um feriado nacional.
  *
  * @see POST /admin/holidays
  */
-export async function createHoliday(payload: { date: string; name: string }): Promise<Holiday> {
+export async function createHoliday(payload: { date: string; name: string; type?: "national" }): Promise<Holiday> {
     const { data } = await api.post("/admin/holidays", payload);
     return data.data;
 }
@@ -166,47 +201,6 @@ export async function deleteHoliday(id: string): Promise<void> {
     await api.delete(`/admin/holidays/${id}`);
 }
 
-// ─── Plans ────────────────────────────────────────────────────────────────────
-
-/**
- * Lista os planos de reserva configurados no sistema.
- *
- * @see GET /admin/plans
- */
-export async function listPlans(filters: Record<string, unknown> = {}, signal?: AbortSignal): Promise<ReservationPlan[]> {
-    const { data } = await api.get("/admin/plans", { params: filters, signal });
-    return data.data;
-}
-
-/**
- * Cria um novo plano de reserva.
- *
- * @see POST /admin/plans
- */
-export async function createPlan(payload: Partial<ReservationPlan>): Promise<ReservationPlan> {
-    const { data } = await api.post("/admin/plans", payload);
-    return data.data;
-}
-
-/**
- * Atualiza um plano de reserva existente.
- *
- * @see PATCH /admin/plans/:id
- */
-export async function updatePlan(id: string, payload: Partial<ReservationPlan>): Promise<ReservationPlan> {
-    const { data } = await api.patch(`/admin/plans/${id}`, payload);
-    return data.data;
-}
-
-/**
- * Remove um plano de reserva.
- *
- * @see DELETE /admin/plans/:id
- */
-export async function deletePlan(id: string): Promise<void> {
-    await api.delete(`/admin/plans/${id}`);
-}
-
 // ─── Blocked Dates ────────────────────────────────────────────────────────────
 
 /**
@@ -217,6 +211,16 @@ export async function deletePlan(id: string): Promise<void> {
 export async function listBlockedDates(filters: Record<string, unknown> = {}): Promise<BlockedDate[]> {
     const { data } = await api.get("/blocked-dates", { params: filters });
     return data.data;
+}
+
+/**
+ * Lista datas bloqueadas com paginação e filtros (`venueId`, `from`, `to`).
+ *
+ * @see GET /blocked-dates
+ */
+export async function listBlockedDatesPage(params: ListParams = {}, signal?: AbortSignal): Promise<PaginatedResult<BlockedDate>> {
+    const { data } = await api.get("/blocked-dates", { params: cleanParams(params), signal });
+    return toPaginated<BlockedDate>(data, params);
 }
 
 /**

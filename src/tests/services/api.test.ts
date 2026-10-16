@@ -17,7 +17,7 @@ describe("api interceptor", () => {
 
     it("attaches Authorization header when token exists", async () => {
         localStorage.setItem(
-            "recanto:userData",
+            "festario:userData",
             JSON.stringify({
                 user: { id: "u1", name: "Test", email: "t@t.com", role: "USER" },
                 token: "abc123",
@@ -33,7 +33,7 @@ describe("api interceptor", () => {
 
     it("attaches Authorization header from legacy session format", async () => {
         localStorage.setItem(
-            "recanto:userData",
+            "festario:userData",
             JSON.stringify({ id: "u1", name: "Test", email: "t@t.com", role: "USER", token: "legacy-token" })
         );
 
@@ -51,7 +51,7 @@ describe("api interceptor", () => {
     });
 
     it("does not attach Authorization header when stored JSON is unrecognized", async () => {
-        localStorage.setItem("recanto:userData", "{}");
+        localStorage.setItem("festario:userData", "{}");
 
         const config = { headers: {} };
         const result = await requestFulfilled(config);

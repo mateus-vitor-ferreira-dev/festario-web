@@ -1,6 +1,6 @@
 import type { AuthSession, UserRole } from "../types";
 
-export const STORAGE_KEY = "recanto:userData";
+export const STORAGE_KEY = "festario:userData";
 
 // Formato legado: campos do usuário na raiz do objeto (antes da normalização)
 interface LegacySession {

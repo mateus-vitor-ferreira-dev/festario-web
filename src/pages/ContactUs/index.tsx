@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useGSAP } from "@gsap/react";
@@ -7,14 +7,16 @@ import { useGSAP } from "@gsap/react";
  * @module pages/ContactUs
  * @description Página de contato com formulário e informações de acesso direto.
  *
- * Exibe links de WhatsApp e e-mail carregados de `GET /contact`, além de um
- * formulário (nome, e-mail, telefone, assunto, mensagem) que envia a mensagem
- * ao admin via `POST /contact/message` usando Resend com `replyTo` do remetente.
+ * Mostra os canais do salão carregados de `GET /contact`: só os que o dono
+ * cadastrou. O formulário (nome, e-mail, telefone, assunto, mensagem) envia a
+ * mensagem ao e-mail do salão via `POST /contact/message`, com `replyTo` do remetente.
  *
  * @see GET /contact
  * @see POST /contact/message
  */
-import { submitContact } from "../../services/contact";
+import { getSalonContact, submitContact } from "../../services/contact";
+import type { SalonContact } from "../../types";
+import { isAbortError } from "../../utils/errors";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { animateFadeInUp } from "../../utils/animations";
 import * as S from "./styles";
@@ -43,6 +45,22 @@ function InstagramIcon() {
     );
 }
 
+function PhoneIcon() {
+    return (
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 011 1V20a1 1 0 01-1 1C10.07 21 3 13.93 3 5a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.46.57 3.58a1 1 0 01-.25 1.01l-2.2 2.2z" />
+        </svg>
+    );
+}
+
+function PinIcon() {
+    return (
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
+        </svg>
+    );
+}
+
 function ChatIcon() {
     return (
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -58,6 +76,18 @@ export default function ContactUs() {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [form, setForm] = useState(EMPTY_FORM);
     const [isSending, setIsSending] = useState(false);
+    const [contact, setContact] = useState<SalonContact | null>(null);
+    const [contactError, setContactError] = useState(false);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        getSalonContact(controller.signal)
+            .then(setContact)
+            .catch((error) => { if (!isAbortError(error)) setContactError(true); });
+        return () => controller.abort();
+    }, []);
+
+    const hasChannels = !!contact && Boolean(contact.whatsapp || contact.phone || contact.email || contact.instagram || contact.address);
 
     useGSAP(() => {
         if (!containerRef.current) return;
@@ -76,7 +106,7 @@ export default function ContactUs() {
         try {
             setIsSending(true);
             await submitContact(form);
-            toast.success("Mensagem enviada com sucesso! Retornaremos em breve.");
+            toast.success("Mensagem enviada. O salão responde no seu e-mail.");
             setForm(EMPTY_FORM);
         } catch (error) {
             toast.error(getErrorMessage(error, "Erro ao enviar mensagem. Tente novamente."));
@@ -88,57 +118,73 @@ export default function ContactUs() {
     return (
         <S.Container ref={containerRef}>
             <S.Header className="anim-header">
-                <S.Title>Contate-nos</S.Title>
+                <S.Title>{contact ? `Fale com ${contact.name}` : "Contato"}</S.Title>
                 <S.Description>
-                    Fale diretamente com o nosso time pelos canais abaixo ou abra uma conversa de negociação pela plataforma.
+                    Fale direto com o salão pelos canais abaixo, mande uma mensagem pelo formulário ou abra uma negociação na plataforma.
                 </S.Description>
             </S.Header>
 
-            <S.Card>
-                <S.CardTitle>Nossos canais</S.CardTitle>
+            <S.Card aria-busy={!contact && !contactError}>
+                <S.CardTitle>Canais do salão</S.CardTitle>
 
-                <S.ContactItem
-                    as="a"
-                    href="https://wa.me/5535999718824"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <S.ContactIcon>
-                        <WhatsAppIcon />
-                    </S.ContactIcon>
-                    <S.ContactInfo>
-                        <S.ContactLabel>WhatsApp</S.ContactLabel>
-                        <S.ContactValue>(35) 9 9971-8824</S.ContactValue>
-                    </S.ContactInfo>
-                </S.ContactItem>
+                {/* Carregando, sem canais ou erro: anunciado ao leitor de tela sem roubar o foco. */}
+                <div role="status">
+                    {!contact && !contactError && <S.Description>Carregando os contatos do salão...</S.Description>}
+                    {contactError && <S.Description>Não foi possível carregar os contatos agora. O formulário abaixo continua funcionando.</S.Description>}
+                    {contact && !hasChannels && (
+                        <S.Description>Este salão ainda não cadastrou WhatsApp, telefone ou e-mail. Use o formulário abaixo ou abra uma negociação.</S.Description>
+                    )}
+                </div>
 
-                <S.ContactItem
-                    as="a"
-                    href="mailto:recanto.vilaricafestas@gmail.com"
-                >
-                    <S.ContactIcon>
-                        <EmailIcon />
-                    </S.ContactIcon>
-                    <S.ContactInfo>
-                        <S.ContactLabel>E-mail</S.ContactLabel>
-                        <S.ContactValue>recanto.vilaricafestas@gmail.com</S.ContactValue>
-                    </S.ContactInfo>
-                </S.ContactItem>
+                {contact?.whatsapp && (
+                    <S.ContactItem as="a" href={`https://wa.me/${contact.whatsapp.number}`} target="_blank" rel="noopener noreferrer">
+                        <S.ContactIcon><WhatsAppIcon /></S.ContactIcon>
+                        <S.ContactInfo>
+                            <S.ContactLabel>WhatsApp</S.ContactLabel>
+                            <S.ContactValue>{contact.whatsapp.display}</S.ContactValue>
+                        </S.ContactInfo>
+                    </S.ContactItem>
+                )}
 
-                <S.ContactItem
-                    as="a"
-                    href="https://www.instagram.com/recanto.vilarica"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <S.ContactIcon>
-                        <InstagramIcon />
-                    </S.ContactIcon>
-                    <S.ContactInfo>
-                        <S.ContactLabel>Instagram</S.ContactLabel>
-                        <S.ContactValue>@recanto.vilarica</S.ContactValue>
-                    </S.ContactInfo>
-                </S.ContactItem>
+                {contact?.phone && (
+                    <S.ContactItem as="a" href={`tel:${contact.phone.replace(/[^\d+]/g, "")}`}>
+                        <S.ContactIcon><PhoneIcon /></S.ContactIcon>
+                        <S.ContactInfo>
+                            <S.ContactLabel>Telefone</S.ContactLabel>
+                            <S.ContactValue>{contact.phone}</S.ContactValue>
+                        </S.ContactInfo>
+                    </S.ContactItem>
+                )}
+
+                {contact?.email && (
+                    <S.ContactItem as="a" href={`mailto:${contact.email}`}>
+                        <S.ContactIcon><EmailIcon /></S.ContactIcon>
+                        <S.ContactInfo>
+                            <S.ContactLabel>E-mail</S.ContactLabel>
+                            <S.ContactValue>{contact.email}</S.ContactValue>
+                        </S.ContactInfo>
+                    </S.ContactItem>
+                )}
+
+                {contact?.instagram && (
+                    <S.ContactItem as="a" href={contact.instagram.url} target="_blank" rel="noopener noreferrer">
+                        <S.ContactIcon><InstagramIcon /></S.ContactIcon>
+                        <S.ContactInfo>
+                            <S.ContactLabel>Instagram</S.ContactLabel>
+                            <S.ContactValue>{contact.instagram.display}</S.ContactValue>
+                        </S.ContactInfo>
+                    </S.ContactItem>
+                )}
+
+                {contact?.address && (
+                    <S.ContactItem as="a" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.address)}`} target="_blank" rel="noopener noreferrer">
+                        <S.ContactIcon><PinIcon /></S.ContactIcon>
+                        <S.ContactInfo>
+                            <S.ContactLabel>Endereço</S.ContactLabel>
+                            <S.ContactValue>{contact.address}</S.ContactValue>
+                        </S.ContactInfo>
+                    </S.ContactItem>
+                )}
 
                 <S.ContactItem as="button" onClick={() => navigate("/negociacoes")}>
                     <S.ContactIcon>
@@ -166,7 +212,7 @@ export default function ContactUs() {
 
                 <S.FormField>
                     <S.FormLabel>Telefone (opcional)</S.FormLabel>
-                    <S.FormInput type="tel" placeholder="(35) 9 9999-9999" {...field("phone")} />
+                    <S.FormInput type="tel" placeholder="(00) 00000-0000" {...field("phone")} />
                 </S.FormField>
 
                 <S.FormField>

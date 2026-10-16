@@ -61,7 +61,22 @@ export const Counter = styled.span`
 
 /* ─── Venue cards ─── */
 
-export const Grid = styled.section`
+export const FiltersSlot = styled.div`
+  scroll-margin-top: 96px;
+
+  &:focus {
+    outline: none;
+  }
+`;
+
+export const Grid = styled.section<{ $busy?: boolean }>`
+  opacity: ${({ $busy }) => ($busy ? 0.55 : 1)};
+  transition: opacity 0.15s ease;
+
+  &:empty {
+    display: none;
+  }
+
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
   gap: 24px;
@@ -85,6 +100,18 @@ export const Card = styled.article`
   ${media.sm} {
     padding: 16px;
     gap: 20px;
+  }
+`;
+
+/* Capa encostada nas bordas do card, com o filete da cor do salão embaixo. */
+export const CoverSlot = styled.div`
+  margin: -24px -24px 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  overflow: hidden;
+  border-bottom: 3px solid var(--salon-accent);
+
+  ${media.sm} {
+    margin: -16px -16px 0;
   }
 `;
 

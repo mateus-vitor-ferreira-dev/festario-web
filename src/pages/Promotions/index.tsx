@@ -4,6 +4,7 @@ import { useGSAP } from "@gsap/react";
 
 import { listPromotionStatus, listMyGrants } from "../../services/promotion";
 import { createReferral, listReferrals } from "../../services/referral";
+import { getSalonContact } from "../../services/contact";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { isAbortError } from "../../utils/errors";
 import { animateFadeInUp } from "../../utils/animations";
@@ -15,21 +16,21 @@ const CAMPAIGN_CONFIGS = {
         typeLabel: "Indicação",
         title: "Indique e Ganhe",
         description:
-            "Indique um amigo pelo e-mail. Quando ele fizer a primeira reserva no Recanto Vila Rica, você recebe automaticamente um desconto na sua próxima reserva.",
+            "Indique um amigo pelo e-mail. Quando ele fizer a primeira reserva neste espaço, você recebe automaticamente um desconto na sua próxima reserva.",
         cta: "invite",
     },
     LOYALTY_ALWAYS_HERE: {
         typeLabel: "Fidelidade",
         title: "Programa de Fidelidade",
         description:
-            "Clientes que retornam ao Recanto Vila Rica recebem descontos exclusivos automaticamente. Quanto mais você reserva, maiores os benefícios.",
+            "Clientes que voltam a reservar neste espaço recebem descontos exclusivos automaticamente. Quanto mais você reserva, maiores os benefícios.",
         cta: null,
     },
     RAFFLE_VIP: {
         typeLabel: "Sorteio VIP",
         title: "Sorteio VIP",
         description:
-            "Publique um stories no Instagram marcando @recanto.vilarica e concorra a uma reserva gratuita. Ganhadores são sorteados ao final da campanha.",
+            "Publique um stories no Instagram marcando {instagram} e concorra a uma reserva gratuita. Ganhadores são sorteados ao final da campanha.",
         cta: "instagram",
     },
 };
@@ -54,6 +55,13 @@ function formatExpiry(date: string | null | undefined): string {
 }
 
 export default function Promotions() {
+    // Instagram do salão: o sorteio pede para marcar o perfil dele, não um fixo.
+    const [instagram, setInstagram] = useState<{ url: string; display: string } | null>(null);
+    useEffect(() => {
+        const controller = new AbortController();
+        getSalonContact(controller.signal).then((c) => setInstagram(c.instagram)).catch(() => setInstagram(null));
+        return () => controller.abort();
+    }, []);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [campaignStatus, setCampaignStatus] = useState<PromotionStatusItem[]>([]);
     const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -188,7 +196,7 @@ export default function Promotions() {
                                             </S.StatusBadge>
                                         </S.CampaignTop>
 
-                                        <S.CampaignDesc>{config.description}</S.CampaignDesc>
+                                        <S.CampaignDesc>{config.description.replace("{instagram}", instagram?.display ?? "o salão")}</S.CampaignDesc>
 
                                         {isActive && entry.campaign?.startsAt && entry.campaign?.endsAt && (
                                             <S.CampaignDates>
@@ -232,9 +240,9 @@ export default function Promotions() {
                                             </>
                                         )}
 
-                                        {isActive && config.cta === "instagram" && (
+                                        {isActive && config.cta === "instagram" && instagram && (
                                             <S.InstagramLink
-                                                href="https://www.instagram.com/recanto.vilarica"
+                                                href={instagram.url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                             >

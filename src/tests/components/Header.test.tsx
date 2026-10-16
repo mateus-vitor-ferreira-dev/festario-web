@@ -11,9 +11,9 @@ import { server } from "../mocks/server";
 
 function renderHeader(userData = null, path = "/home") {
     if (userData) {
-        localStorage.setItem("recanto:userData", JSON.stringify(userData));
+        localStorage.setItem("festario:userData", JSON.stringify(userData));
     } else {
-        localStorage.removeItem("recanto:userData");
+        localStorage.removeItem("festario:userData");
     }
 
     return render(
@@ -51,19 +51,27 @@ describe("Header component", () => {
     it("renders nav links", () => {
         renderHeader({ user: { name: "Mateus", role: "USER" } });
         expect(screen.getByRole("link", { name: /início/i })).toBeInTheDocument();
-        expect(screen.getByRole("link", { name: /espaços/i })).toBeInTheDocument();
+        expect(screen.getByRole("link", { name: /salões/i })).toHaveAttribute("href", "/saloes");
         expect(screen.getByRole("link", { name: /reservas/i })).toBeInTheDocument();
         expect(screen.getByRole("link", { name: /promoções/i })).toBeInTheDocument();
     });
 
-    it("shows Admin link only for ADMIN role", () => {
+    it("shows Plataforma and Painel links for ADMIN role", () => {
         renderHeader({ token: "t", user: { name: "Admin", role: "ADMIN" } });
-        expect(screen.getByRole("link", { name: /^admin$/i })).toBeInTheDocument();
+        expect(screen.getByRole("link", { name: /^plataforma$/i })).toHaveAttribute("href", "/plataforma");
+        expect(screen.getByRole("link", { name: /^painel$/i })).toHaveAttribute("href", "/painel");
     });
 
-    it("does not show Admin link for USER role", () => {
+    it("shows only the Painel link for OWNER role", () => {
+        renderHeader({ token: "t", user: { name: "Dona", role: "OWNER" } });
+        expect(screen.getByRole("link", { name: /^painel$/i })).toHaveAttribute("href", "/painel");
+        expect(screen.queryByRole("link", { name: /^plataforma$/i })).not.toBeInTheDocument();
+    });
+
+    it("does not show panel links for USER role", () => {
         renderHeader({ token: "t", user: { name: "Mateus", role: "USER" } });
-        expect(screen.queryByRole("link", { name: /^admin$/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole("link", { name: /^painel$/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole("link", { name: /^plataforma$/i })).not.toBeInTheDocument();
     });
 
     it("shows user initials in avatar", () => {
@@ -95,17 +103,17 @@ describe("Header component", () => {
         renderHeader({ user: { name: "Mateus", role: "USER" }, token: "tk" });
         const user = userEvent.setup();
         await user.click(screen.getByRole("button", { name: /sair/i }));
-        expect(localStorage.getItem("recanto:userData")).toBeNull();
+        expect(localStorage.getItem("festario:userData")).toBeNull();
     });
 
     it("renders sun icon when dark theme is active", () => {
-        localStorage.setItem("recanto:theme", "dark");
+        localStorage.setItem("festario:theme", "dark");
         renderHeader({ user: { name: "Mateus", role: "USER" } });
         expect(screen.getByTitle(/mudar para tema claro/i)).toBeInTheDocument();
     });
 
     it("toggles theme from dark to light on button click", async () => {
-        localStorage.setItem("recanto:theme", "dark");
+        localStorage.setItem("festario:theme", "dark");
         renderHeader({ user: { name: "Mateus", role: "USER" } });
         const user = userEvent.setup();
         const btn = screen.getByTitle(/mudar para tema claro/i);

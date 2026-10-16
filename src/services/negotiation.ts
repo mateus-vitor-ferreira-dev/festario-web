@@ -12,13 +12,15 @@
  * Alternativa (admin): admin cria reserva customizada diretamente (`createCustomReservation`).
  */
 import api from "./api";
+import { cleanParams, normalizeText, toPaginated } from "./pagination";
 import type {
     Negotiation,
     NegotiationMessage,
     NegotiationStatus,
     Reservation,
     ContactInfo,
-    PixChargeResult,
+    PaginatedResult,
+    ListParams,
 } from "../types";
 
 export interface SendProposalPayload {
@@ -43,7 +45,6 @@ export interface RespondToProposalResult {
     reservation?: Pick<Reservation, "id" | "totalPrice" | "startDate" | "endDate"> & {
         venue?: { name: string } | null;
     };
-    pix?: PixChargeResult | null;
 }
 
 /**
@@ -65,6 +66,27 @@ export async function createNegotiation(signal?: AbortSignal): Promise<Negotiati
 export async function listNegotiations(signal?: AbortSignal): Promise<Negotiation[]> {
     const response = await api.get("/negotiations", { signal });
     return response.data.data;
+}
+
+/**
+ * Lista negociações com paginação e filtros (`status`, `q`).
+ * Admins recebem as negociações de todos os clientes.
+ *
+ * @see GET /negotiations?page=&limit=&status=&q=
+ */
+export async function listNegotiationsPage(params: ListParams = {}, signal?: AbortSignal): Promise<PaginatedResult<Negotiation>> {
+    const response = await api.get("/negotiations", { params: cleanParams(params), signal });
+    const body = response.data;
+    // API antiga (sem `pagination`) ignora filtros: filtra aqui antes de paginar no cliente
+    if (body && Array.isArray(body.data) && !body.pagination && !body.meta) {
+        const status = params.status ? String(params.status) : "";
+        const q = params.q ? normalizeText(String(params.q)) : "";
+        const filtered = (body.data as Negotiation[]).filter((n) =>
+            (!status || n.status === status)
+            && (!q || normalizeText(`${n.subject ?? ""} ${n.user?.name ?? ""}`).includes(q)));
+        return toPaginated<Negotiation>({ data: filtered }, params);
+    }
+    return toPaginated<Negotiation>(body, params);
 }
 
 /**
@@ -132,7 +154,7 @@ export async function respondToProposal(id: string, action: "ACCEPT" | "REJECT")
 }
 
 /**
- * Retorna as informações de contato públicas do Recanto Vila Rica
+ * Retorna as informações de contato públicas do espaço
  * (WhatsApp, e-mail, Instagram).
  *
  * @see GET /contact

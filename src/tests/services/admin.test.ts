@@ -5,10 +5,8 @@ import {
     createBlockedDate,
     createCampaign,
     createHoliday,
-    createPlan,
     deleteBlockedDate,
     deleteHoliday,
-    deletePlan,
     drawRaffleWinner,
     getMonthlyRevenue,
     getReservationsSummary,
@@ -17,11 +15,8 @@ import {
     listBlockedDates,
     listCampaigns,
     listHolidays,
-    listPlans,
     syncHolidays,
-    syncMunicipalHolidays,
     updateCampaign,
-    updatePlan,
 } from "../../services/admin";
 import { server } from "../mocks/server";
 
@@ -42,6 +37,20 @@ describe("adminService", () => {
         );
         const result = await listAdminReservations();
         expect(result).toHaveLength(1);
+    });
+
+    it("listAdminReservations unwraps the paginated response returned by the API", async () => {
+        server.use(
+            http.get(`${BASE}/admin/reservations`, () =>
+                HttpResponse.json({
+                    success: true,
+                    data: { page: 1, limit: 20, data: [{ id: "res-1", status: "PAID" }, { id: "res-2", status: "PENDING" }] },
+                })
+            )
+        );
+        const result = await listAdminReservations();
+        expect(Array.isArray(result)).toBe(true);
+        expect(result.map((r) => r.id)).toEqual(["res-1", "res-2"]);
     });
 
     it("listCampaigns returns campaigns array", async () => {
@@ -107,16 +116,6 @@ describe("adminService", () => {
         expect(result.synced).toBe(12);
     });
 
-    it("syncMunicipalHolidays sends POST and returns synced count", async () => {
-        server.use(
-            http.post(`${BASE}/admin/holidays/sync-municipal`, () =>
-                HttpResponse.json({ success: true, data: { synced: 3 } })
-            )
-        );
-        const result = await syncMunicipalHolidays(2026, []);
-        expect(result.synced).toBe(3);
-    });
-
     it("createHoliday sends POST and returns new holiday", async () => {
         server.use(
             http.post(`${BASE}/admin/holidays`, () =>
@@ -161,6 +160,27 @@ describe("adminService", () => {
         expect(result[0].name).toBe("Mateus");
     });
 
+    it("listAdminUsers unwraps the paginated response returned by the API", async () => {
+        server.use(
+            http.get(`${BASE}/admin/users`, () =>
+                HttpResponse.json({
+                    success: true,
+                    data: { page: 1, limit: 20, total: 1, data: [{ id: "u-1", name: "Mateus", email: "m@email.com" }] },
+                })
+            )
+        );
+        const result = await listAdminUsers();
+        expect(result).toHaveLength(1);
+        expect(result[0].name).toBe("Mateus");
+    });
+
+    it("listAdminUsers returns an empty list for an unexpected payload", async () => {
+        server.use(
+            http.get(`${BASE}/admin/users`, () => HttpResponse.json({ success: true, data: null }))
+        );
+        expect(await listAdminUsers()).toEqual([]);
+    });
+
     it("listAdminUsers passes filters as query params", async () => {
         server.use(
             http.get(`${BASE}/admin/users`, ({ request }) => {
@@ -185,62 +205,6 @@ describe("adminService", () => {
         );
         const result = await getMonthlyRevenue(2026);
         expect(result.year).toBe(2026);
-    });
-
-    // ─── Plans ────────────────────────────────────────────────────────────────
-
-    it("listPlans returns plans array", async () => {
-        server.use(
-            http.get(`${BASE}/admin/plans`, () =>
-                HttpResponse.json({ success: true, data: [{ id: "plan-1", code: "ESSENCIAL", priceCents: 85000, active: true }] })
-            )
-        );
-        const result = await listPlans();
-        expect(result[0].code).toBe("ESSENCIAL");
-    });
-
-    it("listPlans passes filters as query params", async () => {
-        server.use(
-            http.get(`${BASE}/admin/plans`, ({ request }) => {
-                const url = new URL(request.url);
-                return HttpResponse.json({
-                    success: true,
-                    data: [{ id: "plan-1", code: "ESSENCIAL", active: url.searchParams.get("active") === "true" }],
-                });
-            })
-        );
-        const result = await listPlans({ active: true });
-        expect(result[0].active).toBe(true);
-    });
-
-    it("createPlan sends POST and returns new plan", async () => {
-        server.use(
-            http.post(`${BASE}/admin/plans`, () =>
-                HttpResponse.json({ success: true, data: { id: "plan-new", code: "PROMOCIONAL", priceCents: 65000 } }, { status: 201 })
-            )
-        );
-        const result = await createPlan({ code: "PROMOCIONAL", priceCents: 65000 });
-        expect(result.id).toBe("plan-new");
-    });
-
-    it("updatePlan sends PATCH and returns updated plan", async () => {
-        server.use(
-            http.patch(`${BASE}/admin/plans/plan-1`, () =>
-                HttpResponse.json({ success: true, data: { id: "plan-1", priceCents: 90000, active: false } })
-            )
-        );
-        const result = await updatePlan("plan-1", { priceCents: 90000, active: false });
-        expect(result.priceCents).toBe(90000);
-        expect(result.active).toBe(false);
-    });
-
-    it("deletePlan sends DELETE and returns result", async () => {
-        server.use(
-            http.delete(`${BASE}/admin/plans/plan-1`, () =>
-                HttpResponse.json({ success: true, data: {} })
-            )
-        );
-        await expect(deletePlan("plan-1")).resolves.toBeUndefined();
     });
 
     // ─── Blocked Dates ────────────────────────────────────────────────────────

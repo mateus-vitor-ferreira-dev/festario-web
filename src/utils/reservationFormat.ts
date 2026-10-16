@@ -1,17 +1,18 @@
 /**
  * @module utils/reservationFormat
- * @description Utilitários de formatação usados em reservas: datas, horários, moeda e planos.
+ * @description Utilitários de formatação usados em reservas: datas, horários, moeda e pacote.
  */
 
 /**
- * Mapa de códigos de plano para rótulos exibíveis em pt-BR.
- * @type {Record<"PROMOCIONAL" | "ESSENCIAL" | "COMPLETA", string>}
+ * Nome do pacote contratado: a cópia gravada na reserva ou, em reserva antiga, o código
+ * ("SABADO_TARDE" → "Sabado tarde").
  */
-export const PLAN_LABELS = {
-    PROMOCIONAL: "Promocional",
-    ESSENCIAL: "Essencial",
-    COMPLETA: "Completa",
-};
+export function packageLabel(reservation: { packageSnapshot?: { name?: string } | null; planCode?: string | null }): string {
+    const name = reservation.packageSnapshot?.name;
+    if (name) return name;
+    const code = reservation.planCode;
+    return code ? (code.charAt(0) + code.slice(1).toLowerCase()).replace(/_/g, " ") : "—";
+}
 
 /**
  * Formata uma data para o padrão curto brasileiro: `DD/MM/AAAA`.
@@ -61,7 +62,7 @@ export function formatCurrency(value: number | string): string {
 }
 
 /**
- * Formata um valor em centavos como moeda brasileira: ex. `"R$ 650,00"`.
+ * Formata um valor em centavos como moeda brasileira: ex. `"R$ 1.234,56"`.
  * @param {number | string} cents - Valor em centavos
  * @returns {string}
  */

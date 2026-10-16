@@ -1,4 +1,5 @@
 import styled, { css, keyframes } from "styled-components";
+import { Link } from "react-router-dom";
 import { media } from "../../styles/breakpoints";
 
 const spin = keyframes`
@@ -485,7 +486,7 @@ export const CampaignStatusBadge = styled.span<{ $status?: string }>`
 
 export const RoleBadge = styled.span<{ $role?: string }>`
   ${chipBase}
-  ${({ $role }) => ($role === "ADMIN" ? chipPaid : chipNeutral)}
+  ${({ $role }) => ($role === "ADMIN" ? chipInfo : $role === "OWNER" ? chipPaid : chipNeutral)}
 `;
 
 /* Tipo de feriado — rótulo de categoria, não status: chip quadrado */
@@ -732,6 +733,11 @@ export const HolidayInfo = styled.div`
     color: var(--text-muted);
     font-variant-numeric: lining-nums tabular-nums;
   }
+
+  /* no celular, nome e data ocupam a linha e o tipo e a ação ficam sempre embaixo (antes variava com o tamanho do nome) */
+  ${media.sm} {
+    flex-basis: 100%;
+  }
 `;
 
 /* ─── Sorteio ─── */
@@ -787,7 +793,7 @@ export const MessagePreview = styled.div`
 export const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(10, 18, 14, 0.5);
+  background: var(--overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -816,6 +822,11 @@ export const ModalBox = styled.div<{ $maxWidth?: number }>`
   display: flex;
   flex-direction: column;
   gap: 20px;
+
+  /* Conteúdo longo rola dentro do modal; os blocos não encolhem (senão um quadro com overflow fica cortado). */
+  & > * {
+    flex-shrink: 0;
+  }
 
   /* Folha inferior de largura total */
   ${media.sm} {
@@ -1204,4 +1215,95 @@ export const VisuallyHidden = styled.span`
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+`;
+
+/* ─── Listas paginadas ─── */
+
+/** Região da lista: fica translúcida enquanto a próxima página/filtro carrega. */
+export const ListRegion = styled.div<{ $busy?: boolean }>`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  opacity: ${({ $busy }) => ($busy ? 0.55 : 1)};
+  transition: opacity 0.15s ease;
+`;
+
+/** Alvo de foco/rolagem ao trocar de página (topo da seção). */
+export const ScrollAnchor = styled.div`
+  scroll-margin-top: 96px;
+
+  &:focus {
+    outline: none;
+  }
+`;
+
+export const ResultCount = styled.p`
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-variant-numeric: lining-nums tabular-nums;
+`;
+
+/** Seletor de ano no cabeçalho de Feriados — mesmo controle da barra de filtros. */
+export const YearField = styled.div`
+  width: 140px;
+`;
+
+/* ─── Painel do espaço: nome do espaço e barra de contexto (ADMIN) ─── */
+
+export const TitleTenant = styled.span`
+  display: block;
+  margin-top: 2px;
+  font-size: var(--text-xl);
+  font-weight: 500;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+`;
+
+/** Faixa informativa: em qual espaço o ADMIN está operando. Sem sombra (painel). */
+export const ContextBar = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--status-info-border);
+  border-radius: var(--radius-lg);
+  background: var(--status-info-bg);
+  color: var(--status-info-text);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+
+  strong {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  & > span {
+    min-width: 0;
+    flex: 1 1 280px;
+  }
+`;
+
+export const ContextLink = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--brand);
+  text-decoration: underline;
+  text-decoration-color: var(--brand-border);
+  text-underline-offset: 3px;
+
+  &:hover {
+    text-decoration-color: currentColor;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: var(--radius-sm);
+  }
 `;

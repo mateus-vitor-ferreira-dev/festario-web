@@ -42,7 +42,7 @@
 .react-datepicker__day-name {
   color: var(--text-muted);
   font-weight: 500;
-  font-size: 12px;
+  font-size: var(--text-2xs);
   width: 2.25rem;
   margin: 2px;
 }
@@ -128,4 +128,10 @@
   color: var(--text-faint) !important;
   cursor: not-allowed;
   background: none !important;
+}
+
+/* O container padrão é inline-block: a linha de base somava alguns pixels
+   abaixo do campo e deixava o DatePickerInput mais alto que selects e inputs. */
+.react-datepicker__input-container {
+  display: block;
 }

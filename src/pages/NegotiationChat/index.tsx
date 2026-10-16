@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { readTenant } from "../../config/tenantStorage";
+import { isManagerRole, PANEL_PATH } from "../../utils/roles";
 import { toast } from "react-toastify";
 
 /**
@@ -77,9 +79,9 @@ function SendIcon() {
     );
 }
 
-function extractPixCode(content: string): string | null {
-    const match = content.match(/PIX copia e cola:\n(.+)/s);
-    return match ? match[1].trim() : null;
+/** Conversas antigas traziam um código PIX vencido no fim da mensagem; o pagamento agora é combinado com o salão. */
+function withoutLegacyPix(content: string): string {
+    return content.replace(/\n\nPIX copia e cola:\n.+/s, "");
 }
 
 interface ProposalMessageProps {
@@ -166,7 +168,11 @@ export default function NegotiationChat() {
 
     const session = readSession();
     const currentUserId = session?.user?.id ?? null;
-    const isAdmin = session?.user?.role === "ADMIN";
+    // nome mostrado nas mensagens da equipe: o do espaço guardado; sem ele, um rótulo
+    // neutro (a equipe é do salão, não da plataforma)
+    const teamName = readTenant()?.name || "Equipe do espaço";
+    // equipe do espaço: dono (OWNER) ou equipe da plataforma (ADMIN)
+    const isAdmin = isManagerRole(session?.user?.role);
 
     useEffect(() => {
         if (!id) return;
@@ -330,7 +336,7 @@ export default function NegotiationChat() {
         try {
             setIsResponding(true);
             const result = await respondToProposal(id, "ACCEPT");
-            toast.success("Proposta aceita! Redirecionando para o pagamento...");
+            toast.success("Proposta aceita! Veja como pagar e combinar com o salão.");
             setTimeout(() => navigate(`/checkout/${result.reservation?.id}`), 1200);
         } catch (error) {
             toast.error(getErrorMessage(error, "Erro ao aceitar proposta."));
@@ -364,7 +370,7 @@ export default function NegotiationChat() {
             setNegotiation(refetch);
             // Optionally navigate to the reservation
             if (result?.reservation?.id) {
-                setTimeout(() => navigate(`/admin`), 1500);
+                setTimeout(() => navigate(isAdmin ? PANEL_PATH : "/reservations"), 1500);
             }
         } catch (error) {
             toast.error(getErrorMessage(error, "Erro ao confirmar proposta."));
@@ -386,11 +392,6 @@ export default function NegotiationChat() {
         } finally {
             setIsResponding(false);
         }
-    }
-
-    async function handleCopyPix(code: string) {
-        await navigator.clipboard.writeText(code);
-        toast.success("Código PIX copiado!");
     }
 
     const isClosed = negotiation?.status === "CLOSED" || negotiation?.status === "REJECTED";
@@ -432,17 +433,14 @@ export default function NegotiationChat() {
                         const isOwn = !msg.isSystem && msg.author.id === currentUserId;
                         const meta = msg.metadata;
                         const isProposal = meta?.type === "PROPOSAL";
-                        const pixCode = msg.isSystem && !isProposal ? extractPixCode(msg.content) : null;
-                        const displayContent = pixCode
-                            ? msg.content.replace(/\n\nPIX copia e cola:\n.+/s, "")
-                            : msg.content;
+                        const displayContent = msg.isSystem && !isProposal ? withoutLegacyPix(msg.content) : msg.content;
 
                         return (
                             <S.MessageRow key={msg.id} $isOwn={isOwn} $isSystem={msg.isSystem}>
                                 <S.Bubble $isOwn={isOwn} $isSystem={msg.isSystem} $isProposal={isProposal}>
                                     {!isOwn && !msg.isSystem && (
                                         <S.BubbleAuthor $isOwn={isOwn}>
-                                            {msg.author.role === "ADMIN" ? "Recanto Vila Rica" : msg.author.name}
+                                            {isManagerRole(msg.author.role) ? teamName : msg.author.name}
                                         </S.BubbleAuthor>
                                     )}
 
@@ -459,16 +457,6 @@ export default function NegotiationChat() {
                                         <S.BubbleText $isOwn={isOwn} $isSystem={msg.isSystem}>
                                             {displayContent}
                                         </S.BubbleText>
-                                    )}
-
-                                    {pixCode && (
-                                        <S.PixBlock>
-                                            <S.PixLabel>PIX copia e cola</S.PixLabel>
-                                            <S.PixCode>{pixCode}</S.PixCode>
-                                            <S.CopyButton type="button" onClick={() => handleCopyPix(pixCode)}>
-                                                Copiar
-                                            </S.CopyButton>
-                                        </S.PixBlock>
                                     )}
 
                                     <S.BubbleTime $isOwn={isOwn} $isSystem={msg.isSystem}>

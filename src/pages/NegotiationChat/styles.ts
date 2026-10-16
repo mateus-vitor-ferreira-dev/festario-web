@@ -156,7 +156,7 @@ export const MessageRow = styled.div<{ $isOwn: boolean; $isSystem?: boolean }>`
 /*
  * Três vozes:
  *  - usuário (próprio): bolha mata à direita;
- *  - Recanto / outro participante: bolha clara com borda à esquerda, com nome;
+ *  - equipe do espaço / outro participante: bolha clara com borda à esquerda, com nome;
  *  - sistema: nota centralizada, sem bolha, em tom de rodapé.
  */
 export const Bubble = styled.div<{ $isOwn: boolean; $isSystem?: boolean; $isProposal?: boolean }>`
@@ -224,67 +224,13 @@ export const BubbleText = styled.p<{ $isOwn: boolean; $isSystem?: boolean }>`
 `;
 
 export const BubbleTime = styled.span<{ $isOwn: boolean; $isSystem?: boolean }>`
-  font-size: 12px;
+  font-size: var(--text-2xs);
   color: ${({ $isOwn }) => ($isOwn ? "var(--on-brand)" : "var(--text-faint)")};
   opacity: ${({ $isOwn }) => ($isOwn ? 0.75 : 1)};
   display: block;
   text-align: ${({ $isSystem }) => ($isSystem ? "center" : "right")};
   margin-top: 4px;
   font-variant-numeric: tabular-nums;
-`;
-
-/* ─── PIX (aparece em mensagens de sistema) ─── */
-
-export const PixBlock = styled.div`
-  margin-top: 10px;
-  padding: 12px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-  text-align: left;
-`;
-
-export const PixLabel = styled.span`
-  font-size: var(--text-xs);
-  font-weight: 500;
-  color: var(--text-muted);
-`;
-
-export const PixCode = styled.code`
-  font-size: var(--text-xs);
-  color: var(--text-primary);
-  display: block;
-  min-width: 0;
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  word-break: break-all;
-  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-  background: var(--bg-muted);
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-`;
-
-export const CopyButton = styled.button`
-  align-self: flex-end;
-  min-height: 36px;
-  padding: 0 14px;
-  background: transparent;
-  border: 1px solid var(--brand-border);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--brand);
-  cursor: pointer;
-  transition: background 0.15s ease;
-
-  &:hover {
-    background: var(--brand-subtle);
-  }
 `;
 
 /* ─── Campo de mensagem ─── */

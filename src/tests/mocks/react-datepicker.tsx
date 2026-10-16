@@ -3,6 +3,7 @@ import React from "react";
 export const registerLocale = () => {};
 
 export default function DatePicker({
+    id,
     selected,
     onChange,
     customInput,
@@ -21,6 +22,7 @@ export default function DatePicker({
     return (
         <input
             type="date"
+            id={id}
             name={name}
             value={value}
             onChange={handleChange}

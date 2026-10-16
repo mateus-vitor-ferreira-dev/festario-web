@@ -3,7 +3,11 @@
  * @description Funções para listar e buscar espaços para eventos.
  */
 import api from "./api";
-import type { Venue } from "../types";
+import { cleanParams, toPaginated } from "./pagination";
+import type { ListParams, PaginatedResult, PublicTenant, Venue, VenuePackages } from "../types";
+
+/** Limite usado para popular selects com todos os espaços (máximo da API). */
+export const ALL_VENUES_LIMIT = 100;
 
 /**
  * Lista todos os espaços disponíveis para reserva.
@@ -11,8 +15,20 @@ import type { Venue } from "../types";
  * @see GET /venues
  */
 export async function listVenues(signal?: AbortSignal): Promise<Venue[]> {
-    const { data } = await api.get("/venues", { signal });
+    // a listagem é paginada (padrão 20); selects e telas internas querem todos
+    const { data } = await api.get("/venues", { signal, params: { limit: ALL_VENUES_LIMIT } });
     return data.data || [];
+}
+
+/**
+ * Lista espaços com paginação e filtros (`minCapacity`, `maxPrice`, `q`;
+ * `city` está reservado no contrato para o futuro).
+ *
+ * @see GET /venues?page=&limit=&minCapacity=&maxPrice=
+ */
+export async function listVenuesPage(params: ListParams = {}, signal?: AbortSignal): Promise<PaginatedResult<Venue>> {
+    const { data } = await api.get("/venues", { signal, params: cleanParams(params) });
+    return toPaginated<Venue>(data, params);
 }
 
 /**
@@ -29,6 +45,27 @@ export async function getVenue(
 }
 
 /**
+ * Pacotes ativos do espaço, na ordem do salão, com os itens inclusos e adicionais. Com `date`
+ * (`YYYY-MM-DD`), cada pacote diz se vale naquele dia e a resposta diz se o dia é feriado.
+ *
+ * @see GET /venues/:id/packages?date=
+ */
+export async function getVenuePackages(venueId: string, date?: string, signal?: AbortSignal): Promise<VenuePackages> {
+    const { data } = await api.get(`/venues/${venueId}/packages`, { params: date ? { date } : undefined, signal });
+    return data.data;
+}
+
+/**
+ * Regras do salão que o cliente precisa para reservar: antecedência, horizonte e política vigente.
+ *
+ * @see GET /tenant
+ */
+export async function getPublicTenant(signal?: AbortSignal): Promise<PublicTenant> {
+    const { data } = await api.get("/tenant", { signal });
+    return data.data;
+}
+
+/**
  * Atualiza os dados de um espaço (requer perfil ADMIN).
  *
  * @see PATCH /venues/:id
@@ -38,5 +75,16 @@ export async function updateVenue(
     payload: Partial<Venue>,
 ): Promise<Venue> {
     const { data } = await api.patch(`/venues/${venueId}`, payload);
+    return data.data;
+}
+
+/**
+ * Cadastra um espaço no espaço (tenant) atual — OWNER ou ADMIN.
+ * `basePricePerHour` é obrigatório.
+ *
+ * @see POST /venues
+ */
+export async function createVenue(payload: Partial<Venue>): Promise<Venue> {
+    const { data } = await api.post("/venues", payload);
     return data.data;
 }

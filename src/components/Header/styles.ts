@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { media } from "../../styles/breakpoints";
+import { FestarioLogo, FestarioSymbol } from "../Brand";
 
 export const Container = styled.header`
   width: 100%;
@@ -15,9 +16,9 @@ export const Container = styled.header`
 
 export const Content = styled.div`
   width: 100%;
-  max-width: 1200px;
+  max-width: var(--content-max);
   margin: 0 auto;
-  min-height: 64px;
+  min-height: 72px;
   padding: 0 max(24px, env(safe-area-inset-right)) 0 max(24px, env(safe-area-inset-left));
 
   ${media.sm} {
@@ -34,25 +35,78 @@ export const Content = styled.div`
 export const BrandWrapper = styled(Link)`
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-shrink: 0;
+  /* respiro do guia: ¼ da altura do símbolo; também garante o alvo de toque de 44px */
+  padding: 9px 0;
+  min-height: 44px;
   text-decoration: none;
-  white-space: nowrap;
+  border-radius: var(--radius-sm);
 `;
 
-export const Logo = styled.img`
-  width: 44px;
-  height: 44px;
-  object-fit: contain;
-`;
-
-export const BrandText = styled.span`
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  font-weight: 600;
+/* Salão em foco: separado da marca da plataforma por um filete na cor do salão. */
+export const Salon = styled(Link)`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 44px;
+  padding-left: 14px;
+  border-left: 2px solid var(--salon-accent);
   color: var(--text-primary);
+  text-decoration: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
 
   ${media.sm} {
-    display: none;
+    padding-left: 10px;
+  }
+`;
+
+export const SalonName = styled.span`
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: 1.2;
+  max-width: 18ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  /* No celular o selo basta: o nome completo está no title e na página de espaços. */
+  ${media.sm} {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+`;
+
+/* logotipo inline (segue o tema). Altura mínima do guia: 24px */
+export const Logo = styled(FestarioLogo)<{ $compact?: boolean }>`
+  display: block;
+  height: 36px;
+  width: auto;
+
+  ${media.sm} {
+    height: 28px;
+    /* Com o selo do salão ao lado, no celular fica só o símbolo da plataforma. */
+    display: ${({ $compact }) => ($compact ? "none" : "block")};
+  }
+`;
+
+export const Symbol = styled(FestarioSymbol)`
+  display: none;
+  height: 32px;
+  width: auto;
+
+  ${media.sm} {
+    display: block;
   }
 `;
 
@@ -75,7 +129,7 @@ export const Nav = styled.nav<{ $open?: boolean }>`
     background: var(--bg-page);
     border-bottom: 1px solid var(--border-default);
     box-shadow: var(--shadow-lg);
-    max-height: calc(100dvh - 64px);
+    max-height: calc(100dvh - 72px);
     overflow-y: auto;
   }
 `;
@@ -149,7 +203,7 @@ export const UserInfo = styled.div`
   line-height: 1.2;
 
   span {
-    font-size: 12px;
+    font-size: var(--text-2xs);
     color: var(--text-faint);
   }
 
@@ -166,7 +220,7 @@ export const UserInfo = styled.div`
 `;
 
 export const LogoutButton = styled.button`
-  min-height: 40px;
+  min-height: 44px;
   border: 1px solid transparent;
   background: transparent;
   color: var(--text-muted);
@@ -215,8 +269,8 @@ export const ResendButton = styled.button`
 `;
 
 export const ThemeToggle = styled.button`
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   background: transparent;
@@ -234,8 +288,8 @@ export const ThemeToggle = styled.button`
   }
 
   svg {
-    width: 18px;
-    height: 18px;
+    width: var(--icon-md);
+    height: var(--icon-md);
   }
 `;
 
@@ -253,8 +307,8 @@ export const MenuButton = styled.button`
   flex-shrink: 0;
 
   svg {
-    width: 22px;
-    height: 22px;
+    width: var(--icon-lg);
+    height: var(--icon-lg);
   }
 
   ${media.lg} {

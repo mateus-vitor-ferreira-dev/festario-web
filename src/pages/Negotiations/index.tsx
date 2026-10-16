@@ -1,10 +1,12 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useGSAP } from "@gsap/react";
 
-import { createNegotiation } from "../../services/negotiation";
-import { useNegotiations } from "../../hooks/useNegotiations";
+import { createNegotiation, listNegotiationsPage } from "../../services/negotiation";
+import { usePaginatedQuery } from "../../hooks/usePaginatedQuery";
+import { useListParams } from "../../hooks/useListParams";
+import { Pagination } from "../../components";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { animateFadeInUp } from "../../utils/animations";
 import * as S from "./styles";
@@ -15,7 +17,9 @@ import * as S from "./styles";
  * Permite criar uma nova negociação (botão "Nova Negociação") e ver o histórico.
  * Clicar em uma negociação navega para `/negociacoes/:id` (NegotiationChat).
  *
- * @see GET /negotiations
+ * A página atual fica na URL (`?page=2`).
+ *
+ * @see GET /negotiations?page=&limit=
  * @see POST /negotiations
  * @component
  */
@@ -26,6 +30,10 @@ const STATUS_LABELS = {
     REJECTED: "Recusada",
     CLOSED: "Encerrada",
 };
+
+export const NEGOTIATIONS_PAGE_SIZE = 10;
+
+const NO_FILTERS = [] as const;
 
 function formatDate(date: string): string {
     return new Date(date).toLocaleDateString("pt-BR", {
@@ -38,7 +46,13 @@ function formatDate(date: string): string {
 export default function Negotiations() {
     const navigate = useNavigate();
     const containerRef = useRef<HTMLDivElement | null>(null);
-    const { negotiations, isLoading } = useNegotiations();
+    const listTopRef = useRef<HTMLDivElement | null>(null);
+    const { page, setPage } = useListParams(NO_FILTERS);
+    const params = useMemo(() => ({ page, limit: NEGOTIATIONS_PAGE_SIZE }), [page]);
+    const { data: negotiations, meta, isLoading, isFetching } = usePaginatedQuery(listNegotiationsPage, params, {
+        errorMessage: "Erro ao carregar negociações.",
+        onPageOutOfRange: setPage,
+    });
     const [isSending, setIsSending] = useState(false);
 
     useGSAP(() => {
@@ -62,7 +76,7 @@ export default function Negotiations() {
 
     return (
         <S.Container ref={containerRef}>
-            <S.Header className="anim-header">
+            <S.Header className="anim-header" ref={listTopRef} tabIndex={-1}>
                 <S.HeaderText>
                     <S.Title>Negociações</S.Title>
                     <S.Description>
@@ -84,7 +98,8 @@ export default function Negotiations() {
                     <p>Você ainda não possui negociações.<br />Use "Nova negociação" para conversar com a equipe sobre datas, convidados ou condições especiais.</p>
                 </S.EmptyState>
             ) : (
-                <S.List>
+                <>
+                <S.List aria-busy={isFetching} $busy={isFetching}>
                     {negotiations.map((neg) => (
                         <S.NegotiationCard
                             key={neg.id}
@@ -105,6 +120,21 @@ export default function Negotiations() {
                         </S.NegotiationCard>
                     ))}
                 </S.List>
+                {meta && (
+                    <Pagination
+                        page={meta.page}
+                        totalPages={meta.totalPages}
+                        total={meta.total}
+                        limit={meta.limit}
+                        count={negotiations.length}
+                        hasNext={meta.hasNext}
+                        onChange={setPage}
+                        scrollTargetRef={listTopRef}
+                        disabled={isFetching}
+                        label="Paginação das negociações"
+                    />
+                )}
+                </>
             )}
         </S.Container>
     );

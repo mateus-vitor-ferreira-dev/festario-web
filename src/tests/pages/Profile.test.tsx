@@ -46,7 +46,7 @@ describe("Profile page", () => {
     it("shows USER role badge", async () => {
         renderPage();
         await waitFor(() =>
-            expect(screen.getByText("Usuário")).toBeInTheDocument()
+            expect(screen.getByText("Cliente")).toBeInTheDocument()
         );
     });
 
@@ -61,13 +61,13 @@ describe("Profile page", () => {
         );
         renderPage();
         await waitFor(() =>
-            expect(screen.getByText("Administrador")).toBeInTheDocument()
+            expect(screen.getByText("Equipe da plataforma")).toBeInTheDocument()
         );
     });
 
     it("saves profile changes successfully", async () => {
         localStorage.setItem(
-            "recanto:userData",
+            "festario:userData",
             JSON.stringify({ token: "tk", user: { id: "user-1", name: "Mateus", email: "mateus@email.com", role: "USER" } })
         );
         const user = userEvent.setup();
@@ -165,7 +165,7 @@ describe("Profile page", () => {
 
     it("updates localStorage via migrated legacy session", async () => {
         localStorage.setItem(
-            "recanto:userData",
+            "festario:userData",
             JSON.stringify({ id: "u1", name: "Mateus", email: "mateus@email.com", role: "USER", token: "tk" })
         );
         const user = userEvent.setup();
@@ -177,7 +177,7 @@ describe("Profile page", () => {
         await waitFor(() =>
             expect(screen.getByText(/perfil atualizado com sucesso/i)).toBeInTheDocument()
         );
-        const stored = JSON.parse(localStorage.getItem("recanto:userData"));
+        const stored = JSON.parse(localStorage.getItem("festario:userData"));
         expect(stored.user.name).toBe("Mateus Atualizado");
     });
 

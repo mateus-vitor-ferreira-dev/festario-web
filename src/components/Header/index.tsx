@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useGSAP } from "@gsap/react";
-import logo from "../../assets/logo-recanto.svg";
 import { useAuth } from "../../contexts/AuthContext";
+import { useSalonBrand } from "../../contexts/SalonBrandContext";
+import SalonMark from "../SalonMark";
 import { useTheme } from "../../contexts/ThemeContext";
 import { resendVerification } from "../../services/auth";
 import { animateFadeInUp } from "../../utils/animations";
 import { getHttpStatus } from "../../utils/errors";
+import { isManagerRole, PANEL_PATH, PLATFORM_PATH, SALONS_PATH } from "../../utils/roles";
 import * as S from "./styles";
 
 function getInitials(name: string): string {
@@ -64,8 +66,9 @@ function MoonIcon() {
 /**
  * Barra de navegação principal da aplicação.
  *
- * Lê o perfil do usuário do `localStorage` (`recanto:userData`) para exibir
- * iniciais no avatar e o link de Admin (visível apenas para `role === "ADMIN"`).
+ * Lê o perfil do usuário do `localStorage` (`festario:userData`) para exibir
+ * iniciais no avatar e os atalhos por papel: OWNER vê "Painel"; ADMIN vê
+ * "Plataforma" e "Painel"; USER vê só a navegação de cliente.
  * Inclui botão de toggle de tema claro/escuro e botão de logout. Abaixo de
  * 1024px a mesma `<nav>` vira um painel aberto pelo botão de menu (fecha com
  * Esc ou ao trocar de rota).
@@ -78,6 +81,9 @@ export default function Header() {
     const location = useLocation();
     const { theme, toggleTheme } = useTheme();
     const { user, logout: authLogout } = useAuth();
+    const { salon } = useSalonBrand();
+    // Na área da plataforma e na vitrine não há um salão em foco: só a marca do Festário.
+    const showSalon = Boolean(salon) && !location.pathname.startsWith(PLATFORM_PATH) && location.pathname !== SALONS_PATH;
     const containerRef = useRef(null);
     const [resending, setResending] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
@@ -135,18 +141,29 @@ export default function Header() {
                 </S.VerificationBanner>
             )}
             <S.Content>
-                <S.BrandWrapper to="/home">
-                    <S.Logo src={logo} alt="Logo Recanto Vila Rica" />
-                    <S.BrandText>Recanto Vila Rica</S.BrandText>
+                <S.BrandWrapper to="/home" title="Ir para o início">
+                    <S.Logo $compact={showSalon} />
+                    {showSalon && <S.Symbol title="Festário" />}
                 </S.BrandWrapper>
+
+                {showSalon && salon && (
+                    <S.Salon to={`/s/${salon.slug}`} title={`Página de ${salon.name}`}>
+                        <SalonMark name={salon.name} logoVariants={salon.logoVariants} logoUrl={salon.logoUrl} size="sm" decorative />
+                        <S.SalonName>{salon.name}</S.SalonName>
+                    </S.Salon>
+                )}
 
                 <S.Nav id="main-nav" aria-label="Principal" $open={menuOpen}>
                     <S.NavLink $active={location.pathname === "/home"} as={Link} to="/home">
                         Início
                     </S.NavLink>
 
-                    <S.NavLink $active={location.pathname === "/venues"} as={Link} to="/venues">
-                        Espaços
+                    <S.NavLink
+                        $active={location.pathname === SALONS_PATH || location.pathname.startsWith("/s/")}
+                        as={Link}
+                        to={SALONS_PATH}
+                    >
+                        Salões
                     </S.NavLink>
 
                     <S.NavLink
@@ -182,8 +199,24 @@ export default function Header() {
                     </S.NavLink>
 
                     {userRole === "ADMIN" && (
-                        <S.NavLink $active={location.pathname === "/admin"} as={Link} to="/admin">
-                            Admin
+                        <S.NavLink
+                            $active={location.pathname.startsWith(PLATFORM_PATH)}
+                            aria-current={location.pathname.startsWith(PLATFORM_PATH) ? "page" : undefined}
+                            as={Link}
+                            to={PLATFORM_PATH}
+                        >
+                            Plataforma
+                        </S.NavLink>
+                    )}
+
+                    {isManagerRole(userRole) && (
+                        <S.NavLink
+                            $active={location.pathname === PANEL_PATH}
+                            aria-current={location.pathname === PANEL_PATH ? "page" : undefined}
+                            as={Link}
+                            to={PANEL_PATH}
+                        >
+                            Painel
                         </S.NavLink>
                     )}
                 </S.Nav>

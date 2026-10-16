@@ -3,27 +3,61 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useGSAP } from "@gsap/react";
 
+import PaymentMeter from "../../components/PaymentMeter";
 import { getReservation } from "../../services/reservation";
-import { createCheckoutSession, getPaymentStatus } from "../../services/payment";
+import { getReservationPayment } from "../../services/payment";
 import { getErrorMessage } from "../../utils/getErrorMessage";
-import { isAbortError, getHttpStatus } from "../../utils/errors";
-import { PLAN_LABELS, formatDateFull, formatTime, formatCurrency, calcDuration } from "../../utils/reservationFormat";
+import { isAbortError } from "../../utils/errors";
+import { packageLabel, formatDate, formatDateFull, formatTime, formatCents, calcDuration } from "../../utils/reservationFormat";
+import { METHOD_LABELS, formatDeadline, instagramLink, whatsappLink } from "../../utils/paymentFormat";
 import { animateFadeInUp } from "../../utils/animations";
-import type { Reservation, PixChargeResult } from "../../types";
+import type { Reservation, ReservationPayment } from "../../types";
 import * as S from "./styles";
 
+/** Mensagem pronta para o WhatsApp do salão. */
+function whatsappMessage(reservation: Reservation, payment: ReservationPayment): string {
+    const what = payment.reservationStatus === "PENDING"
+        ? `pagar ${payment.depositCents != null ? `o sinal de ${formatCents(payment.depositCents)}` : formatCents(payment.summary.totalCents)}`
+        : `pagar o restante de ${formatCents(payment.summary.balanceCents)}`;
+    return `Olá! Quero ${what} da minha reserva no ${reservation.venue?.name ?? "salão"} em ${formatDate(reservation.startDate)} (${packageLabel(reservation)}). Código: ${reservation.id.slice(0, 8)}.`;
+}
+
+/** O que a pessoa precisa saber primeiro, pelo estado do dinheiro da reserva. */
+function headline(p: ReservationPayment): { title: string; text: string; tone: "pending" | "paid" | "neutral" } {
+    const { summary } = p;
+    if (p.reservationStatus === "PENDING") {
+        const amount = formatCents(summary.missingToConfirmCents);
+        return {
+            title: "Combine o pagamento com o salão",
+            text: summary.netCents > 0
+                ? `O salão já registrou ${formatCents(summary.netCents)}. Faltam ${amount} para confirmar a reserva.`
+                : `Para confirmar a reserva, o salão precisa receber ${amount}${p.depositCents != null ? " de sinal" : ""}.`,
+            tone: "pending",
+        };
+    }
+    if (p.reservationStatus === "PAID") {
+        return summary.balanceCents > 0
+            ? { title: "Reserva confirmada", text: `O salão recebeu o sinal. Falta o restante: ${formatCents(summary.balanceCents)}${p.balanceDueAt ? `, até ${formatDate(p.balanceDueAt)}` : ""}.`, tone: "paid" }
+            : { title: "Reserva confirmada e quitada", text: "O salão recebeu o valor total. Até a festa!", tone: "paid" };
+    }
+    if (p.reservationStatus === "CANCELLED") {
+        const due = p.refundDueCents ?? 0;
+        if (summary.paidCents === 0) return { title: "Reserva cancelada", text: "Nada foi pago, então não há o que devolver.", tone: "neutral" };
+        if (due === 0) return { title: "Reserva cancelada", text: "Pela política de cancelamento desta reserva, não há devolução.", tone: "neutral" };
+        return summary.refundedCents >= due
+            ? { title: "Reserva cancelada", text: `O salão registrou a devolução de ${formatCents(summary.refundedCents)}.`, tone: "neutral" }
+            : { title: "Reserva cancelada", text: `Pela política, você recebe ${formatCents(due)} de volta (${p.refundPercentage}%). O salão faz a devolução${summary.refundedCents > 0 ? `; já devolveu ${formatCents(summary.refundedCents)}` : ""}.`, tone: "neutral" };
+    }
+    return { title: "Reserva expirada", text: "O pagamento não foi registrado no prazo e a data voltou a ficar livre.", tone: "neutral" };
+}
+
 /**
- * Página de checkout para uma reserva pendente de pagamento.
- *
- * Carrega os detalhes da reserva pelo `reservationId` da URL e oferece duas opções:
- * - **Stripe** (cartão): chama `createCheckoutSession` e redireciona para o Stripe Checkout
- * - **PIX** (Mercado Pago): chama `createPixCharge`, exibe QR Code e faz polling do status
- *   até PAID ou CANCELLED com `getPaymentStatus`
+ * Pagamento da reserva. Não há cobrança online: o cliente paga direto ao salão, que registra o que
+ * recebeu. A tela mostra quanto confirma a reserva (o sinal ou o total), o prazo, como pagar (o texto do
+ * salão e os contatos) e os pagamentos já registrados.
  *
  * @see GET /reservations/:id
- * @see POST /payment/checkout-session
- * @see POST /payment/pix
- * @see GET /payment/status/:paymentId
+ * @see GET /payments/reservation/:id
  * @component
  */
 export default function Checkout() {
@@ -32,20 +66,20 @@ export default function Checkout() {
     const containerRef = useRef<HTMLDivElement | null>(null);
 
     const [reservation, setReservation] = useState<Reservation | null>(null);
+    const [payment, setPayment] = useState<ReservationPayment | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [isRedirecting, setIsRedirecting] = useState(false);
-    const [pixData, setPixData] = useState<PixChargeResult | null>(null);
-    const [pixStep, setPixStep] = useState("select");
-    const [isCopied, setIsCopied] = useState(false);
 
     useEffect(() => {
         const controller = new AbortController();
-
-        async function loadReservation() {
+        async function load() {
             try {
                 setIsLoading(true);
-                const data = await getReservation(reservationId!, controller.signal);
-                setReservation(data);
+                const [r, p] = await Promise.all([
+                    getReservation(reservationId!, controller.signal),
+                    getReservationPayment(reservationId!, null, controller.signal),
+                ]);
+                setReservation(r);
+                setPayment(p);
             } catch (error) {
                 if (isAbortError(error)) return;
                 toast.error(getErrorMessage(error, "Erro ao carregar a reserva."));
@@ -54,124 +88,13 @@ export default function Checkout() {
                 if (!controller.signal.aborted) setIsLoading(false);
             }
         }
-
-        if (reservationId) {
-            loadReservation();
-        }
-
+        if (reservationId) load();
         return () => controller.abort();
     }, [reservationId, navigate]);
 
-    // Restaura o QR Code se o usuário recarregar a página com um PIX pendente
-    useEffect(() => {
-        if (!reservation) return;
-        const p = reservation.payment;
-        if (
-            reservation.status === "PENDING" &&
-            p?.status === "PENDING" &&
-            p?.pixTxId &&
-            p?.pixQrCode &&
-            p?.pixExpiresAt &&
-            new Date(p.pixExpiresAt) > new Date()
-        ) {
-            setPixData({
-                txid: p.pixTxId,
-                qrCode: p.pixQrCode,
-                copyPaste: p.pixCopyPaste ?? "",
-                expiresAt: p.pixExpiresAt,
-            });
-            setPixStep("qr");
-        }
-    }, [reservation]);
-
-    // Polling de status quando QR Code está sendo exibido.
-    // Para automaticamente na expiração do PIX, após 5 erros consecutivos,
-    // ou quando o status muda para PAID/EXPIRED/CANCELLED.
-    useEffect(() => {
-        if (pixStep !== "qr" || !pixData || !reservationId) return;
-
-        const controller = new AbortController();
-        let consecutiveErrors = 0;
-        const MAX_ERRORS = 5;
-        const expiresAt = pixData.expiresAt ? new Date(pixData.expiresAt).getTime() : Infinity;
-
-        const interval = setInterval(async () => {
-            if (Date.now() >= expiresAt) {
-                clearInterval(interval);
-                toast.info("O código PIX expirou. Volte para suas reservas e tente novamente.");
-                navigate("/reservations");
-                return;
-            }
-
-            try {
-                const result = await getPaymentStatus(reservationId, controller.signal);
-                consecutiveErrors = 0;
-
-                if (result?.payment?.status === "PAID") {
-                    clearInterval(interval);
-                    navigate("/payment/success");
-                    return;
-                }
-                if (["EXPIRED", "CANCELLED"].includes(result?.reservationStatus)) {
-                    clearInterval(interval);
-                    navigate("/reservations");
-                }
-            } catch (err) {
-                if (isAbortError(err)) return;
-                consecutiveErrors += 1;
-                if (consecutiveErrors >= MAX_ERRORS) {
-                    clearInterval(interval);
-                    toast.error("Não foi possível verificar o status do pagamento. Acesse 'Minhas reservas' para confirmar.");
-                }
-            }
-        }, 7000);
-
-        return () => {
-            clearInterval(interval);
-            controller.abort();
-        };
-    }, [pixStep, pixData, reservationId, navigate]);
-
-    async function handleProceedToPayment() {
-        if (!reservation) return;
-        try {
-            setIsRedirecting(true);
-
-            if (reservation.checkoutUrl) {
-                window.location.href = reservation.checkoutUrl;
-                return;
-            }
-
-            const session = await createCheckoutSession(reservationId!);
-            window.location.href = session.url;
-        } catch (error) {
-            const status = getHttpStatus(error);
-
-            if (status === 409) {
-                toast.error("Já existe uma sessão de pagamento ativa para esta reserva. Verifique seu e-mail ou aguarde a expiração.");
-            } else {
-                toast.error(getErrorMessage(error, "Erro ao iniciar o pagamento."));
-            }
-
-            setIsRedirecting(false);
-        }
-    }
-
-    async function handleCopyCopyPaste() {
-        if (!pixData) return;
-        try {
-            await navigator.clipboard.writeText(pixData.copyPaste);
-            setIsCopied(true);
-            setTimeout(() => setIsCopied(false), 3000);
-        } catch {
-            toast.error("Não foi possível copiar o código.");
-        }
-    }
-
     useGSAP(() => {
         if (isLoading || !reservation || !containerRef.current) return;
-        const el = containerRef.current;
-        animateFadeInUp(el.querySelector(".anim-header"));
+        animateFadeInUp(containerRef.current.querySelector(".anim-header"));
     }, { scope: containerRef, dependencies: [isLoading, reservation] });
 
     if (isLoading) {
@@ -185,139 +108,133 @@ export default function Checkout() {
         );
     }
 
-    if (!reservation) {
-        return null;
-    }
+    if (!reservation || !payment) return null;
 
-    const isPendingPayment = reservation.status === "PENDING";
+    const { summary } = payment;
+    const head = headline(payment);
     const duration = calcDuration(reservation.startDate, reservation.endDate);
+    const contacts = payment.instructions;
+    const wa = contacts?.whatsapp ? whatsappLink(contacts.whatsapp, whatsappMessage(reservation, payment)) : null;
+    const open = payment.reservationStatus === "PENDING" || (payment.reservationStatus === "PAID" && summary.balanceCents > 0);
+    const hasContact = Boolean(wa || contacts?.instagram || contacts?.phone || contacts?.email);
 
     return (
         <S.Container ref={containerRef}>
             <S.PageHeader className="anim-header">
-                <S.PageTitle>Finalizar pagamento</S.PageTitle>
+                <S.PageTitle>Pagamento da reserva</S.PageTitle>
                 <S.PageDescription>
-                    Revise os detalhes da sua reserva antes de prosseguir para o pagamento seguro.
+                    O pagamento é combinado direto com {payment.tenant?.name ?? "o salão"}. Assim que o salão registrar o que recebeu, a reserva é confirmada e você recebe o aviso por e-mail e WhatsApp.
                 </S.PageDescription>
             </S.PageHeader>
 
             <S.Grid>
-                <S.SummaryCard>
-                    <S.SummaryHeader>
-                        <S.VenueName>{reservation.venue?.name}</S.VenueName>
-                        <S.StatusBadge status={reservation.status}>
-                            {reservation.status === "PENDING" ? "Aguardando pagamento" : reservation.status}
-                        </S.StatusBadge>
-                    </S.SummaryHeader>
+                <S.Column>
+                    <S.SummaryCard>
+                        <S.SummaryHeader>
+                            <S.VenueName>{reservation.venue?.name}</S.VenueName>
+                            <S.StatusBadge status={reservation.status}>
+                                {{ PENDING: "Aguardando pagamento", PAID: "Confirmada", CANCELLED: "Cancelada", EXPIRED: "Expirada" }[reservation.status] ?? reservation.status}
+                            </S.StatusBadge>
+                        </S.SummaryHeader>
 
-                    <S.Divider />
+                        <S.Divider />
 
-                    <S.DetailList>
-                        {reservation.planCode && (
+                        <S.DetailList>
                             <S.DetailItem>
-                                <S.DetailLabel>Plano</S.DetailLabel>
-                                <S.DetailValue>{PLAN_LABELS[reservation.planCode] || reservation.planCode}</S.DetailValue>
+                                <S.DetailLabel>Pacote</S.DetailLabel>
+                                <S.DetailValue>{packageLabel(reservation)}</S.DetailValue>
                             </S.DetailItem>
+                            <S.DetailItem>
+                                <S.DetailLabel>Data do evento</S.DetailLabel>
+                                <S.DetailValue>{formatDateFull(reservation.startDate)}</S.DetailValue>
+                            </S.DetailItem>
+                            <S.DetailItem>
+                                <S.DetailLabel>Horário</S.DetailLabel>
+                                <S.DetailValue>{formatTime(reservation.startDate)} às {formatTime(reservation.endDate)} ({duration}h)</S.DetailValue>
+                            </S.DetailItem>
+                            {reservation.guestCount ? (
+                                <S.DetailItem>
+                                    <S.DetailLabel>Convidados</S.DetailLabel>
+                                    <S.DetailValue>{reservation.guestCount}</S.DetailValue>
+                                </S.DetailItem>
+                            ) : null}
+                            <S.DetailItem>
+                                <S.DetailLabel>Código da reserva</S.DetailLabel>
+                                <S.DetailValue>{reservation.id.slice(0, 8)}</S.DetailValue>
+                            </S.DetailItem>
+                        </S.DetailList>
+
+                        <S.Divider />
+
+                        <S.TotalRow>
+                            <S.TotalLabel>Valor da reserva</S.TotalLabel>
+                            <S.TotalValue>{formatCents(summary.totalCents)}</S.TotalValue>
+                        </S.TotalRow>
+                    </S.SummaryCard>
+
+                    <S.SummaryCard as="section" aria-labelledby="entries-title">
+                        <S.SectionTitle id="entries-title">Pagamentos registrados pelo salão</S.SectionTitle>
+                        {payment.entries.length === 0 ? (
+                            <S.Muted>Nenhum ainda. Depois de pagar, o salão registra aqui e a reserva é atualizada.</S.Muted>
+                        ) : (
+                            <S.EntryList>
+                                {payment.entries.map((e) => (
+                                    <S.EntryItem key={e.id} $refund={e.kind === "REFUND"}>
+                                        <div>
+                                            <strong>{e.kind === "REFUND" ? "Devolução" : "Pagamento"} · {METHOD_LABELS[e.method]}</strong>
+                                            <span>{formatDate(e.paidAt)}{e.note ? ` — ${e.note}` : ""}</span>
+                                        </div>
+                                        <S.EntryAmount $refund={e.kind === "REFUND"}>{e.kind === "REFUND" ? "−" : ""}{formatCents(e.amountCents)}</S.EntryAmount>
+                                    </S.EntryItem>
+                                ))}
+                            </S.EntryList>
                         )}
+                    </S.SummaryCard>
+                </S.Column>
 
-                        <S.DetailItem>
-                            <S.DetailLabel>Data do evento</S.DetailLabel>
-                            <S.DetailValue>{formatDateFull(reservation.startDate)}</S.DetailValue>
-                        </S.DetailItem>
+                <S.PaymentCard aria-labelledby="pay-title">
+                    <S.Headline $tone={head.tone}>
+                        <S.PaymentTitle id="pay-title">{head.title}</S.PaymentTitle>
+                        <p>{head.text}</p>
+                    </S.Headline>
 
-                        <S.DetailItem>
-                            <S.DetailLabel>Início</S.DetailLabel>
-                            <S.DetailValue>{formatTime(reservation.startDate)}</S.DetailValue>
-                        </S.DetailItem>
+                    <PaymentMeter totalCents={summary.totalCents} netCents={summary.netCents} requiredCents={summary.requiredCents} />
 
-                        <S.DetailItem>
-                            <S.DetailLabel>Término</S.DetailLabel>
-                            <S.DetailValue>{formatTime(reservation.endDate)}</S.DetailValue>
-                        </S.DetailItem>
+                    <S.AmountList>
+                        {payment.depositCents != null && (
+                            <div><dt>Sinal (confirma a reserva)</dt><dd>{formatCents(payment.depositCents)}</dd></div>
+                        )}
+                        <div><dt>Recebido pelo salão</dt><dd>{formatCents(summary.netCents)}</dd></div>
+                        {payment.reservationStatus !== "CANCELLED" && payment.reservationStatus !== "EXPIRED" && (
+                            <div><dt>Falta pagar</dt><dd>{formatCents(summary.balanceCents)}</dd></div>
+                        )}
+                        {payment.balanceDueAt && summary.balanceCents > 0 && payment.reservationStatus !== "CANCELLED" && (
+                            <div><dt>Restante até</dt><dd>{formatDate(payment.balanceDueAt)}</dd></div>
+                        )}
+                    </S.AmountList>
 
-                        <S.DetailItem>
-                            <S.DetailLabel>Duração</S.DetailLabel>
-                            <S.DetailValue>{duration} hora{duration !== 1 ? "s" : ""}</S.DetailValue>
-                        </S.DetailItem>
-                    </S.DetailList>
-
-                    <S.Divider />
-
-                    <S.TotalRow>
-                        <S.TotalLabel>Total a pagar</S.TotalLabel>
-                        <S.TotalValue>{formatCurrency(reservation.totalPrice)}</S.TotalValue>
-                    </S.TotalRow>
-                </S.SummaryCard>
-
-                <S.PaymentCard>
-                    <S.PaymentTitle>Pagamento seguro</S.PaymentTitle>
-
-                    {isPendingPayment && pixStep === "select" && (
-                        <>
-                            <S.MethodOption>
-                                <S.MethodRadio aria-hidden="true" />
-                                <S.MethodText>
-                                    <strong>Cartão de crédito</strong>
-                                    <span>Você conclui o pagamento na página segura do Stripe.</span>
-                                </S.MethodText>
-                            </S.MethodOption>
-
-                            <S.SecurityBadges>
-                                <S.SecurityItem>
-                                    <S.SecurityDot />
-                                    Criptografia SSL de ponta a ponta
-                                </S.SecurityItem>
-                            </S.SecurityBadges>
-
-                            <S.AmountSummary>
-                                <span>Total</span>
-                                <strong>{formatCurrency(reservation.totalPrice)}</strong>
-                            </S.AmountSummary>
-
-                            <S.PayButton onClick={handleProceedToPayment} disabled={isRedirecting}>
-                                {isRedirecting ? "Redirecionando..." : "Pagar com Cartão"}
-                            </S.PayButton>
-                        </>
+                    {payment.confirmBy && (
+                        <S.Deadline role="note">
+                            <strong>Prazo: {formatDeadline(payment.confirmBy)}</strong>
+                            <span>Se o salão não registrar o pagamento até lá, a reserva expira e a data volta a ficar livre.</span>
+                        </S.Deadline>
                     )}
 
-                    {isPendingPayment && pixStep === "qr" && pixData && (
-                        <>
-                            <S.PaymentDescription>
-                                Escaneie o QR Code ou copie o código PIX abaixo. O pagamento é confirmado automaticamente.
-                            </S.PaymentDescription>
-
-                            <S.AmountSummary>
-                                <span>Total</span>
-                                <strong>{formatCurrency(reservation.totalPrice)}</strong>
-                            </S.AmountSummary>
-
-                            <S.PixContainer>
-                                <S.PixQrImage
-                                    src={`data:image/png;base64,${pixData.qrCode}`}
-                                    alt="QR Code PIX"
-                                />
-
-                                <S.PixCopyPasteBox>
-                                    <S.PixCopyPasteLabel>Código Copia e Cola</S.PixCopyPasteLabel>
-                                    <S.PixCopyPasteValue>{pixData.copyPaste}</S.PixCopyPasteValue>
-                                    <S.CopyButton onClick={handleCopyCopyPaste}>
-                                        {isCopied ? "Copiado!" : "Copiar código"}
-                                    </S.CopyButton>
-                                </S.PixCopyPasteBox>
-
-                                <S.PixStatus>Aguardando confirmação do pagamento...</S.PixStatus>
-
-                                <S.PixExpiry>
-                                    Expira em: {new Date(pixData.expiresAt).toLocaleTimeString("pt-BR")}
-                                </S.PixExpiry>
-                            </S.PixContainer>
-                        </>
-                    )}
-
-                    {!isPendingPayment && (
-                        <S.InfoBox>
-                            Esta reserva não está disponível para pagamento (status: {reservation.status}).
-                        </S.InfoBox>
+                    {open && (
+                        <S.HowToPay aria-labelledby="how-title">
+                            <S.SectionTitle as="h3" id="how-title">Como pagar</S.SectionTitle>
+                            {contacts?.text
+                                ? <S.Instructions>{contacts.text}</S.Instructions>
+                                : <S.Muted>O salão combina a forma de pagamento com você. Fale com ele pelos contatos abaixo.</S.Muted>}
+                            {hasContact && (
+                                <S.ContactActions>
+                                    {wa && <S.PrimaryAction href={wa} target="_blank" rel="noopener noreferrer">Combinar pelo WhatsApp</S.PrimaryAction>}
+                                    {contacts?.instagram && <S.SecondaryAction href={instagramLink(contacts.instagram)} target="_blank" rel="noopener noreferrer">Instagram {contacts.instagram}</S.SecondaryAction>}
+                                    {contacts?.phone && <S.SecondaryAction href={`tel:${contacts.phone.replace(/[^\d+]/g, "")}`}>Ligar {contacts.phone}</S.SecondaryAction>}
+                                    {contacts?.email && <S.SecondaryAction href={`mailto:${contacts.email}`}>E-mail</S.SecondaryAction>}
+                                </S.ContactActions>
+                            )}
+                        </S.HowToPay>
                     )}
 
                     <S.CancelLink onClick={() => navigate("/reservations")}>

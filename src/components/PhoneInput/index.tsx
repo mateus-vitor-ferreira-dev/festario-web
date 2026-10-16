@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useId, useRef, useState } from "react";
 import { formatPhone } from "../../utils/formatPhone";
 import { COUNTRIES, DEFAULT_COUNTRY } from "../../constants/countries";
 import type { Country } from "../../constants/countries";
@@ -18,6 +18,8 @@ export default function PhoneInput({ label, name, value, onChange, onDialCodeCha
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState("");
     const containerRef = useRef<HTMLDivElement | null>(null);
+    const inputId = useId();
+    const errorId = `${inputId}-error`;
     const searchRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
@@ -65,7 +67,7 @@ export default function PhoneInput({ label, name, value, onChange, onDialCodeCha
 
     return (
         <S.Container ref={containerRef}>
-            {label && <S.Label>{label}</S.Label>}
+            {label && <S.Label htmlFor={inputId}>{label}</S.Label>}
 
             <S.InputWrapper $error={!!error}>
                 <S.CountryButton
@@ -82,7 +84,10 @@ export default function PhoneInput({ label, name, value, onChange, onDialCodeCha
                 <S.Divider />
 
                 <S.PhoneNumberInput
+                    id={inputId}
                     inputMode="tel"
+                    aria-invalid={error ? true : undefined}
+                    aria-describedby={error ? errorId : undefined}
                     name={name}
                     value={value}
                     onChange={handlePhoneChange}
@@ -90,7 +95,7 @@ export default function PhoneInput({ label, name, value, onChange, onDialCodeCha
                 />
             </S.InputWrapper>
 
-            {error && <S.Error>{error}</S.Error>}
+            {error && <S.Error id={errorId} role="alert">{error}</S.Error>}
 
             {isOpen && (
                 <S.Dropdown>
@@ -99,6 +104,7 @@ export default function PhoneInput({ label, name, value, onChange, onDialCodeCha
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Buscar país..."
+                        aria-label="Buscar país"
                     />
                     <S.List>
                         {filtered.map((c) => (

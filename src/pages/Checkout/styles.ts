@@ -212,10 +212,10 @@ export const PaymentCard = styled.article`
   flex-direction: column;
   gap: 20px;
 
-  /* >lg: coluna de pagamento acompanha a rolagem (64px do header + folga) */
+  /* >lg: coluna de pagamento acompanha a rolagem (72px do header + folga) */
   @media (min-width: 1025px) {
     position: sticky;
-    top: 88px;
+    top: 96px;
   }
 
   ${media.md} {
@@ -227,142 +227,6 @@ export const PaymentTitle = styled.h3`
   font-size: var(--text-xl);
   color: var(--text-primary);
   line-height: 1.2;
-`;
-
-export const PaymentDescription = styled.p`
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  line-height: 1.6;
-  margin-top: -8px;
-`;
-
-/* Método escolhido — mostrado como opção selecionada */
-export const MethodOption = styled.div`
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 14px 16px;
-  border: 1.5px solid var(--brand);
-  border-radius: var(--radius-md);
-  background: var(--brand-subtle);
-`;
-
-export const MethodRadio = styled.span`
-  width: 18px;
-  height: 18px;
-  margin-top: 2px;
-  border-radius: 50%;
-  border: 1.5px solid var(--brand);
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &::after {
-    content: "";
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--brand);
-  }
-`;
-
-export const MethodText = styled.div`
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-
-  strong {
-    font-size: var(--text-base);
-    font-weight: 700;
-    color: var(--text-primary);
-  }
-
-  span {
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-    line-height: 1.5;
-  }
-`;
-
-export const SecurityBadges = styled.ul`
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`;
-
-export const SecurityItem = styled.li`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-`;
-
-export const SecurityDot = styled.span`
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--brand);
-  flex-shrink: 0;
-`;
-
-export const AmountSummary = styled.div`
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-default);
-
-  span {
-    font-size: var(--text-base);
-    font-weight: 600;
-    color: var(--text-secondary);
-  }
-
-  strong {
-    font-family: var(--font-display);
-    font-size: var(--text-xl);
-    font-weight: 600;
-    color: var(--text-primary);
-    text-align: right;
-    font-variant-numeric: lining-nums tabular-nums;
-  }
-`;
-
-export const PayButton = styled.button`
-  width: 100%;
-  min-height: 48px;
-  padding: 0 20px;
-  border: none;
-  border-radius: var(--radius-md);
-  background: var(--brand);
-  color: var(--on-brand);
-  font-size: var(--text-base);
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s ease;
-
-  &:hover:not(:disabled) {
-    background: var(--brand-dark);
-  }
-
-  &:disabled {
-    opacity: 0.65;
-    cursor: not-allowed;
-  }
-`;
-
-export const InfoBox = styled.div`
-  background: var(--status-pending-bg);
-  border: 1px solid var(--status-pending-border);
-  border-radius: var(--radius-md);
-  padding: 14px 16px;
-  font-size: var(--text-sm);
-  color: var(--status-pending-text-deep);
-  line-height: 1.5;
 `;
 
 export const CancelLink = styled.button`
@@ -384,129 +248,196 @@ export const CancelLink = styled.button`
   }
 `;
 
-/* ─── Seletor de método (cartão / PIX) ─── */
+/* ─── Pagamento combinado com o salão ─── */
 
-export const MethodSelector = styled.div`
+export const Column = styled.div`
   display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+`;
+
+export const SectionTitle = styled.h2`
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+  line-height: 1.25;
+`;
+
+export const Muted = styled.p`
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.55;
+`;
+
+/* O que a pessoa precisa saber primeiro: título e uma frase, com a cor do estado. */
+export const Headline = styled.div<{ $tone: "pending" | "paid" | "neutral" }>`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 14px;
+  border-left: 4px solid ${({ $tone }) => ($tone === "paid" ? "var(--brand)" : $tone === "pending" ? "var(--gold)" : "var(--border-medium)")};
+
+  p {
+    font-size: var(--text-base);
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+`;
+
+export const AmountList = styled.dl`
+  display: grid;
+  gap: 10px;
+  margin: 0;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  dt {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+  }
+
+  dd {
+    margin: 0;
+    font-size: var(--text-base);
+    font-weight: 700;
+    color: var(--text-primary);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+`;
+
+export const Deadline = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--status-pending-bg);
+  border: 1px solid var(--status-pending-border);
+  color: var(--status-pending-text-deep);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+
+  strong {
+    font-size: var(--text-base);
+  }
+`;
+
+export const HowToPay = styled.section`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-default);
+`;
+
+/* Texto livre do salão (chave PIX, banco...): quebra de linha preservada e fácil de selecionar. */
+export const Instructions = styled.p`
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-muted);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  line-height: 1.55;
+  user-select: text;
+`;
+
+export const ContactActions = styled.div`
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 `;
 
-export const MethodButton = styled.button<{ $active?: boolean }>`
-  flex: 1;
-  min-height: 44px;
-  padding: 0 12px;
+const action = `
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 18px;
   border-radius: var(--radius-md);
   font-size: var(--text-base);
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
 
-  ${({ $active }) =>
-    $active
-      ? `
-    background: var(--brand-subtle);
-    color: var(--brand);
-    border: 1.5px solid var(--brand);
-  `
-      : `
-    background: transparent;
-    color: var(--text-secondary);
-    border: 1.5px solid var(--border-medium);
-
-    &:hover {
-      border-color: var(--brand);
-      color: var(--brand);
-    }
-  `}
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
 `;
 
-/* ─── PIX QR Code ─── */
+export const PrimaryAction = styled.a`
+  ${action}
+  background: var(--brand);
+  color: var(--on-brand);
 
-const pulseAnim = keyframes`
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  &:hover {
+    background: var(--brand-dark);
+  }
 `;
 
-export const PixContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-`;
-
-export const PixQrImage = styled.img`
-  width: 200px;
-  height: 200px;
-  padding: 8px;
-  background: #ffffff; /* QR precisa de fundo claro para leitura, inclusive no tema escuro */
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-default);
-`;
-
-export const PixCopyPasteBox = styled.div`
-  width: 100%;
-  background: var(--bg-page);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-
-export const PixCopyPasteLabel = styled.span`
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--text-muted);
-`;
-
-export const PixCopyPasteValue = styled.span`
-  font-size: var(--text-xs);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  color: var(--text-secondary);
-  overflow-wrap: anywhere;
-  line-height: 1.5;
-`;
-
-export const CopyButton = styled.button`
-  align-self: flex-start;
+export const SecondaryAction = styled.a`
+  ${action}
   min-height: 44px;
-  padding: 0 14px;
   background: transparent;
-  border: 1px solid var(--brand-border);
-  border-radius: var(--radius-sm);
   color: var(--brand);
-  font-size: var(--text-sm);
+  border: 1px solid var(--brand-border);
   font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease;
+  overflow-wrap: anywhere;
 
   &:hover {
     background: var(--brand-subtle);
   }
 `;
 
-export const PixStatus = styled.p`
-  font-size: var(--text-sm);
-  color: var(--text-muted);
+export const EntryList = styled.ul`
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+`;
 
-  &::before {
-    content: "";
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--brand);
-    flex-shrink: 0;
-    animation: ${pulseAnim} 1.5s ease-in-out infinite;
+export const EntryItem = styled.li<{ $refund?: boolean }>`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-default);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  strong {
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+  }
+
+  span {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
   }
 `;
 
-export const PixExpiry = styled.p`
-  font-size: var(--text-xs);
-  color: var(--text-faint);
-  font-variant-numeric: tabular-nums;
+export const EntryAmount = styled.span<{ $refund?: boolean }>`
+  flex-shrink: 0;
+  font-weight: 700;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: ${({ $refund }) => ($refund ? "var(--status-cancelled-text)" : "var(--text-primary)")} !important;
 `;

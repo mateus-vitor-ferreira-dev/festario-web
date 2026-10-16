@@ -1,12 +1,16 @@
 import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { MainLayout } from "../components";
 import ErrorBoundary from "../components/ErrorBoundary";
 import PageLoader from "../components/PageLoader";
-import { AdminRoute } from "./AdminRoute";
+import ShowcaseLayout from "../components/ShowcaseLayout";
 import { PrivateRoute } from "./PrivateRoute";
+import { RoleRoute } from "./RoleRoute";
 
 const Admin             = lazy(() => import("../pages/Admin"));
+const InviteAccept      = lazy(() => import("../pages/InviteAccept"));
+const Platform          = lazy(() => import("../pages/Platform"));
+const TenantDetail      = lazy(() => import("../pages/Platform/TenantDetail"));
 const Checkout          = lazy(() => import("../pages/Checkout"));
 const ContactUs         = lazy(() => import("../pages/ContactUs"));
 const ForgotPassword    = lazy(() => import("../pages/ForgotPassword"));
@@ -15,14 +19,14 @@ const Login             = lazy(() => import("../pages/Login"));
 const NegotiationChat   = lazy(() => import("../pages/NegotiationChat"));
 const Negotiations      = lazy(() => import("../pages/Negotiations"));
 const NotFound          = lazy(() => import("../pages/NotFound"));
-const PaymentCancel     = lazy(() => import("../pages/PaymentCancel"));
-const PaymentSuccess    = lazy(() => import("../pages/PaymentSuccess"));
 const Profile           = lazy(() => import("../pages/Profile"));
 const Promotions        = lazy(() => import("../pages/Promotions"));
 const Referrals         = lazy(() => import("../pages/Referrals"));
 const ReservationIntent = lazy(() => import("../pages/ReservationIntent"));
 const Reservations      = lazy(() => import("../pages/Reservations"));
 const ResetPassword     = lazy(() => import("../pages/ResetPassword"));
+const SalonPage         = lazy(() => import("../pages/SalonPage"));
+const Salons            = lazy(() => import("../pages/Salons"));
 const SignUp            = lazy(() => import("../pages/SignUp"));
 const Venues            = lazy(() => import("../pages/Venues"));
 
@@ -41,8 +45,20 @@ function PageErrorFallback() {
     );
 }
 
+/** Links antigos de `/admin` (inclusive `?tab=`) continuam funcionando. */
+function LegacyAdminRedirect() {
+    const { search } = useLocation();
+    return <Navigate to={{ pathname: "/painel", search }} replace />;
+}
+
 /**
  * Árvore de rotas da aplicação.
+ *
+ * Vitrine pública: `/saloes` (todos os salões) e `/s/:slug` (página de um salão, que leva à reserva).
+ * Sem login, abrem com o cabeçalho de visitante (`ShowcaseLayout`); `/` leva para lá.
+ *
+ * Áreas por papel (ver `utils/roles`): `/painel` (OWNER e ADMIN — painel do espaço),
+ * `/plataforma` (só ADMIN). `/convite/:token` é pública (aceite do convite do dono).
  *
  * Cada página é carregada sob demanda via React.lazy — o bundle inicial
  * contém apenas o shell (Auth, Layout, rotas) e cada chunk de página é
@@ -57,7 +73,7 @@ export function AppRoutes({ introFinished }: AppRoutesProps) {
         <ErrorBoundary fallback={<PageErrorFallback />}>
             <Suspense fallback={<PageLoader />}>
                 <Routes>
-                    <Route path="/" element={<Navigate to="/cadastro" replace />} />
+                    <Route path="/" element={<Navigate to="/saloes" replace />} />
                     <Route
                         path="/cadastro"
                         element={<SignUp introFinished={introFinished} />}
@@ -68,6 +84,13 @@ export function AppRoutes({ introFinished }: AppRoutesProps) {
                     />
                     <Route path="/esqueci-senha" element={<ForgotPassword />} />
                     <Route path="/redefinir-senha" element={<ResetPassword />} />
+                    <Route path="/convite/:token" element={<InviteAccept />} />
+
+                    {/* Vitrine pública: quem não tem conta vê os salões; o login só é pedido ao reservar. */}
+                    <Route element={<ShowcaseLayout />}>
+                        <Route path="/saloes" element={<Salons />} />
+                        <Route path="/s/:slug" element={<SalonPage />} />
+                    </Route>
 
                     <Route element={<PrivateRoute />}>
                         <Route element={<MainLayout />}>
@@ -96,14 +119,31 @@ export function AppRoutes({ introFinished }: AppRoutesProps) {
                                     </ErrorBoundary>
                                 }
                             />
-                            <Route path="/payment/success" element={<PaymentSuccess />} />
-                            <Route path="/payment/cancel" element={<PaymentCancel />} />
-                            <Route element={<AdminRoute />}>
+                            <Route path="/admin" element={<LegacyAdminRedirect />} />
+                            <Route element={<RoleRoute roles={["OWNER", "ADMIN"]} />}>
                                 <Route
-                                    path="/admin"
+                                    path="/painel"
                                     element={
                                         <ErrorBoundary fallback={<PageErrorFallback />}>
                                             <Admin />
+                                        </ErrorBoundary>
+                                    }
+                                />
+                            </Route>
+                            <Route element={<RoleRoute roles={["ADMIN"]} />}>
+                                <Route
+                                    path="/plataforma"
+                                    element={
+                                        <ErrorBoundary fallback={<PageErrorFallback />}>
+                                            <Platform />
+                                        </ErrorBoundary>
+                                    }
+                                />
+                                <Route
+                                    path="/plataforma/espacos/:slug"
+                                    element={
+                                        <ErrorBoundary fallback={<PageErrorFallback />}>
+                                            <TenantDetail />
                                         </ErrorBoundary>
                                     }
                                 />

@@ -23,35 +23,35 @@ function renderWithProvider() {
 
 describe("ThemeContext", () => {
     it("defaults to light theme", () => {
-        localStorage.removeItem("recanto:theme");
+        localStorage.removeItem("festario:theme");
         renderWithProvider();
         expect(screen.getByTestId("theme").textContent).toBe("light");
     });
 
     it("reads saved theme from localStorage", () => {
-        localStorage.setItem("recanto:theme", "dark");
+        localStorage.setItem("festario:theme", "dark");
         renderWithProvider();
         expect(screen.getByTestId("theme").textContent).toBe("dark");
-        localStorage.removeItem("recanto:theme");
+        localStorage.removeItem("festario:theme");
     });
 
     it("toggles from light to dark", async () => {
-        localStorage.removeItem("recanto:theme");
+        localStorage.removeItem("festario:theme");
         renderWithProvider();
         await userEvent.click(screen.getByText("toggle"));
         expect(screen.getByTestId("theme").textContent).toBe("dark");
     });
 
     it("toggles from dark back to light", async () => {
-        localStorage.setItem("recanto:theme", "dark");
+        localStorage.setItem("festario:theme", "dark");
         renderWithProvider();
         await userEvent.click(screen.getByText("toggle"));
         expect(screen.getByTestId("theme").textContent).toBe("light");
-        localStorage.removeItem("recanto:theme");
+        localStorage.removeItem("festario:theme");
     });
 
     it("sets data-theme attribute on documentElement", async () => {
-        localStorage.removeItem("recanto:theme");
+        localStorage.removeItem("festario:theme");
         renderWithProvider();
         await act(async () => {});
         expect(document.documentElement.getAttribute("data-theme")).toBe("light");

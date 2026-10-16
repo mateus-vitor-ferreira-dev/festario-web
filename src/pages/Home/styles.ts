@@ -87,56 +87,50 @@ export const NewReservationButton = styled.a`
     }
 `;
 
-/* ─── Facts — linha discreta de números ─── */
-
-export const Facts = styled.dl`
+/** Atalhos do cabeçalho: área do papel (painel/plataforma) + nova reserva. */
+export const HeaderActions = styled.div`
     display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 
-    ${media.md} {
+    ${media.sm} {
+        width: 100%;
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
+        grid-template-columns: 1fr;
 
-    border-top: 1px solid var(--border-default);
-    border-bottom: 1px solid var(--border-default);
-`;
-
-export const Fact = styled.div`
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-    padding: 14px 28px 14px 0;
-    margin-right: 28px;
-    border-right: 1px solid var(--border-default);
-
-    &:last-child {
-        border-right: none;
-        margin-right: 0;
-    }
-
-    ${media.md} {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-        padding: 12px 12px 12px 0;
-        margin-right: 12px;
+        & > a {
+            justify-content: center;
+        }
     }
 `;
 
-export const FactValue = styled.dd`
-    order: -1;
-    font-family: var(--font-display);
-    font-size: var(--text-2xl);
-    font-weight: 600;
-    color: var(--text-primary);
-    line-height: 1;
-    font-variant-numeric: lining-nums tabular-nums;
+export const ShortcutLink = styled.a`
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 1px solid var(--brand-border);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--brand);
+    font-size: var(--text-base);
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+        background: var(--brand-subtle);
+        border-color: var(--brand);
+    }
+
+    &:focus-visible {
+        outline: none;
+        box-shadow: var(--focus-ring);
+    }
 `;
 
-export const FactLabel = styled.dt`
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-`;
+/* ─── Facts — linha discreta de números ─── */
 
 /* ─── Content panels ─── */
 
@@ -147,7 +141,8 @@ export const ContentGrid = styled.div`
     align-items: start;
 
     ${media.lg} {
-        grid-template-columns: 1fr;
+        /* minmax(0, …): o painel não cresce até o min-content da data em destaque */
+        grid-template-columns: minmax(0, 1fr);
     }
 `;
 
@@ -269,7 +264,7 @@ export const DateBlock = styled.time`
     }
 
     span {
-        font-size: 12px;
+        font-size: var(--text-2xs);
         color: var(--text-muted);
         margin-top: 2px;
     }
@@ -340,14 +335,6 @@ export const StatusChip = styled.span<{ $color?: string }>`
     }}
 `;
 
-export const PriceChip = styled.span`
-    font-size: var(--text-sm);
-    font-weight: 500;
-    white-space: nowrap;
-    color: var(--text-secondary);
-    flex-shrink: 0;
-`;
-
 export const DiscountChip = styled.span`
     display: inline-flex;
     align-items: center;
@@ -364,101 +351,6 @@ export const DiscountChip = styled.span`
 
 /* ─── Venue rows ─── */
 
-export const VenueList = styled.div`
-    display: flex;
-    flex-direction: column;
-`;
-
-export const VenueCard = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 14px 0;
-    border-bottom: 1px solid var(--border-default);
-
-    &:first-child {
-        padding-top: 0;
-    }
-
-    &:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-    }
-`;
-
-export const VenueCardTop = styled.div`
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 8px;
-    flex-wrap: wrap;
-`;
-
-export const VenueCardName = styled.strong`
-    font-family: var(--font-display);
-    font-size: var(--text-lg);
-    font-weight: 600;
-    color: var(--text-primary);
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-`;
-
-export const VenueCardLocation = styled.span`
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-`;
-
-export const VenueCardBottom = styled.div`
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-top: 2px;
-`;
-
-export const VenueAmenities = styled.div`
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-`;
-
-export const AmenityChip = styled.span`
-    display: inline-flex;
-    align-items: center;
-    padding: 2px 8px;
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    font-weight: 500;
-    white-space: nowrap;
-    background: var(--bg-muted);
-    color: var(--text-medium);
-`;
-
-export const VenueReserveBtn = styled.button`
-    display: inline-flex;
-    align-items: center;
-    min-height: 36px;
-    padding: 0 14px;
-    border-radius: var(--radius-sm);
-    font-size: var(--text-sm);
-    font-weight: 700;
-    cursor: pointer;
-    white-space: nowrap;
-    flex-shrink: 0;
-    background: transparent;
-    color: var(--brand);
-    border: 1px solid var(--brand-border);
-    transition: background 0.15s ease;
-
-    &:hover {
-        background: var(--brand-subtle);
-    }
-`;
-
 /* ─── Empty state ─── */
 
 export const EmptyState = styled.div`
@@ -472,4 +364,45 @@ export const EmptyState = styled.div`
         font-size: var(--text-base);
         color: var(--text-muted);
     }
+`;
+
+/* ─── Pendência: reserva esperando pagamento ─── */
+
+export const PendingCallout = styled.section`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 18px 20px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--status-pending-border);
+    background: var(--status-pending-bg);
+
+    h2 {
+        font-size: var(--text-lg);
+        color: var(--status-pending-text-deep);
+    }
+
+    p {
+        margin-top: 2px;
+        color: var(--status-pending-text);
+        font-size: var(--text-sm);
+        line-height: 1.5;
+    }
+`;
+
+export const SalonName = styled.span`
+    display: block;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--text-muted);
+`;
+
+/* ─── Salões sugeridos ─── */
+
+export const Suggestions = styled.section`
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 `;

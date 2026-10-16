@@ -1,11 +1,13 @@
 <div align="center">
 
-<h1>🌿 Recanto Vila Rica — Web App</h1>
+<img src="docs/marca/svg/festario-logotipo.svg" alt="Festário" height="56"/>
 
-<p><strong>Interface de reservas de um espaço de eventos: o cliente escolhe a data, assina o contrato e paga; o dono administra a agenda</strong></p>
+<h1>Festário — Web App</h1>
+
+<p><strong>Interface de reservas de espaços de festa (SaaS multi-espaço, repositório <code>festario-web</code>): o cliente escolhe a data, assina o contrato e paga; o dono administra a agenda</strong></p>
 
 <p>
-  <img src="https://github.com/mateus-vitor-ferreira-dev/recanto-vila-rica-web/actions/workflows/ci.yml/badge.svg" alt="CI"/>
+  <img src="https://github.com/mateus-vitor-ferreira-dev/festario-web/actions/workflows/ci.yml/badge.svg" alt="CI"/>
   &nbsp;
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React 19"/>
   <img src="https://img.shields.io/badge/TypeScript-6.0_strict-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript 6"/>
@@ -35,7 +37,7 @@ flowchart TB
     APP["<b>Web App · React 19 + Vite 8</b><br/>intenção de reserva · checkout · negociações<br/>indicações · promoções · perfil · painel admin"]
 
     APP --> AX["Axios · refresh de token + retry com jitter"]
-    AX --> API["API Recanto Vila Rica"]
+    AX --> API["API (festario-api)"]
 
     APP --> G["Google OAuth · login"]
     APP --> PDF["@react-pdf/renderer<br/>contrato gerado no browser"]
@@ -80,9 +82,14 @@ flowchart TB
   <tbody>
     <tr><td><strong>Visitante</strong></td><td>Cadastro, login (e-mail/senha ou Google), recuperação e redefinição de senha</td></tr>
     <tr><td><strong>Cliente</strong></td><td>Home, salões, calendário de disponibilidade, intenção de reserva com cotação e contrato, checkout (cartão/PIX), minhas reservas com cancelamento, negociações, promoções, indicações, contato e perfil</td></tr>
-    <tr><td><strong>Admin</strong></td><td>Tudo do cliente + <code>/admin</code>, com 9 abas: dashboard, reservas, usuários, negociações (propostas e reservas customizadas), campanhas (indicação, fidelidade e sorteio VIP), feriados, datas bloqueadas, planos e espaços</td></tr>
+    <tr><td><strong>Dono do espaço</strong> (<code>OWNER</code>)</td><td>Tudo do cliente + <code>/painel</code> do próprio estabelecimento, com 9 abas: dashboard, reservas, usuários, negociações (propostas e reservas customizadas), campanhas (indicação, fidelidade e sorteio VIP), feriados (só consulta), datas bloqueadas, planos e espaços</td></tr>
+    <tr><td><strong>Equipe da plataforma</strong> (<code>ADMIN</code>)</td><td>Tudo do dono, em qualquer estabelecimento, + <code>/plataforma</code>: estabelecimentos (cadastro, ativar/desativar, números), convites do dono e feriados (globais)</td></tr>
   </tbody>
 </table>
+
+O link antigo <code>/admin</code> redireciona para <code>/painel</code>. O dono convidado cria a conta em <code>/convite/:token</code>.
+
+**Espaço (tenant).** A API escolhe o estabelecimento pelo cabeçalho `X-Tenant-Slug`; sem ele, usa o espaço padrão. O web guarda o slug em `localStorage["festario:tenant"]` e o envia em toda requisição quando ele existe. O slug é guardado ao aceitar o convite, ao abrir `/login?espaco=<slug>` (é o link de acesso do dono de um estabelecimento que não é o padrão — ex.: `/login?espaco=salao-jardim-das-flores`) ou quando a equipe da plataforma abre o painel de um estabelecimento. No login, "Entrar no espaço padrão" apaga o slug guardado.
 
 ---
 
@@ -159,7 +166,7 @@ O cancelamento devolve conforme a distância até o evento — **100%** acima de
 |---|---|---|
 | **Node.js** | **20.x** | versão usada em todos os jobs do CI (`.github/workflows/ci.yml`) |
 | **npm** | 10+ | acompanha o Node 20; o projeto usa `package-lock.json` |
-| **API do Recanto Vila Rica** | — | precisa estar rodando — repositório `recanto-vila-rica-api` (privado, código de cliente) |
+| **API da plataforma** | — | precisa estar rodando — repositório `festario-api` (privado, código de cliente) |
 
 > Sem a API no ar a aplicação abre, mas login, salões e reservas falham — todo dado vem dela.
 
@@ -167,15 +174,15 @@ O cancelamento devolve conforme a distância até o evento — **100%** acima de
 
 ```bash
 # 1. Clone e instale
-git clone https://github.com/mateus-vitor-ferreira-dev/recanto-vila-rica-web.git
-cd recanto-vila-rica-web
+git clone https://github.com/mateus-vitor-ferreira-dev/festario-web.git
+cd festario-web
 npm install
 
 # 2. Suba a API primeiro (noutro terminal), em http://localhost:3000
 
-# 3. Crie o .env.local na raiz — o repo não versiona .env (veja as variáveis abaixo).
+# 3. Crie o .env.local a partir do exemplo — o repo não versiona .env (veja as variáveis abaixo).
 #    Dá para pular: sem nenhuma variável, VITE_API_URL cai no default http://localhost:3000
-touch .env.local
+cp .env.example .env.local
 
 # 4. Rode
 npm run dev                     # http://localhost:5173
@@ -191,8 +198,9 @@ O Vite só expõe ao browser variáveis com o prefixo `VITE_`. Todas são lidas 
 VITE_API_URL=http://localhost:3000
 
 # Client ID do Google OAuth — habilita o botão "Entrar com Google".
-# Opcional em dev: sem ela o botão renderiza mas o login com Google não completa;
+# Opcional em dev: sem ela o botão não aparece no login nem no cadastro;
 # login por e-mail/senha continua funcionando normalmente.
+# Precisa ser o MESMO ID de GOOGLE_CLIENT_ID na API, senão a API recusa o token.
 # Como obter: Google Cloud Console → APIs e Serviços → Credenciais →
 #   Criar credencial → ID do cliente OAuth → Aplicativo da Web →
 #   adicione http://localhost:5173 em "Origens JavaScript autorizadas".
@@ -238,7 +246,9 @@ SENTRY_AUTH_TOKEN=
 | Mudou o `.env.local` e nada aconteceu | Variáveis `VITE_*` são inlined no build. Reinicie o `npm run dev` — HMR não recarrega env. |
 | Erros de CORS em toda chamada | A API precisa liberar `http://localhost:5173` como origem. Confira a config de CORS no repo da API. |
 | Login com Google abre o popup e ele fecha sozinho | Falta o header `Cross-Origin-Opener-Policy: same-origin-allow-popups`. O `vite.config.ts` já o define em dev e o `vercel.json` em produção — se você serve o build por outro meio, replique-o. |
+| Não aparece o botão "Entrar com Google" | `VITE_GOOGLE_CLIENT_ID` vazia no `.env.local` (ou o `npm run dev` não foi reiniciado depois de preencher). |
 | `VITE_GOOGLE_CLIENT_ID` definida mas o Google recusa | `http://localhost:5173` não está nas origens autorizadas do OAuth client. |
+| O Google abre, mas a API responde 401 | `GOOGLE_CLIENT_ID` da API diferente do `VITE_GOOGLE_CLIENT_ID` do web. |
 | Toda requisição volta 401 e o app desloga | Sessão expirada com refresh token inválido: o interceptor limpa o storage e manda para `/login`. Faça login de novo. |
 
 ### Scripts
@@ -275,6 +285,6 @@ A cobertura tem **thresholds que reprovam o build**: 84% de linhas, 82% de funç
 
 <div align="center">
   <sub>
-    <a href="https://github.com/mateus-vitor-ferreira-dev/recanto-vila-rica-landing-page">Landing page</a>
+    <a href="https://github.com/mateus-vitor-ferreira-dev/festario-landing-page">Landing page</a>
   </sub>
 </div>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-    PLAN_LABELS,
+    packageLabel,
     calcDuration,
     formatCurrency,
     formatDate,
@@ -9,10 +9,10 @@ import {
 } from "../../utils/reservationFormat";
 
 describe("reservationFormat utils", () => {
-    it("exports expected plan labels", () => {
-        expect(PLAN_LABELS.PROMOCIONAL).toBe("Promocional");
-        expect(PLAN_LABELS.ESSENCIAL).toBe("Essencial");
-        expect(PLAN_LABELS.COMPLETA).toBe("Completa");
+    it("names the package from the reservation copy, falling back to the old code", () => {
+        expect(packageLabel({ packageSnapshot: { name: "Sábado à tarde" }, planCode: "X" })).toBe("Sábado à tarde");
+        expect(packageLabel({ planCode: "FESTA_INFANTIL" })).toBe("Festa infantil");
+        expect(packageLabel({ planCode: null })).toBe("—");
     });
 
     it("formats date in pt-BR", () => {
