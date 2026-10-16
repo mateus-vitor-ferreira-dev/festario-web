@@ -18,7 +18,7 @@ export const useGoogleLogin = ({ onSuccess, onError }) => {
     };
 };
 
-export const useGoogleOAuth = () => ({
-    clientId: "test-client-id",
-    scriptLoadedSuccessfully: true,
-});
+/** Estado do provedor nos testes: um teste pode zerar o clientId para simular o ambiente sem configuração. */
+export const oauthState = { clientId: "test-client-id", scriptLoadedSuccessfully: true };
+
+export const useGoogleOAuth = () => ({ ...oauthState });

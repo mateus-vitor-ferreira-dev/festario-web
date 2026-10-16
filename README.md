@@ -180,9 +180,9 @@ npm install
 
 # 2. Suba a API primeiro (noutro terminal), em http://localhost:3000
 
-# 3. Crie o .env.local na raiz — o repo não versiona .env (veja as variáveis abaixo).
+# 3. Crie o .env.local a partir do exemplo — o repo não versiona .env (veja as variáveis abaixo).
 #    Dá para pular: sem nenhuma variável, VITE_API_URL cai no default http://localhost:3000
-touch .env.local
+cp .env.example .env.local
 
 # 4. Rode
 npm run dev                     # http://localhost:5173
@@ -198,8 +198,9 @@ O Vite só expõe ao browser variáveis com o prefixo `VITE_`. Todas são lidas 
 VITE_API_URL=http://localhost:3000
 
 # Client ID do Google OAuth — habilita o botão "Entrar com Google".
-# Opcional em dev: sem ela o botão renderiza mas o login com Google não completa;
+# Opcional em dev: sem ela o botão não aparece no login nem no cadastro;
 # login por e-mail/senha continua funcionando normalmente.
+# Precisa ser o MESMO ID de GOOGLE_CLIENT_ID na API, senão a API recusa o token.
 # Como obter: Google Cloud Console → APIs e Serviços → Credenciais →
 #   Criar credencial → ID do cliente OAuth → Aplicativo da Web →
 #   adicione http://localhost:5173 em "Origens JavaScript autorizadas".
@@ -245,7 +246,9 @@ SENTRY_AUTH_TOKEN=
 | Mudou o `.env.local` e nada aconteceu | Variáveis `VITE_*` são inlined no build. Reinicie o `npm run dev` — HMR não recarrega env. |
 | Erros de CORS em toda chamada | A API precisa liberar `http://localhost:5173` como origem. Confira a config de CORS no repo da API. |
 | Login com Google abre o popup e ele fecha sozinho | Falta o header `Cross-Origin-Opener-Policy: same-origin-allow-popups`. O `vite.config.ts` já o define em dev e o `vercel.json` em produção — se você serve o build por outro meio, replique-o. |
+| Não aparece o botão "Entrar com Google" | `VITE_GOOGLE_CLIENT_ID` vazia no `.env.local` (ou o `npm run dev` não foi reiniciado depois de preencher). |
 | `VITE_GOOGLE_CLIENT_ID` definida mas o Google recusa | `http://localhost:5173` não está nas origens autorizadas do OAuth client. |
+| O Google abre, mas a API responde 401 | `GOOGLE_CLIENT_ID` da API diferente do `VITE_GOOGLE_CLIENT_ID` do web. |
 | Toda requisição volta 401 e o app desloga | Sessão expirada com refresh token inválido: o interceptor limpa o storage e manda para `/login`. Faça login de novo. |
 
 ### Scripts

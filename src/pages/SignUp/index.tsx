@@ -8,6 +8,7 @@ import api from "../../services/api";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { validatePassword } from "../../utils/validatePassword";
 import { RETURN_PARAM, withReturn } from "../../utils/returnPath";
+import { env } from "../../config/env";
 import * as S from "./styles";
 
 /**
@@ -175,11 +176,15 @@ export default function SignUp({ introFinished = true }) {
                     {isLoading ? "Criando conta..." : "Criar conta"}
                 </Button>
 
-                <S.Divider>
-                    <span>ou continue com</span>
-                </S.Divider>
+                {env.googleLoginEnabled && (
+                    <>
+                        <S.Divider>
+                            <span>ou continue com</span>
+                        </S.Divider>
 
-                <GoogleButton navigate={navigate} />
+                        <GoogleButton navigate={navigate} />
+                    </>
+                )}
 
                 <S.FooterText>
                     Já tem conta? <Link to={withReturn("/login", searchParams.get(RETURN_PARAM))}>Entrar</Link>

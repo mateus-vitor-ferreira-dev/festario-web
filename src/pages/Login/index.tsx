@@ -10,6 +10,7 @@ import { getErrorMessage } from "../../utils/getErrorMessage";
 import { homePathFor } from "../../utils/roles";
 import { RETURN_PARAM, safeReturnPath, withReturn } from "../../utils/returnPath";
 import api from "../../services/api";
+import { env } from "../../config/env";
 import * as S from "./styles";
 
 /**
@@ -135,11 +136,15 @@ export default function Login({ introFinished = true }) {
                     {isLoading ? "Entrando..." : "Entrar"}
                 </Button>
 
-                <S.Divider>
-                    <span>ou continue com</span>
-                </S.Divider>
+                {env.googleLoginEnabled && (
+                    <>
+                        <S.Divider>
+                            <span>ou continue com</span>
+                        </S.Divider>
 
-                <GoogleButton navigate={navigate} />
+                        <GoogleButton navigate={navigate} />
+                    </>
+                )}
 
                 <S.FooterText>
                     Ainda não tem conta? <Link to={withReturn("/cadastro", searchParams.get(RETURN_PARAM))}>Criar conta</Link>
