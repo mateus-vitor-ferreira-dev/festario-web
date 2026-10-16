@@ -753,6 +753,8 @@ export interface SalonVenue {
 /** Página pública do salão (`GET /salons/:slug`). */
 export interface SalonDetail extends SalonCard {
   priceRange: { min: number; max: number } | null;
+  /** Tem espaço com pacote ativo. Falso: o salão ainda não abriu a agenda (não dá para reservar). */
+  bookable?: boolean;
   contact: {
     address: string | null;
     contactWhatsapp: string | null;

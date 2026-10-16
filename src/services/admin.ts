@@ -55,7 +55,7 @@ export async function listAdminReservations(filters: Record<string, unknown> = {
 
 /**
  * Lista reservas do admin com paginação e filtros (`status`, `startDate`, `endDate`,
- * `q`, `venueId`, `planCode`, `minPrice`, `maxPrice`, `sort`).
+ * `q`, `venueId`, `packageId`, `minPrice`, `maxPrice`, `sort`).
  *
  * @see GET /admin/reservations
  */

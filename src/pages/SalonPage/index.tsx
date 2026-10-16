@@ -174,60 +174,70 @@ export default function SalonPage() {
                 </S.ManagerNote>
             )}
 
-            <S.SectionTitle>Espaços para reservar</S.SectionTitle>
-            <S.Venues>
-                {s.venues.map((venue, i) => {
-                    const venueDistance = formatDistance(venue.distanceKm);
-                    const venuePrice = formatPrice(venue.startingPrice);
-                    const venuePlace = formatPlace(venue.neighborhood, venue.city, venue.state) || venue.location;
-                    return (
-                        <S.Venue key={venue.id}>
-                            <S.VenueCoverSlot>
-                                <VenueCover
-                                    venueName={venue.name}
-                                    photo={venue.photos[0]}
-                                    sizes="(max-width: 768px) 100vw, 480px"
-                                    priority={i === 0}
-                                />
-                            </S.VenueCoverSlot>
-                            <S.VenueBody>
-                                <S.VenueName>{venue.name}</S.VenueName>
-                                {venuePlace && (
-                                    <S.VenuePlace>
-                                        {venuePlace}
-                                        {venueDistance && s.venues.length > 1 && <> ({venueDistance})</>}
-                                    </S.VenuePlace>
-                                )}
-                                {venue.description && <S.VenueDescription>{venue.description}</S.VenueDescription>}
-                                <S.Facts>
-                                    {venuePrice && <li>a partir de <strong>{venuePrice}</strong></li>}
-                                    <li>até {venue.capacity} convidados</li>
-                                </S.Facts>
-                                {(() => {
-                                    const list = sortAmenities(venue.amenities ?? [...(venue.hasPool ? ["POOL"] : []), ...(venue.hasKidsArea ? ["KIDS_AREA"] : [])]);
-                                    return list.length > 0 && (
-                                        <S.Amenities aria-label={`O que ${venue.name} oferece`}>
-                                            {list.map((a) => <li key={a}>{AMENITY_LABELS[a]}</li>)}
-                                        </S.Amenities>
-                                    );
-                                })()}
-                                <S.VenueActions>
-                                    {venue.mapsUrl && (
-                                        <S.SecondaryButton as="a" href={venue.mapsUrl} target="_blank" rel="noopener noreferrer">
-                                            Ver no mapa
-                                        </S.SecondaryButton>
-                                    )}
-                                    {canReserve && (
-                                        <S.PrimaryButton type="button" onClick={() => reserve(venue)}>
-                                            Reservar {s.venues.length > 1 ? "este espaço" : "uma data"}
-                                        </S.PrimaryButton>
-                                    )}
-                                </S.VenueActions>
-                            </S.VenueBody>
-                        </S.Venue>
-                    );
-                })}
-            </S.Venues>
+            {s.bookable === false ? (
+                <S.Notice as="section" aria-labelledby="closed-title">
+                    <h2 id="closed-title">Este salão ainda não abriu a agenda</h2>
+                    <p>Os pacotes e os preços ainda estão sendo cadastrados. Fale com o salão pelos contatos acima ou veja outros salões enquanto isso.</p>
+                    <S.SecondaryButton as={Link} to={`/saloes${from}`}>Ver outros salões</S.SecondaryButton>
+                </S.Notice>
+            ) : (
+                <>
+                    <S.SectionTitle>Espaços para reservar</S.SectionTitle>
+                    <S.Venues>
+                        {s.venues.map((venue, i) => {
+                            const venueDistance = formatDistance(venue.distanceKm);
+                            const venuePrice = formatPrice(venue.startingPrice);
+                            const venuePlace = formatPlace(venue.neighborhood, venue.city, venue.state) || venue.location;
+                            return (
+                                <S.Venue key={venue.id}>
+                                    <S.VenueCoverSlot>
+                                        <VenueCover
+                                            venueName={venue.name}
+                                            photo={venue.photos[0]}
+                                            sizes="(max-width: 768px) 100vw, 480px"
+                                            priority={i === 0}
+                                        />
+                                    </S.VenueCoverSlot>
+                                    <S.VenueBody>
+                                        <S.VenueName>{venue.name}</S.VenueName>
+                                        {venuePlace && (
+                                            <S.VenuePlace>
+                                                {venuePlace}
+                                                {venueDistance && s.venues.length > 1 && <> ({venueDistance})</>}
+                                            </S.VenuePlace>
+                                        )}
+                                        {venue.description && <S.VenueDescription>{venue.description}</S.VenueDescription>}
+                                        <S.Facts>
+                                            {venuePrice && <li>a partir de <strong>{venuePrice}</strong></li>}
+                                            <li>até {venue.capacity} convidados</li>
+                                        </S.Facts>
+                                        {(() => {
+                                            const list = sortAmenities(venue.amenities ?? [...(venue.hasPool ? ["POOL"] : []), ...(venue.hasKidsArea ? ["KIDS_AREA"] : [])]);
+                                            return list.length > 0 && (
+                                                <S.Amenities aria-label={`O que ${venue.name} oferece`}>
+                                                    {list.map((a) => <li key={a}>{AMENITY_LABELS[a]}</li>)}
+                                                </S.Amenities>
+                                            );
+                                        })()}
+                                        <S.VenueActions>
+                                            {venue.mapsUrl && (
+                                                <S.SecondaryButton as="a" href={venue.mapsUrl} target="_blank" rel="noopener noreferrer">
+                                                    Ver no mapa
+                                                </S.SecondaryButton>
+                                            )}
+                                            {canReserve && (
+                                                <S.PrimaryButton type="button" onClick={() => reserve(venue)}>
+                                                    Reservar {s.venues.length > 1 ? "este espaço" : "uma data"}
+                                                </S.PrimaryButton>
+                                            )}
+                                        </S.VenueActions>
+                                    </S.VenueBody>
+                                </S.Venue>
+                            );
+                        })}
+                    </S.Venues>
+                </>
+            )}
         </S.Container>
     );
 }

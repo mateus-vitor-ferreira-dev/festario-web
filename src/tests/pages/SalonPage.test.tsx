@@ -73,6 +73,15 @@ describe("Página do salão", () => {
         expect(within(list).getAllByRole("listitem").map((li) => li.textContent)).toEqual(["Piscina", "Área kids", "Buffet", "Banda / música ao vivo"]);
     });
 
+    it("salão que ainda não abriu a agenda: avisa e não oferece reserva", async () => {
+        server.use(http.get(`${BASE}/salons/salao-jardim-das-flores`, () => HttpResponse.json({ data: { ...SALON, bookable: false, priceRange: null, venues: [] } })));
+        renderPage();
+        expect(await screen.findByRole("heading", { name: "Este salão ainda não abriu a agenda" })).toBeInTheDocument();
+        expect(screen.queryByRole("heading", { name: "Espaços para reservar" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /reservar/i })).not.toBeInTheDocument();
+        expect(screen.getByRole("link", { name: "Ver outros salões" })).toHaveAttribute("href", "/saloes");
+    });
+
     it("'Reservar' leva à reserva do espaço", async () => {
         server.use(http.get(`${BASE}/salons/salao-jardim-das-flores`, () => HttpResponse.json({ data: SALON })));
         const user = userEvent.setup();
