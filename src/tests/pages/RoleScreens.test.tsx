@@ -200,7 +200,7 @@ describe("Home por papel", () => {
     it("USER has no panel shortcuts", async () => {
         setSession("USER");
         renderAt("/home");
-        expect(await screen.findByText(/total de reservas/i)).toBeInTheDocument();
+        expect(await screen.findByRole("heading", { name: "Próximas festas" })).toBeInTheDocument();
         expect(screen.queryByRole("link", { name: /abrir painel do espaço/i })).not.toBeInTheDocument();
         expect(screen.queryByRole("link", { name: /abrir plataforma/i })).not.toBeInTheDocument();
     });

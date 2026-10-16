@@ -1,330 +1,153 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { MemoryRouter } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { AuthProvider } from "../../contexts/AuthContext";
 import Home from "../../pages/Home";
 import { server } from "../mocks/server";
-import { AuthProvider } from "../../contexts/AuthContext";
 
 const BASE = "http://localhost:3000";
+const DAY = 24 * 60 * 60 * 1000;
+const inDays = (n: number) => new Date(Date.now() + n * DAY).toISOString();
 
-function renderPage() {
+function reservation(id: string, over: Record<string, unknown> = {}) {
+    return {
+        id, status: "PAID", startDate: inDays(30), endDate: inDays(30), totalPrice: 1000,
+        venue: { id: `v-${id}`, name: `Espaço ${id}` }, tenant: { slug: "recanto", name: "Recanto Vila Rica" }, ...over,
+    };
+}
+
+const SALON = {
+    slug: "jardim", name: "Salão Jardim das Flores", logoUrl: null, logoVariants: null, primaryColor: null, primaryColorDark: null, cover: null,
+    neighborhood: "Centro", city: "Lavras", state: "MG", capacity: { min: 50, max: 120 }, startingPrice: 590,
+    amenities: { hasPool: false, hasKidsArea: true }, venueCount: 1, distanceKm: 2.4, nearestVenueId: "v1",
+};
+
+function mock({ reservations = [] as unknown[], grants = [] as unknown[], salons = [SALON] as unknown[], onSalons }: { reservations?: unknown[]; grants?: unknown[]; salons?: unknown[]; onSalons?: (url: URL) => void } = {}) {
+    server.use(
+        http.get(`${BASE}/reservations`, () => HttpResponse.json({ data: reservations, pagination: { page: 1, limit: 100, total: reservations.length, totalPages: 1 } })),
+        http.get(`${BASE}/promotions/my-grants`, () => HttpResponse.json({ data: grants })),
+        http.get(`${BASE}/salons`, ({ request }) => {
+            onSalons?.(new URL(request.url));
+            return HttpResponse.json({ data: salons, pagination: { page: 1, limit: 3, total: salons.length, totalPages: 1 }, origin: null });
+        }),
+    );
+}
+
+function renderPage(user: Record<string, unknown> = { id: "u1", name: "Mariana Costa", email: "m@x.com", role: "USER" }) {
+    localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user }));
     return render(
         <AuthProvider>
             <MemoryRouter>
                 <Home />
                 <ToastContainer />
             </MemoryRouter>
-        </AuthProvider>
+        </AuthProvider>,
     );
 }
 
-describe("Home page", () => {
-    afterEach(() => vi.restoreAllMocks());
-    it("shows greeting and stats after loading", async () => {
-        renderPage();
-        await waitFor(() =>
-            expect(screen.getByText(/total de reservas/i)).toBeInTheDocument()
-        );
-        expect(screen.getAllByText(/espaços disponíveis/i).length).toBeGreaterThan(0);
-        expect(screen.getAllByText(/próximas reservas/i).length).toBeGreaterThan(0);
-    });
+beforeEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+});
+afterEach(() => vi.useRealTimers());
 
-    it("shows user first name in greeting", async () => {
-        renderPage();
-        await waitFor(() =>
-            expect(screen.getByText(/mateus/i)).toBeInTheDocument()
-        );
-    });
-
-    it("shows empty state for upcoming reservations when list is empty", async () => {
-        renderPage();
-        await waitFor(() =>
-            expect(screen.getByText(/nenhuma reserva futura encontrada/i)).toBeInTheDocument()
-        );
-    });
-
-    it("shows upcoming reservations when data is present", async () => {
-        server.use(
-            http.get(`${BASE}/reservations`, () =>
-                HttpResponse.json({
-                    success: true,
-                    data: [
-                        {
-                            id: "res-1",
-                            status: "PENDING",
-                            startDate: new Date(Date.now() + 86400000).toISOString(),
-                            endDate: new Date(Date.now() + 86400000 * 2).toISOString(),
-                            venue: { name: "Salão Principal" },
-                        },
-                    ],
-                })
-            )
-        );
-        renderPage();
-        await waitFor(() =>
-            expect(screen.getAllByText("Salão Principal").length).toBeGreaterThan(0)
-        );
-        expect(screen.getByText("Pendente")).toBeInTheDocument();
-    });
-
-    it("shows venue price chip when basePrice is present", async () => {
-        renderPage();
-        await waitFor(() =>
-            expect(screen.getByText(/a partir de/i)).toBeInTheDocument()
-        );
-    });
-
-    it("does not show price chip when basePrice is null", async () => {
-        server.use(
-            http.get(`${BASE}/venues`, () =>
-                HttpResponse.json({
-                    success: true,
-                    data: [{ id: "venue-1", name: "Salão Principal", location: "Lavras", basePrice: null }],
-                })
-            )
-        );
-        renderPage();
-        await waitFor(() =>
-            expect(screen.getByText("Salão Principal")).toBeInTheDocument()
-        );
-        expect(screen.queryByText(/a partir de/i)).not.toBeInTheDocument();
-    });
-
-    it("shows grants panel when user has available discounts", async () => {
-        server.use(
-            http.get(`${BASE}/promotions/my-grants`, () =>
-                HttpResponse.json({
-                    success: true,
-                    data: [
-                        {
-                            id: "grant-1",
-                            percentOff: 10,
-                            validUntil: "2027-01-01T00:00:00.000Z",
-                            campaign: { name: "Indique um amigo" },
-                        },
-                    ],
-                })
-            )
-        );
-        renderPage();
-        await waitFor(() =>
-            expect(screen.getByText(/seus descontos disponíveis/i)).toBeInTheDocument()
-        );
-        expect(screen.getByText("10% OFF")).toBeInTheDocument();
-    });
-
-    it("does not show grants panel when user has no discounts", async () => {
-        renderPage();
-        await waitFor(() =>
-            expect(screen.getByText(/total de reservas/i)).toBeInTheDocument()
-        );
-        expect(screen.queryByText(/seus descontos disponíveis/i)).not.toBeInTheDocument();
-    });
-
-    it("shows grant with no expiry date", async () => {
-        server.use(
-            http.get(`${BASE}/promotions/my-grants`, () =>
-                HttpResponse.json({
-                    success: true,
-                    data: [
-                        {
-                            id: "grant-1",
-                            percentOff: 15,
-                            validUntil: null,
-                            campaign: { name: "Fidelidade" },
-                        },
-                    ],
-                })
-            )
-        );
-        renderPage();
-        await waitFor(() =>
-            expect(screen.getByText(/sem data de expiração/i)).toBeInTheDocument()
-        );
-    });
-
-    it("shows empty state when venues list is empty", async () => {
-        server.use(
-            http.get(`${BASE}/venues`, () =>
-                HttpResponse.json({ success: true, data: [] })
-            )
-        );
-        renderPage();
-        await waitFor(() =>
-            expect(screen.getByText(/nenhum espaço encontrado/i)).toBeInTheDocument()
-        );
-    });
-
-    it("shows error toast when dashboard load fails", async () => {
-        server.use(
-            http.get(`${BASE}/users/me`, () =>
-                HttpResponse.json({ success: false }, { status: 500 })
-            )
-        );
-        renderPage();
-        await waitFor(() =>
-            expect(screen.getByText(/erro ao carregar os dados da home/i)).toBeInTheDocument()
-        );
-    });
-
-    it("shows past reservations are excluded from upcoming list", async () => {
-        server.use(
-            http.get(`${BASE}/reservations`, () =>
-                HttpResponse.json({
-                    success: true,
-                    data: [
-                        {
-                            id: "past-1",
-                            status: "PAID",
-                            startDate: new Date(Date.now() - 86400000).toISOString(),
-                            endDate: new Date(Date.now() - 86400000 + 3600000).toISOString(),
-                            venue: { name: "Salão do Passado" },
-                        },
-                    ],
-                })
-            )
-        );
-        renderPage();
-        await waitFor(() =>
-            expect(screen.getByText(/total de reservas/i)).toBeInTheDocument()
-        );
-        expect(screen.queryByText("Salão do Passado")).not.toBeInTheDocument();
-    });
-
-    it("shows loading state initially", () => {
+describe("Início do cliente", () => {
+    it("cumprimenta pelo primeiro nome e leva para a vitrine", async () => {
+        mock();
         renderPage();
         expect(screen.getByText(/carregando seu painel/i)).toBeInTheDocument();
+        expect(await screen.findByRole("heading", { name: /, mariana\./i })).toBeInTheDocument();
+        expect(screen.getByText("Suas festas em todos os salões do Festário.")).toBeInTheDocument();
+        expect(screen.getAllByRole("link", { name: "Encontrar um salão" })[0]).toHaveAttribute("href", "/saloes");
     });
 
-    it("shows 'Bom dia' when hour < 12", async () => {
-        vi.spyOn(Date.prototype, "getHours").mockReturnValue(8);
+    it("lista as próximas festas de vários salões, cada uma com o salão; passadas e canceladas ficam de fora", async () => {
+        mock({
+            reservations: [
+                reservation("b", { startDate: inDays(40), tenant: { slug: "pampulha", name: "Casa Pampulha" } }),
+                reservation("a", { startDate: inDays(10) }),
+                reservation("velha", { startDate: inDays(-5) }),
+                reservation("cancelada", { status: "CANCELLED", startDate: inDays(20) }),
+            ],
+        });
         renderPage();
-        await waitFor(() =>
-            expect(screen.getByText(/bom dia/i)).toBeInTheDocument()
-        );
+        const panel = (await screen.findByRole("heading", { name: "Próximas festas" })).closest("article")!;
+        expect(within(panel).getByText("Espaço a")).toBeInTheDocument();
+        expect(within(panel).getByText("Recanto Vila Rica")).toBeInTheDocument();
+        expect(within(panel).getByText("Espaço b")).toBeInTheDocument();
+        expect(within(panel).getByText("Casa Pampulha")).toBeInTheDocument();
+        expect(within(panel).queryByText("Espaço velha")).not.toBeInTheDocument();
+        expect(within(panel).queryByText("Espaço cancelada")).not.toBeInTheDocument();
+        // a primeira (mais próxima) é a de destaque, com o atalho para a reserva
+        expect(within(panel).getByRole("link", { name: "Ver reserva" })).toHaveAttribute("href", "/reservations");
     });
 
-    it("shows 'Boa tarde' when hour is between 12 and 18", async () => {
-        vi.spyOn(Date.prototype, "getHours").mockReturnValue(15);
+    it("espaço com o mesmo nome do salão não repete o nome", async () => {
+        mock({ reservations: [reservation("x", { status: "PENDING", venue: { id: "v", name: "Recanto Vila Rica" } })] });
         renderPage();
-        await waitFor(() =>
-            expect(screen.getByText(/boa tarde/i)).toBeInTheDocument()
-        );
+        const callout = (await screen.findByRole("heading", { name: "Reserva esperando pagamento" })).closest("section")!;
+        expect(within(callout).getByText(/^Recanto Vila Rica, em/)).toBeInTheDocument();
     });
 
-    it("shows 'Boa noite' when hour >= 18", async () => {
-        vi.spyOn(Date.prototype, "getHours").mockReturnValue(20);
+    it("reserva esperando pagamento aparece em destaque, com o link para pagar", async () => {
+        mock({ reservations: [reservation("p", { status: "PENDING", startDate: inDays(15) })] });
         renderPage();
-        await waitFor(() =>
-            expect(screen.getByText(/boa noite/i)).toBeInTheDocument()
-        );
+        const callout = (await screen.findByRole("heading", { name: "Reserva esperando pagamento" })).closest("section")!;
+        expect(within(callout).getByText(/Espaço p, Recanto Vila Rica/)).toBeInTheDocument();
+        expect(within(callout).getByRole("link", { name: "Ver pagamento" })).toHaveAttribute("href", "/checkout/p");
     });
 
-    it("loads dashboard even when listMyGrants throws", async () => {
-        server.use(
-            http.get(`${BASE}/promotions/my-grants`, () =>
-                HttpResponse.json({ success: false }, { status: 500 })
-            )
-        );
+    it("sem festas marcadas, convida a encontrar um salão", async () => {
+        mock();
         renderPage();
-        await waitFor(() =>
-            expect(screen.getByText(/total de reservas/i)).toBeInTheDocument()
-        );
-        expect(screen.queryByText(/seus descontos disponíveis/i)).not.toBeInTheDocument();
+        expect(await screen.findByText("Nenhuma festa marcada.")).toBeInTheDocument();
+        expect(screen.queryByRole("heading", { name: "Reserva esperando pagamento" })).not.toBeInTheDocument();
     });
 
-    it("shows 'Reserva' when upcoming reservation has no venue", async () => {
-        server.use(
-            http.get(`${BASE}/reservations`, () =>
-                HttpResponse.json({
-                    success: true,
-                    data: [
-                        {
-                            id: "res-no-venue",
-                            status: "PENDING",
-                            startDate: new Date(Date.now() + 86400000).toISOString(),
-                            endDate: new Date(Date.now() + 86400000 * 2).toISOString(),
-                            venue: null,
-                        },
-                    ],
-                })
-            )
-        );
+    it("mostra os descontos com o salão onde cada um vale", async () => {
+        mock({
+            grants: [
+                { id: "g1", percentOff: 10, validUntil: inDays(20), campaign: { id: "c1", name: "Indicação", type: "REFERRAL" }, tenant: { slug: "recanto", name: "Recanto Vila Rica" } },
+                { id: "g2", percentOff: 5, validUntil: null, campaign: { id: "c2", name: "Fidelidade", type: "LOYALTY" }, tenant: null },
+            ],
+        });
         renderPage();
-        await waitFor(() =>
-            expect(screen.getByText("Reserva")).toBeInTheDocument()
-        );
+        expect(await screen.findByText("10% OFF")).toBeInTheDocument();
+        expect(screen.getByText(/Vale em Recanto Vila Rica · até/)).toBeInTheDocument();
+        expect(screen.getByText(/sem data de expiração/)).toBeInTheDocument();
     });
 
-    it("shows raw status string when reservation status is unknown", async () => {
-        server.use(
-            http.get(`${BASE}/reservations`, () =>
-                HttpResponse.json({
-                    success: true,
-                    data: [
-                        {
-                            id: "res-unknown",
-                            status: "UNKNOWN_STATUS",
-                            startDate: new Date(Date.now() + 86400000).toISOString(),
-                            endDate: new Date(Date.now() + 86400000 * 2).toISOString(),
-                            venue: { name: "Salão" },
-                        },
-                    ],
-                })
-            )
-        );
-        renderPage();
-        await waitFor(() =>
-            expect(screen.getByText("UNKNOWN_STATUS")).toBeInTheDocument()
-        );
+    it("sugere salões perto do endereço do perfil", async () => {
+        const urls: URL[] = [];
+        mock({ onSalons: (u) => urls.push(u) });
+        renderPage({ id: "u1", name: "Mariana", email: "m@x.com", role: "USER", hasLocation: true, neighborhood: "Centro", city: "Lavras", state: "MG" });
+        expect(await screen.findByRole("heading", { name: "Salões perto de Centro, Lavras - MG" })).toBeInTheDocument();
+        expect(screen.getByRole("link", { name: /salão jardim das flores/i })).toHaveAttribute("href", "/s/jardim");
+        expect(urls.at(-1)?.searchParams.get("origin")).toBe("profile");
+        expect(urls.at(-1)?.searchParams.get("limit")).toBe("3");
     });
 
-    it("shows 'Localização não informada' when venue has no location", async () => {
-        server.use(
-            http.get(`${BASE}/venues`, () =>
-                HttpResponse.json({
-                    success: true,
-                    data: [{ id: "venue-1", name: "Salão Sem Local", location: null, basePrice: 50000 }],
-                })
-            )
-        );
+    it("sem endereço, os salões aparecem como destaque", async () => {
+        mock();
         renderPage();
-        await waitFor(() =>
-            expect(screen.getByText(/localização não informada/i)).toBeInTheDocument()
-        );
+        expect(await screen.findByRole("heading", { name: "Salões em destaque" })).toBeInTheDocument();
     });
 
-    it("sorts upcoming reservations by startDate", async () => {
-        server.use(
-            http.get(`${BASE}/reservations`, () =>
-                HttpResponse.json({
-                    success: true,
-                    data: [
-                        {
-                            id: "res-later",
-                            status: "PAID",
-                            startDate: new Date(Date.now() + 86400000 * 5).toISOString(),
-                            endDate: new Date(Date.now() + 86400000 * 6).toISOString(),
-                            venue: { name: "Salão B" },
-                        },
-                        {
-                            id: "res-sooner",
-                            status: "PENDING",
-                            startDate: new Date(Date.now() + 86400000).toISOString(),
-                            endDate: new Date(Date.now() + 86400000 * 2).toISOString(),
-                            venue: { name: "Salão A" },
-                        },
-                    ],
-                })
-            )
-        );
+    it("uma parte que falha não esconde as outras", async () => {
+        mock({ grants: [{ id: "g1", percentOff: 10, validUntil: null, campaign: { id: "c1", name: "Indicação", type: "REFERRAL" }, tenant: null }] });
+        server.use(http.get(`${BASE}/reservations`, () => HttpResponse.json({ message: "erro" }, { status: 500 })));
         renderPage();
-        await waitFor(() =>
-            expect(screen.getByText("Salão A")).toBeInTheDocument()
-        );
-        const items = screen.getAllByRole("listitem");
-        expect(items[0]).toHaveTextContent("Salão A");
+        expect(await screen.findByText(/não foi possível carregar as suas reservas/i)).toBeInTheDocument();
+        expect(screen.getByText("10% OFF")).toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: "Salões em destaque" })).toBeInTheDocument();
+    });
+
+    it("dono vê o atalho para o painel", async () => {
+        mock();
+        renderPage({ id: "o1", name: "Dona", email: "d@x.com", role: "OWNER" });
+        expect(await screen.findByRole("link", { name: "Abrir painel do espaço" })).toHaveAttribute("href", "/painel");
     });
 });
