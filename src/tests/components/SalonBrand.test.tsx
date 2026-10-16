@@ -114,7 +114,7 @@ describe("Header com o salão", () => {
         server.use(http.get(`${BASE}/tenant`, () => HttpResponse.json({ data: { slug: "jardim", name: "Salão das Flores", primaryColor: "#1f6b4f", primaryColorDark: "#7fd1ae", logoVariants: null } })));
         renderHeader();
         const link = await screen.findByRole("link", { name: /salão das flores/i });
-        expect(link).toHaveAttribute("href", "/venues");
+        expect(link).toHaveAttribute("href", "/s/jardim");
         await waitFor(() => expect(document.documentElement.style.getPropertyValue("--salon-color")).toBe("#1f6b4f"));
         expect(document.documentElement.style.getPropertyValue("--salon-color-dark")).toBe("#7fd1ae");
     });

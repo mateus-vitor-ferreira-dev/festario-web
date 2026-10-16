@@ -38,7 +38,7 @@ describe("GoogleButton", () => {
         expect(btn).toBeInTheDocument();
     });
 
-    it("onSuccess: saves userData, shows toast and navigates to /home", async () => {
+    it("onSuccess: saves userData, shows toast and navigates to the salon showcase", async () => {
         server.use(
             http.post(`${BASE}/auth/google`, () =>
                 HttpResponse.json({
@@ -57,7 +57,7 @@ describe("GoogleButton", () => {
             expect(screen.getByText(/login com google realizado/i)).toBeInTheDocument()
         );
         expect(localStorage.getItem("festario:userData")).not.toBeNull();
-        expect(navigate).toHaveBeenCalledWith("/home");
+        expect(navigate).toHaveBeenCalledWith("/saloes");
     });
 
     it("onSuccess: shows fallback toast message when message is absent", async () => {

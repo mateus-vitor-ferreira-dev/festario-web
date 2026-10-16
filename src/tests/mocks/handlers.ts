@@ -42,6 +42,10 @@ export const userHandlers = [
 // ─── Venues ──────────────────────────────────────────────────────────────────
 
 export const venueHandlers = [
+    http.get(`${BASE_URL}/salons`, () =>
+        HttpResponse.json({ data: [], pagination: { page: 1, limit: 12, total: 0, totalPages: 1 }, origin: null, sort: "relevance" })
+    ),
+
     http.get(`${BASE_URL}/venues`, () =>
         HttpResponse.json({
             success: true,

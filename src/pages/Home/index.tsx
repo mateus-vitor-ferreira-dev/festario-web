@@ -6,7 +6,7 @@ import { useGSAP } from "@gsap/react";
 import api from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { BRAND_NAME } from "../../config/brand";
-import { PANEL_PATH, PLATFORM_PATH } from "../../utils/roles";
+import { PANEL_PATH, PLATFORM_PATH, SALONS_PATH } from "../../utils/roles";
 import { listMyGrants } from "../../services/promotion";
 import { listReservations } from "../../services/reservation";
 import { listVenues } from "../../services/venue";
@@ -187,7 +187,7 @@ export default function Home() {
                             Abrir painel do espaço
                         </S.ShortcutLink>
                     )}
-                    <S.NewReservationButton as={Link} to="/venues">
+                    <S.NewReservationButton as={Link} to={SALONS_PATH}>
                         Nova reserva
                     </S.NewReservationButton>
                 </S.HeaderActions>
@@ -220,8 +220,8 @@ export default function Home() {
                     {upcomingReservations.length === 0 ? (
                         <S.EmptyState>
                             <span>Nenhuma reserva futura encontrada.</span>
-                            <S.PanelLink as={Link} to="/venues">
-                                Ver datas livres
+                            <S.PanelLink as={Link} to={SALONS_PATH}>
+                                Ver salões
                             </S.PanelLink>
                         </S.EmptyState>
                     ) : (

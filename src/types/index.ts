@@ -696,3 +696,70 @@ export interface ClauseTemplate {
   usesTime: boolean;
   clauseId: string | null;
 }
+
+// ─── Vitrine de salões ────────────────────────────────────────────────────────
+
+/** De onde a vitrine mediu a distância (`label` é o bairro/cidade quando há). */
+export interface SalonOrigin {
+  source: "coords" | "cep" | "profile";
+  label: string | null;
+}
+
+/** Um salão na vitrine: endereço e capa do espaço mais perto (ou do primeiro). */
+export interface SalonCard {
+  slug: string;
+  name: string;
+  logoUrl: string | null;
+  logoVariants: ImageVariant[] | null;
+  primaryColor: string | null;
+  primaryColorDark: string | null;
+  cover: VenuePhoto | null;
+  neighborhood: string | null;
+  city: string | null;
+  state: string | null;
+  capacity: { min: number; max: number };
+  startingPrice: number | null;
+  amenities: { hasPool: boolean; hasKidsArea: boolean };
+  venueCount: number;
+  distanceKm: number | null;
+  nearestVenueId: string | null;
+}
+
+export interface SalonVenue {
+  id: string;
+  name: string;
+  description: string | null;
+  capacity: number;
+  hasPool: boolean;
+  hasKidsArea: boolean;
+  neighborhood: string | null;
+  city: string | null;
+  state: string | null;
+  location: string | null;
+  startingPrice: number | null;
+  photos: VenuePhoto[];
+  mapsUrl: string | null;
+  distanceKm: number | null;
+}
+
+/** Página pública do salão (`GET /salons/:slug`). */
+export interface SalonDetail extends SalonCard {
+  priceRange: { min: number; max: number } | null;
+  contact: {
+    address: string | null;
+    contactWhatsapp: string | null;
+    contactPhone: string | null;
+    contactEmail: string | null;
+    instagram: string | null;
+  } | null;
+  venues: SalonVenue[];
+  origin: SalonOrigin | null;
+}
+
+/** Ponto de partida da distância, como a API recebe: coordenadas, CEP ou o endereço do perfil. */
+export interface SalonOriginParams {
+  lat?: number;
+  lng?: number;
+  cep?: string;
+  origin?: "profile";
+}

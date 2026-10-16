@@ -10,6 +10,8 @@ import type { UserRole } from "../types";
 
 export const PANEL_PATH = "/painel";
 export const PLATFORM_PATH = "/plataforma";
+/** Vitrine de salões: a porta de entrada do cliente. */
+export const SALONS_PATH = "/saloes";
 
 /** Quem administra um espaço (painel, negociações como equipe, feriados em leitura). */
 export const MANAGER_ROLES: readonly UserRole[] = ["OWNER", "ADMIN"];
@@ -32,5 +34,5 @@ export function isPlatformAdmin(role: string | null | undefined): boolean {
 export function homePathFor(role: string | null | undefined): string {
     if (role === "ADMIN") return PLATFORM_PATH;
     if (role === "OWNER") return PANEL_PATH;
-    return "/home";
+    return SALONS_PATH;
 }

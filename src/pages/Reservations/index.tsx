@@ -148,7 +148,7 @@ export default function Reservations() {
                 <S.EmptyState>
                     <h2>Nenhuma reserva encontrada</h2>
                     <p>Você ainda não tem reservas. Escolha um espaço e marque a data do seu evento.</p>
-                    <S.PayButton as={Link} to="/venues">Fazer uma reserva</S.PayButton>
+                    <S.PayButton as={Link} to="/saloes">Fazer uma reserva</S.PayButton>
                 </S.EmptyState>
             </S.Container>
         );

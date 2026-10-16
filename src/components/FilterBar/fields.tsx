@@ -200,3 +200,20 @@ export function MoneyRangeField({ label, min, max, onChange, wide = true, deboun
         </S.Fieldset>
     );
 }
+
+interface CheckboxFieldProps extends Omit<BaseFieldProps, "wide"> {
+    checked: boolean;
+    onChange: (checked: boolean) => void;
+}
+
+/** Filtro de sim/não ("Com piscina"): caixa com o rótulo ao lado, na altura dos outros campos. */
+export function CheckboxField({ label, checked, onChange, id: idProp }: CheckboxFieldProps) {
+    const generated = useId();
+    const id = idProp ?? generated;
+    return (
+        <S.CheckRow htmlFor={id} $checked={checked}>
+            <input id={id} type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+            <span>{label}</span>
+        </S.CheckRow>
+    );
+}

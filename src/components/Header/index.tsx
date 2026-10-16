@@ -9,7 +9,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { resendVerification } from "../../services/auth";
 import { animateFadeInUp } from "../../utils/animations";
 import { getHttpStatus } from "../../utils/errors";
-import { isManagerRole, PANEL_PATH, PLATFORM_PATH } from "../../utils/roles";
+import { isManagerRole, PANEL_PATH, PLATFORM_PATH, SALONS_PATH } from "../../utils/roles";
 import * as S from "./styles";
 
 function getInitials(name: string): string {
@@ -82,8 +82,8 @@ export default function Header() {
     const { theme, toggleTheme } = useTheme();
     const { user, logout: authLogout } = useAuth();
     const { salon } = useSalonBrand();
-    // Na área da plataforma não há um salão em foco: só a marca do Festário.
-    const showSalon = Boolean(salon) && !location.pathname.startsWith(PLATFORM_PATH);
+    // Na área da plataforma e na vitrine não há um salão em foco: só a marca do Festário.
+    const showSalon = Boolean(salon) && !location.pathname.startsWith(PLATFORM_PATH) && location.pathname !== SALONS_PATH;
     const containerRef = useRef(null);
     const [resending, setResending] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
@@ -147,7 +147,7 @@ export default function Header() {
                 </S.BrandWrapper>
 
                 {showSalon && salon && (
-                    <S.Salon to="/venues" title={`Espaços de ${salon.name}`}>
+                    <S.Salon to={`/s/${salon.slug}`} title={`Página de ${salon.name}`}>
                         <SalonMark name={salon.name} logoVariants={salon.logoVariants} logoUrl={salon.logoUrl} size="sm" decorative />
                         <S.SalonName>{salon.name}</S.SalonName>
                     </S.Salon>
@@ -158,8 +158,12 @@ export default function Header() {
                         Início
                     </S.NavLink>
 
-                    <S.NavLink $active={location.pathname === "/venues"} as={Link} to="/venues">
-                        Espaços
+                    <S.NavLink
+                        $active={location.pathname === SALONS_PATH || location.pathname.startsWith("/s/")}
+                        as={Link}
+                        to={SALONS_PATH}
+                    >
+                        Salões
                     </S.NavLink>
 
                     <S.NavLink
