@@ -172,6 +172,8 @@ export interface PromotionGrant {
   validUntil?: string | null;
   createdAt?: string;
   campaign: Pick<Campaign, "id" | "code" | "type" | "name" | "endsAt">;
+  /** Salão onde o cupom vale (o que o concedeu). */
+  tenant?: TenantRef | null;
 }
 
 export interface PromotionStatusItem {

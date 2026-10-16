@@ -62,7 +62,7 @@ describe("AppRoutes", () => {
         );
         renderRoutes("/home");
         // espera o conteúdo estável da Home (o "Carregando seu painel" é transitório)
-        expect(await screen.findByText(/total de reservas/i, {}, LAZY_TIMEOUT)).toBeInTheDocument();
+        expect(await screen.findByRole("heading", { name: "Próximas festas" }, LAZY_TIMEOUT)).toBeInTheDocument();
     });
 
     it("redirects USER from the old /admin link (now /painel) to the salon showcase", async () => {
