@@ -18,8 +18,8 @@ describe("Brand (Festário)", () => {
     it("tom onDark fixa as cores da versão para fundo escuro, sem depender do tema", () => {
         const { container } = render(<FestarioSymbol tone="onDark" title="Festário" />);
         const svg = container.querySelector("svg")!;
-        expect(svg.style.getPropertyValue("--logo-body")).toBe("#f5f6fb");
-        expect(svg.style.getPropertyValue("--logo-check")).toBe("#27357e");
+        expect(svg.style.getPropertyValue("--logo-body")).toBe("#9aa8f2");
+        expect(svg.style.getPropertyValue("--logo-ink")).toBe("#ffffff");
     });
 
     it("no tema da página, as cores vêm dos tokens", () => {

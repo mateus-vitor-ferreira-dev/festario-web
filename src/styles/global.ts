@@ -153,10 +153,9 @@ export const GlobalStyle = createGlobalStyle`
     --accent-blue: #2d5fa0;
     --accent-teal: #217a6c;
 
-    /* ── Marca (logotipo inline): corpo, check e nome ── */
+    /* ── Marca (logotipo inline): corpo da bandeirinha e argolas, e o nome ── */
     --logo-body:  #27357e;
-    --logo-check: #ffffff;
-    --logo-ink:   #141936;
+    --logo-ink:   #27357e;
 
     /* ── Elevação — só para o que flutua (menus, modais, chat) ── */
     --shadow-sm: 0 1px 2px rgba(20, 25, 54, 0.06);
@@ -235,9 +234,8 @@ export const GlobalStyle = createGlobalStyle`
     --accent-blue: #94b8ea;
     --accent-teal: #79c4b3;
 
-    --logo-body:  #f5f6fb;
-    --logo-check: #27357e;
-    --logo-ink:   #f5f6fb;
+    --logo-body:  #9aa8f2;
+    --logo-ink:   #ffffff;
 
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
     --shadow-md: 0 6px 16px -4px rgba(0, 0, 0, 0.55), 0 2px 4px rgba(0, 0, 0, 0.3);
