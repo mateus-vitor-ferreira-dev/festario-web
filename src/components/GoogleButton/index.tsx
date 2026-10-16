@@ -13,6 +13,7 @@ interface GoogleButtonProps {
     navigate: NavigateFunction;
 }
 
+/** Entrar com Google. Sem o ID do cliente OAuth (`VITE_GOOGLE_CLIENT_ID`), não renderiza nada. */
 export default function GoogleButton({ navigate }: GoogleButtonProps) {
     const { login } = useAuth();
     const [searchParams] = useSearchParams();
@@ -52,6 +53,9 @@ export default function GoogleButton({ navigate }: GoogleButtonProps) {
             theme: "outline",
         });
     }, [scriptLoadedSuccessfully, clientId, handleCredentialResponse]);
+
+    // Sem o ID do cliente, o botão do Google nunca montaria: melhor não mostrar um botão que não faz nada.
+    if (!clientId) return null;
 
     return (
         <S.GoogleBtnWrapper style={{ position: "relative" }}>
