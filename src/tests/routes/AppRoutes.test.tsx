@@ -25,9 +25,19 @@ describe("AppRoutes", () => {
     // quando muitos testes rodam em paralelo no CI ou em máquinas lentas.
     const LAZY_TIMEOUT = { timeout: 8000 };
 
-    it("redirects '/' to '/cadastro'", async () => {
+    it("redirects '/' to the public salon showcase", async () => {
         renderRoutes("/");
-        expect(await screen.findByRole("button", { name: /criar conta/i }, LAZY_TIMEOUT)).toBeInTheDocument();
+        expect(await screen.findByRole("heading", { name: /salões de festa/i }, LAZY_TIMEOUT)).toBeInTheDocument();
+        // visitante: cabeçalho com entrar e criar conta, que voltam para a vitrine
+        expect(screen.getByRole("link", { name: "Entrar" })).toHaveAttribute("href", "/login?voltar=%2Fsaloes");
+        expect(screen.getByRole("link", { name: "Criar conta" })).toHaveAttribute("href", "/cadastro?voltar=%2Fsaloes");
+        expect(screen.queryByRole("link", { name: /reservas/i })).not.toBeInTheDocument();
+    });
+
+    it("private pages send the visitor to login with the way back", async () => {
+        renderRoutes("/reservations");
+        expect(await screen.findByRole("button", { name: /^entrar$/i }, LAZY_TIMEOUT)).toBeInTheDocument();
+        expect(screen.getByRole("link", { name: "Criar conta" })).toHaveAttribute("href", "/cadastro?voltar=%2Freservations");
     });
 
     it("renders SignUp at /cadastro", async () => {

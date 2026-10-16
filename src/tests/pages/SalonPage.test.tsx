@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { AuthProvider } from "../../contexts/AuthContext";
@@ -25,13 +25,20 @@ const SALON = {
     venues: [VENUE], origin: null,
 };
 
-function renderPage(role = "USER", state?: unknown) {
-    localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "u1", name: "Ana", role } }));
+function LocationProbe() {
+    const location = useLocation();
+    return <div data-testid="location">{location.pathname}{location.search}</div>;
+}
+
+function renderPage(role: string | null = "USER", state?: unknown, search = "") {
+    if (role) localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "u1", name: "Ana", role } }));
     return render(
         <AuthProvider>
-            <MemoryRouter initialEntries={[{ pathname: "/s/salao-jardim-das-flores", state }]}>
+            <MemoryRouter initialEntries={[{ pathname: "/s/salao-jardim-das-flores", search, state }]}>
+                <LocationProbe />
                 <Routes>
                     <Route path="/s/:slug" element={<SalonPage />} />
+                    <Route path="/login" element={<div>Login Page</div>} />
                     <Route path="/reservation-intent/:venueId" element={<div>Reservation Intent</div>} />
                 </Routes>
             </MemoryRouter>
@@ -85,5 +92,25 @@ describe("Página do salão", () => {
 
         expect(await screen.findByRole("heading", { name: "Este salão não está disponível" })).toBeInTheDocument();
         expect(screen.getByRole("link", { name: "Todos os salões" })).toHaveAttribute("href", "/saloes");
+    });
+
+    it("visitante sem conta vê o salão e, ao reservar, vai ao login com a volta para o espaço", async () => {
+        server.use(http.get(`${BASE}/salons/salao-jardim-das-flores`, () => HttpResponse.json({ data: SALON })));
+        const user = userEvent.setup();
+        renderPage(null);
+
+        expect(await screen.findByRole("heading", { level: 1, name: "Salão Jardim das Flores" })).toBeInTheDocument();
+        await user.click(screen.getByRole("button", { name: "Reservar uma data" }));
+        expect(screen.getByText("Login Page")).toBeInTheDocument();
+        expect(screen.getByTestId("location")).toHaveTextContent(`/login?voltar=${encodeURIComponent("/s/salao-jardim-das-flores?reservar=v1")}`);
+        // o salão só vira o do navegador depois do login
+        expect(localStorage.getItem("festario:tenant")).toBeNull();
+    });
+
+    it("de volta do login com o espaço escolhido, segue direto para a reserva", async () => {
+        server.use(http.get(`${BASE}/salons/salao-jardim-das-flores`, () => HttpResponse.json({ data: SALON })));
+        renderPage("USER", undefined, "?reservar=v1");
+        expect(await screen.findByText("Reservation Intent")).toBeInTheDocument();
+        expect(JSON.parse(localStorage.getItem("festario:tenant")!).slug).toBe("salao-jardim-das-flores");
     });
 });
