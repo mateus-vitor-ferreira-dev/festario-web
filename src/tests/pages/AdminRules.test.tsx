@@ -64,7 +64,7 @@ describe("Regras do salão", () => {
     it("shows the first-time steps when the salon has no package", async () => {
         renderAt("/painel?tab=rules");
         const steps = await screen.findByRole("list", { name: /primeiros passos/i });
-        expect(within(steps).getByRole("button", { name: /criar pacote/i })).toBeInTheDocument();
+        expect(within(steps).getByRole("button", { name: "Criar do zero" })).toBeInTheDocument();
     });
 
     it("switches sections through the URL", async () => {
@@ -94,7 +94,7 @@ describe("Regras do salão", () => {
         );
         const user = userEvent.setup();
         renderAt("/painel?tab=rules");
-        await user.click(await screen.findByRole("button", { name: /^criar pacote$/i }));
+        await user.click(await screen.findByRole("button", { name: "Criar do zero" }));
 
         await user.click(screen.getByRole("button", { name: /^criar pacote$/i }));
         expect(await screen.findByRole("alert")).toHaveTextContent(/dê um nome ao pacote/i);

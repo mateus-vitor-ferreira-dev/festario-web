@@ -166,7 +166,7 @@ describe("Pacotes", () => {
         server.use(http.post(`${BASE}/admin/plans`, () => HttpResponse.json({ message: "Nome já usado" }, { status: 409 })));
         const user = userEvent.setup();
         renderAt("/painel?tab=rules");
-        await user.click(await screen.findByRole("button", { name: /^criar pacote$/i }));
+        await user.click(await screen.findByRole("button", { name: "Criar do zero" }));
         await user.type(screen.getByLabelText("Nome"), "Sábado");
         await user.type(screen.getByLabelText("Preço (R$)"), "1000");
         await user.click(screen.getAllByRole("button", { name: "sáb" })[0]);

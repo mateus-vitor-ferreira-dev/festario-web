@@ -9,6 +9,7 @@ import { getErrorMessage } from "../../../utils/getErrorMessage";
 import * as A from "../styles";
 import { describeDays, describeWindow, formatBRL, formatHours } from "../../../utils/packageFormat";
 import { PackageEditor } from "./PackageEditor";
+import { PACKAGE_TEMPLATES, type PackageTemplate } from "./packageTemplates";
 import * as S from "./styles";
 import { TimeWindow, WeekStrip } from "../../../components/PackageVisuals";
 
@@ -35,6 +36,11 @@ export function PackagesSection({ onGoTo }: { onGoTo: (section: string) => void 
     const [venues, setVenues] = useState<Venue[]>([]);
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState<SalonPackage | "new" | null>(null);
+    const [template, setTemplate] = useState<PackageTemplate | null>(null);
+    function startNew(from: PackageTemplate | null = null) {
+        setTemplate(from);
+        setEditing("new");
+    }
     const [busyId, setBusyId] = useState<string | null>(null);
 
     const load = useCallback(async (signal?: AbortSignal) => {
@@ -94,6 +100,7 @@ export function PackagesSection({ onGoTo }: { onGoTo: (section: string) => void 
                 items={items}
                 venues={venues}
                 nextSortOrder={nextSortOrder}
+                template={editing === "new" ? template : null}
                 onCancel={() => setEditing(null)}
                 onSaved={async () => { setEditing(null); await load(); }}
             />
@@ -118,8 +125,21 @@ export function PackagesSection({ onGoTo }: { onGoTo: (section: string) => void 
                     <S.Step>
                         <div>
                             <strong>Crie o primeiro pacote</strong>
-                            <p>Preço, dias, horário e o que vem incluso. Sem pacote ativo, o salão não recebe reservas.</p>
-                            <A.PrimaryButton type="button" $size="sm" onClick={() => setEditing("new")}>Criar pacote</A.PrimaryButton>
+                            <p>Preço, dias, horário e o que vem incluso. Sem pacote ativo, o salão não recebe reservas nem aparece na vitrine.</p>
+                            <A.PrimaryButton type="button" $size="sm" onClick={() => startNew()}>Criar do zero</A.PrimaryButton>
+                            <S.Templates role="group" aria-label="Começar de um modelo">
+                                <span>Ou comece de um modelo, e ajuste ao seu salão:</span>
+                                <ul>
+                                    {PACKAGE_TEMPLATES.map((t) => (
+                                        <li key={t.key}>
+                                            <button type="button" onClick={() => startNew(t)}>
+                                                <strong>{t.title}</strong>
+                                                <small>{t.summary}</small>
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </S.Templates>
                         </div>
                     </S.Step>
                     <S.Step>
@@ -145,7 +165,7 @@ export function PackagesSection({ onGoTo }: { onGoTo: (section: string) => void 
         <A.Section>
             <A.SectionHeader>
                 <S.Intro>Os pacotes aparecem para o cliente nesta ordem. Cada um vale nos dias e no horário marcados.</S.Intro>
-                <A.PrimaryButton type="button" onClick={() => setEditing("new")}>Novo pacote</A.PrimaryButton>
+                <A.PrimaryButton type="button" onClick={() => startNew()}>Novo pacote</A.PrimaryButton>
             </A.SectionHeader>
 
             <S.PackageList>
