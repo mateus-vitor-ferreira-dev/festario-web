@@ -14,6 +14,7 @@ import { UsersTab } from "./tabs/UsersTab";
 import { VenueTab } from "./tabs/VenueTab";
 import { RulesTab } from "./rules/RulesTab";
 import { BrandTab } from "./brand/BrandTab";
+import { AgendaClosedNotice } from "./AgendaClosedNotice";
 import * as S from "./styles";
 
 const TAB_COMPONENTS = {
@@ -110,6 +111,11 @@ export default function Admin() {
                         </>
                     )}
                 </S.ContextBar>
+            )}
+
+            {/* Na seção de pacotes o passo a passo já orienta: o aviso só aparece nas outras telas. */}
+            {!(activeTab === "rules" && (searchParams.get("section") ?? "packages") === "packages") && (
+                <AgendaClosedNotice refreshKey={searchParams.toString()} onCreatePackage={() => setSearchParams({ tab: "rules" })} />
             )}
 
             <S.TabBar
