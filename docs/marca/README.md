@@ -3,16 +3,22 @@
 **Festário** junta *festa* ao sufixo de *calendário*, *diário* e *horário*: é a agenda das festas. Domínios livres na escolha (14/10/2026): `festario.com.br` e `festario.app`. O `festario.com` já estava registrado.
 
 ## O símbolo
-Um calendário cujo topo é um **varal de bandeirinhas** de festa junina, com o **check** da data confirmada. A festa brasileira e a reserva garantida aparecem na mesma forma.
+Um calendário cuja **folha é uma bandeirinha** de festa junina. O corte em V da bandeirinha também lembra um marcador de página: a data guardada. O cabeçalho pitanga leva as duas argolas do calendário, e a célula milho é o dia reservado. A festa brasileira e a reserva garantida cabem na mesma forma.
+
+Slogan: **Data marcada, festa garantida.**
 
 | Arquivo (`svg/`) | Uso |
 |---|---|
 | `festario-logotipo.svg` / `-escuro.svg` | marca completa: header, login, e-mails, Open Graph |
 | `festario-simbolo.svg` / `-escuro.svg` | espaços quadrados: avatar, ícone de app, carregamento |
 | `festario-simbolo-mono.svg` | uma cor só (`currentColor`): usar **inline** no HTML para herdar a cor do texto |
-| `festario-favicon.svg` | **só de 16 a 32 px**. É uma versão simplificada (sem o fio, bandeirinhas maiores) e se adapta à aba escura com `prefers-color-scheme` |
+| `festario-favicon.svg` | **só de 16 a 32 px**. Desenho próprio na grade 32, em medidas inteiras, que troca o anil pelo anil-claro na aba escura (`prefers-color-scheme`) |
+| `apple-touch-icon.svg` / `festario-icone-512.svg` | ícone de app: símbolo claro sobre anil, em ~60% da altura, para caber na máscara redonda do Android |
+| `og-image.svg` | compartilhamento (1200×630): varal de bandeirinhas, logotipo e o slogan |
 
-O nome no logotipo é a **Alegreya Sans ExtraBold**, convertida em contorno, então não depende da fonte instalada. A fonte é da Huerta Tipográfica, sob a SIL Open Font License 1.1. A interface continua com Alegreya (títulos) e Alegreya Sans (texto), por continuidade com o app.
+Os PNGs de `public/` (`apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `og-image.png`) são esses SVGs rasterizados no tamanho exato.
+
+O nome no logotipo é a **Alegreya Sans ExtraBold**, convertida em contorno, então não depende da fonte instalada. O agudo do "á" sai em pitanga. O slogan da og-image é a **Alegreya SemiBold**. A fonte é da Huerta Tipográfica, sob a SIL Open Font License 1.1. A interface continua com Alegreya (títulos) e Alegreya Sans (texto), por continuidade com o app.
 
 ## Tamanho mínimo e respiro
 - **Logotipo:** altura mínima de **24 px** na tela e **8 mm** impresso.
@@ -53,11 +59,19 @@ Os tokens ficam em [`tokens.css`](tokens.css).
 | **Milho** | **Papel** | **1,84:1** | **reprova: milho nunca é texto sobre fundo claro** |
 
 ## Usos errados
-- Mudar as cores das bandeirinhas ou a ordem (milho, pitanga, milho).
+- Trocar as cores fixas do símbolo: cabeçalho e agudo em pitanga, célula do dia em milho. Só o corpo e as argolas mudam (anil no claro, anil-claro no escuro).
 - Esticar, girar, aplicar sombra, contorno ou gradiente.
 - Usar o favicon acima de 32 px ou o símbolo completo abaixo de 24 px.
 - Colocar o símbolo colorido sobre foto ou fundo de baixo contraste. Nesses casos, use a versão mono em branco ou anil escuro.
 - Escrever "Festario" sem acento, "FESTÁRIO" em caixa alta ou "festário" em minúsculas em material de marca.
 
 ## Para regenerar
-Os SVGs são gerados por código a partir de constantes (cores e geometria). O script é o [`build-brand.cjs`](build-brand.cjs) (`node docs/marca/build-brand.cjs <AlegreyaSans-ExtraBold.ttf> docs/marca/svg`, com `opentype.js`). Para mudar uma cor, troque o token e regenere tudo, sem editar os arquivos à mão.
+Os SVGs são gerados por código a partir de constantes (cores e geometria). O script é o [`build-brand.cjs`](build-brand.cjs), com `opentype.js`:
+
+```sh
+F=node_modules/@expo-google-fonts
+node docs/marca/build-brand.cjs $F/alegreya-sans/800ExtraBold/AlegreyaSans_800ExtraBold.ttf \
+  $F/alegreya/600SemiBold/Alegreya_600SemiBold.ttf docs/marca/svg
+```
+
+Ele também escreve `public/festario-favicon.svg` e `src/components/Brand/geometry.ts`, então o logotipo desenhado no app nunca se separa dos arquivos. Depois, rasterize os PNGs de `public/` a partir dos SVGs no tamanho de cada um. Para mudar uma cor, troque o token e regenere tudo, sem editar os arquivos à mão.

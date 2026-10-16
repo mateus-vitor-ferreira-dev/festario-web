@@ -1,14 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Festário"><title>Festário</title>
-  <defs><mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
-    <rect width="64" height="64" fill="#fff"/>
-    <path d="M12 15.3 L22 16.7 L16.8 26.5 Z" fill="#000" stroke="#000" stroke-width="2.4" stroke-linejoin="round"/>
-    <path d="M27 17.4 L37 17.4 L32 27.5 Z" fill="#000" stroke="#000" stroke-width="2.4" stroke-linejoin="round"/>
-    <path d="M42 16.7 L52 15.3 L47.2 26.5 Z" fill="#000" stroke="#000" stroke-width="2.4" stroke-linejoin="round"/>
-    <path d="M21 38 l8 8 l15 -16" fill="none" stroke="#000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  </mask></defs>
-  <g mask="url(#m)" fill="currentColor"><rect x="6" y="18" width="52" height="40" rx="10"/>
-  <path d="M5 13 Q32 22 59 13" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></g>
-  <path d="M12 15.3 L22 16.7 L16.8 26.5 Z" fill="currentColor"/>
-  <path d="M27 17.4 L37 17.4 L32 27.5 Z" fill="currentColor"/>
-  <path d="M42 16.7 L52 15.3 L47.2 26.5 Z" fill="currentColor"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Festário">
+  <title>Festário</title>
+  <path fill="currentColor" d="M88 160A56 56 0 0 1 144 104H154V130A38 38 0 0 0 230 130V104H282V130A38 38 0 0 0 358 130V104H368A56 56 0 0 1 424 160V200H88Z"/>
+  <g fill="currentColor"><rect x="170" y="56" width="44" height="96" rx="22"/><rect x="298" y="56" width="44" height="96" rx="22"/></g>
+  <path fill="currentColor" fill-rule="evenodd" d="M88 224H424V448L256 368L88 448ZM276 256A20 20 0 0 1 296 276V316A20 20 0 0 1 276 336H236A20 20 0 0 1 216 316V276A20 20 0 0 1 236 256Z"/>
 </svg>
