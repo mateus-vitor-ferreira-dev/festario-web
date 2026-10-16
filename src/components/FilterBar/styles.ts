@@ -14,7 +14,7 @@ export const controlBase = css`
   padding: 0 14px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-medium);
-  background-color: var(--bg-surface);
+  background-color: var(--bg-field);
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: var(--text-base);
@@ -33,6 +33,7 @@ export const controlBase = css`
   &:focus {
     border-color: var(--brand);
     box-shadow: var(--focus-ring);
+    background-color: var(--bg-surface);
   }
 `;
 
@@ -357,31 +358,175 @@ export const NoResults = styled.div`
   }
 `;
 
-/** Linha de checkbox com a mesma altura dos campos, para alinhar pela base da grade. */
-export const CheckRow = styled.label<{ $checked: boolean }>`
+/* ─── Várias opções (MultiSelectField) ─── */
+
+export const MultiTrigger = styled.button<{ $empty: boolean }>`
+  ${controlBase}
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: var(--control-h);
+  gap: 8px;
+  text-align: left;
+  cursor: pointer;
+  color: ${({ $empty }) => ($empty ? "var(--text-faint)" : "var(--text-primary)")};
+
+  > span:first-child {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  svg {
+    flex-shrink: 0;
+    width: var(--icon-md);
+    height: var(--icon-md);
+    color: var(--text-muted);
+    transition: transform 0.15s ease;
+  }
+
+  &[aria-expanded="true"] {
+    border-color: var(--brand);
+    background-color: var(--bg-surface);
+
+    svg {
+      transform: rotate(180deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    svg {
+      transition: none;
+    }
+  }
+`;
+
+export const MultiCount = styled.span`
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--brand);
+  color: var(--on-brand);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+`;
+
+export const MultiPanel = styled.div`
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  width: min(560px, calc(100vw - 32px));
+  max-height: min(440px, 70vh);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--brand-border);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-md);
+
+  ${media.md} {
+    width: 100%;
+  }
+`;
+
+export const MultiGroup = styled.fieldset`
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+
+  legend {
+    padding: 0;
+    margin-bottom: 8px;
+    font-family: var(--font-display);
+    font-size: var(--text-base);
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+`;
+
+export const PillList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+/** Opção como pílula: o checkbox fica escondido; a pílula inteira é o alvo de toque. */
+export const Pill = styled.label<{ $on: boolean }>`
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
   padding: 0 14px;
-  border: 1px solid ${({ $checked }) => ($checked ? "var(--brand-border)" : "var(--border-default)")};
-  border-radius: var(--radius-md);
-  background: ${({ $checked }) => ($checked ? "var(--brand-subtle)" : "var(--bg-surface)")};
-  color: var(--text-primary);
+  border-radius: var(--radius-pill);
+  border: 1px solid ${({ $on }) => ($on ? "var(--brand)" : "var(--border-default)")};
+  background: ${({ $on }) => ($on ? "var(--brand)" : "var(--bg-field)")};
+  color: ${({ $on }) => ($on ? "var(--on-brand)" : "var(--text-secondary)")};
   font-size: var(--text-sm);
-  font-weight: 500;
+  font-weight: ${({ $on }) => ($on ? 700 : 500)};
   cursor: pointer;
   user-select: none;
 
   input {
-    width: 20px;
-    height: 20px;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     margin: 0;
-    accent-color: var(--brand);
+    opacity: 0;
     cursor: pointer;
   }
 
+  &:hover {
+    border-color: var(--brand);
+  }
+
   &:focus-within {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+`;
+
+export const MultiFooter = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-default);
+
+  button {
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-medium);
+    background: transparent;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  button:last-child {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+  }
+
+  button:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  button:focus-visible {
     outline: 2px solid var(--brand);
     outline-offset: 2px;
   }

@@ -308,3 +308,29 @@ export const SecondaryButton = styled.button`
     border-color: var(--brand-border);
   }
 `;
+
+/** Comodidades do espaço: lista leve, sem fundo, para não competir com preço e convidados. */
+export const Amenities = styled.ul`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  li::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--salon-accent);
+  }
+`;
