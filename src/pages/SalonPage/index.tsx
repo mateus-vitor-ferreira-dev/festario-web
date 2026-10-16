@@ -10,6 +10,7 @@ import { getHttpStatus, isAbortError } from "../../utils/errors";
 import { getLoadErrorMessage } from "../../utils/getErrorMessage";
 import { isManagerRole } from "../../utils/roles";
 import { withReturn } from "../../utils/returnPath";
+import { AMENITY_LABELS, sortAmenities } from "../../constants/amenities";
 import { formatCapacityRange, formatDistance, formatPlace, formatPrice } from "../../utils/salonFormat";
 import type { SalonDetail, SalonVenue } from "../../types";
 import * as S from "./styles";
@@ -201,9 +202,15 @@ export default function SalonPage() {
                                 <S.Facts>
                                     {venuePrice && <li>a partir de <strong>{venuePrice}</strong></li>}
                                     <li>até {venue.capacity} convidados</li>
-                                    {venue.hasPool && <li>Piscina</li>}
-                                    {venue.hasKidsArea && <li>Área kids</li>}
                                 </S.Facts>
+                                {(() => {
+                                    const list = sortAmenities(venue.amenities ?? [...(venue.hasPool ? ["POOL"] : []), ...(venue.hasKidsArea ? ["KIDS_AREA"] : [])]);
+                                    return list.length > 0 && (
+                                        <S.Amenities aria-label={`O que ${venue.name} oferece`}>
+                                            {list.map((a) => <li key={a}>{AMENITY_LABELS[a]}</li>)}
+                                        </S.Amenities>
+                                    );
+                                })()}
                                 <S.VenueActions>
                                     {venue.mapsUrl && (
                                         <S.SecondaryButton as="a" href={venue.mapsUrl} target="_blank" rel="noopener noreferrer">

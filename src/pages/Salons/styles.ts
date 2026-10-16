@@ -176,7 +176,7 @@ export const CepForm = styled.form`
     padding: 0 12px;
     border: 1px solid var(--border-medium);
     border-radius: var(--radius-md);
-    background: var(--bg-surface);
+    background: var(--bg-field);
     color: var(--text-primary);
     font: inherit;
     font-size: var(--text-base);
@@ -185,6 +185,7 @@ export const CepForm = styled.form`
     &:focus-visible {
       outline: 2px solid var(--brand);
       outline-offset: 1px;
+      background: var(--bg-surface);
     }
   }
 

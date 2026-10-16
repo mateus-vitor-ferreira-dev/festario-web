@@ -41,6 +41,8 @@ export interface Venue {
   hasKidsArea: boolean;
   kidsAreaPricePerHour?: number;
   hasPool: boolean;
+  /** Comodidades do espaço (códigos do catálogo). */
+  amenities?: string[];
   poolPricePerDay?: number;
   basePricePerHour?: number;
   /** Alias retornado pela API em alguns endpoints */
@@ -722,6 +724,8 @@ export interface SalonCard {
   capacity: { min: number; max: number };
   startingPrice: number | null;
   amenities: { hasPool: boolean; hasKidsArea: boolean };
+  /** Comodidades dos espaços do salão (códigos do catálogo, na ordem dele). */
+  amenityList?: string[];
   venueCount: number;
   distanceKm: number | null;
   nearestVenueId: string | null;
@@ -734,6 +738,8 @@ export interface SalonVenue {
   capacity: number;
   hasPool: boolean;
   hasKidsArea: boolean;
+  /** Comodidades do espaço (códigos do catálogo). */
+  amenities?: string[];
   neighborhood: string | null;
   city: string | null;
   state: string | null;

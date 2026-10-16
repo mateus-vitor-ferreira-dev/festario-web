@@ -3,6 +3,8 @@ import { toast } from "react-toastify";
 import { createVenue, listVenues, updateVenue } from "../../../services/venue";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
 import type { Venue } from "../../../types";
+import AmenityChecklist from "../../../components/AmenityChecklist";
+import { AMENITY_LABELS, sortAmenities } from "../../../constants/amenities";
 import { ModalHeader } from "../ModalHeader";
 import * as S from "../styles";
 
@@ -21,6 +23,7 @@ interface VenueForm {
     kidsAreaPricePerHour: number | string;
     hasPool: boolean;
     poolPricePerDay: number | string;
+    amenities: string[];
 }
 
 const EMPTY_FORM: VenueForm = {
@@ -38,6 +41,7 @@ const EMPTY_FORM: VenueForm = {
     kidsAreaPricePerHour: "",
     hasPool: false,
     poolPricePerDay: "",
+    amenities: [],
 };
 
 interface AddressParts {
@@ -106,6 +110,7 @@ function venueToForm(v: Venue): VenueForm {
         kidsAreaPricePerHour: v.kidsAreaPricePerHour ?? "",
         hasPool: v.hasPool ?? false,
         poolPricePerDay: v.poolPricePerDay ?? "",
+        amenities: sortAmenities(v.amenities ?? []),
     };
 }
 
@@ -173,6 +178,7 @@ export function VenueTab() {
                     form.hasPool && form.poolPricePerDay !== ""
                         ? Number(form.poolPricePerDay)
                         : null,
+                amenities: form.amenities,
             };
             const basePricePerHour = form.basePricePerHour !== "" ? Number(form.basePricePerHour) : undefined;
             if (editingVenue) {
@@ -215,8 +221,7 @@ export function VenueTab() {
                                 <S.Th>Nome</S.Th>
                                 <S.Th $num>Capacidade</S.Th>
                                 <S.Th>Localização</S.Th>
-                                <S.Th>Área kids</S.Th>
-                                <S.Th>Piscina</S.Th>
+                                <S.Th>Comodidades</S.Th>
                                 <S.Th></S.Th>
                             </tr>
                         </thead>
@@ -228,8 +233,12 @@ export function VenueTab() {
                                     </S.Td>
                                     <S.Td $num>{v.capacity} pessoas</S.Td>
                                     <S.Td>{v.location || "—"}</S.Td>
-                                    <S.Td>{v.hasKidsArea ? "Sim" : "Não"}</S.Td>
-                                    <S.Td>{v.hasPool ? "Sim" : "Não"}</S.Td>
+                                    <S.Td>{(() => {
+                                        const list = sortAmenities(v.amenities ?? []);
+                                        if (list.length === 0) return "—";
+                                        const shown = list.slice(0, 3).map((a) => AMENITY_LABELS[a]).join(", ");
+                                        return list.length > 3 ? `${shown} +${list.length - 3}` : shown;
+                                    })()}</S.Td>
                                     <S.Td>
                                         <S.SecondaryButton
                                             $size="sm"
@@ -322,7 +331,7 @@ export function VenueTab() {
                             </S.FormSection>
 
                             <S.FormSection>
-                                <legend>Comodidades</legend>
+                                <legend>Cobrados à parte</legend>
                                 <S.CheckboxLabel>
                                     <input
                                         type="checkbox"
@@ -369,6 +378,19 @@ export function VenueTab() {
                                         />
                                     </S.FormGroup>
                                 )}
+                            </S.FormSection>
+
+                            <S.FormSection>
+                                <legend>O que o espaço oferece</legend>
+                                <S.FieldHint>Aparece na página do salão e entra no filtro de comodidades da vitrine.</S.FieldHint>
+                                <AmenityChecklist
+                                    value={form.amenities}
+                                    onChange={(amenities) => setForm((f) => ({ ...f, amenities }))}
+                                    locked={{
+                                        ...(form.hasPool ? { POOL: "Marcada porque a piscina é cobrada à parte" } : {}),
+                                        ...(form.hasKidsArea ? { KIDS_AREA: "Marcada porque a área kids é cobrada à parte" } : {}),
+                                    }}
+                                />
                             </S.FormSection>
 
                             <S.ModalActions>

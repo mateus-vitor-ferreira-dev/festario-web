@@ -66,6 +66,13 @@ describe("Página do salão", () => {
         expect(JSON.parse(localStorage.getItem("festario:tenant")!)).toEqual({ slug: "salao-jardim-das-flores", name: "Salão Jardim das Flores" });
     });
 
+    it("lista o que cada espaço oferece, com piscina e área kids cobradas incluídas", async () => {
+        server.use(http.get(`${BASE}/salons/salao-jardim-das-flores`, () => HttpResponse.json({ data: { ...SALON, venues: [{ ...VENUE, amenities: ["POOL", "KIDS_AREA", "BUFFET", "LIVE_MUSIC"] }] } })));
+        renderPage();
+        const list = await screen.findByRole("list", { name: "O que Espaço Jardim oferece" });
+        expect(within(list).getAllByRole("listitem").map((li) => li.textContent)).toEqual(["Piscina", "Área kids", "Buffet", "Banda / música ao vivo"]);
+    });
+
     it("'Reservar' leva à reserva do espaço", async () => {
         server.use(http.get(`${BASE}/salons/salao-jardim-das-flores`, () => HttpResponse.json({ data: SALON })));
         const user = userEvent.setup();

@@ -85,6 +85,8 @@ export const GlobalStyle = createGlobalStyle`
     --bg-page:    #f5f6fb;
     --bg-surface: #ffffff;
     --bg-muted:   #ebedf6;
+    /* Campos de filtro: tom anil suave em repouso; no foco, a superfície. */
+    --bg-field:   #eceefa;
 
     /* ── Texto — anil escuro e grafite ── */
     --text-primary:   #141936;
@@ -174,6 +176,7 @@ export const GlobalStyle = createGlobalStyle`
     --bg-page:    #0f1330;
     --bg-surface: #1a1f45;
     --bg-muted:   #242a56;
+    --bg-field:   #242a56;
 
     --text-primary:   #f5f6fb;
     --text-secondary: #dcdff0;

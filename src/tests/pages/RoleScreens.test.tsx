@@ -144,9 +144,17 @@ describe("Painel - cadastro de espaço (venue)", () => {
         await user.type(screen.getByLabelText("Capacidade (pessoas)"), "120");
         await user.type(screen.getByLabelText("Preço base (R$/hora)"), "150");
         await user.type(screen.getByLabelText("Cidade"), "Lavras");
+        // piscina cobrada marca a comodidade sozinha e trava; as outras o dono escolhe
+        await user.click(screen.getByLabelText("Possui piscina"));
+        await user.type(screen.getByLabelText("Preço da piscina (R$/dia)"), "100");
+        expect(screen.getByRole("checkbox", { name: "Piscina" })).toBeChecked();
+        expect(screen.getByRole("checkbox", { name: "Piscina" })).toBeDisabled();
+        await user.click(screen.getByRole("checkbox", { name: "Banda / música ao vivo" }));
+        await user.click(screen.getByRole("checkbox", { name: "Quadra" }));
         await user.click(screen.getByRole("button", { name: "Criar espaço" }));
         expect(await screen.findByRole("cell", { name: "Salão Novo" })).toBeInTheDocument();
-        expect(body).toMatchObject({ name: "Salão Novo", capacity: 120, basePricePerHour: 150, location: "Lavras" });
+        expect(body).toMatchObject({ name: "Salão Novo", capacity: 120, basePricePerHour: 150, location: "Lavras", hasPool: true, amenities: ["COURT", "LIVE_MUSIC"] });
+        expect(screen.getByRole("cell", { name: "Quadra, Banda / música ao vivo" })).toBeInTheDocument();
     });
 });
 

@@ -1,4 +1,4 @@
-import { ChangeEvent, KeyboardEvent, ReactNode, useEffect, useId, useState } from "react";
+import { ChangeEvent, KeyboardEvent, ReactNode, useEffect, useId, useRef, useState } from "react";
 import DatePickerInput from "../DatePickerInput";
 import { useDebouncedCallback } from "../../hooks/useDebouncedCallback";
 import { parseMoney } from "./money";
@@ -201,19 +201,113 @@ export function MoneyRangeField({ label, min, max, onChange, wide = true, deboun
     );
 }
 
-interface CheckboxFieldProps extends Omit<BaseFieldProps, "wide"> {
-    checked: boolean;
-    onChange: (checked: boolean) => void;
+export interface MultiSelectGroup {
+    key: string;
+    label: string;
+    items: readonly { value: string; label: string }[];
 }
 
-/** Filtro de sim/não ("Com piscina"): caixa com o rótulo ao lado, na altura dos outros campos. */
-export function CheckboxField({ label, checked, onChange, id: idProp }: CheckboxFieldProps) {
+interface MultiSelectFieldProps extends BaseFieldProps {
+    value: string[];
+    onChange: (value: string[]) => void;
+    groups: readonly MultiSelectGroup[];
+    /** Texto quando nada está marcado. */
+    placeholder?: string;
+}
+
+function ChevronIcon() {
+    return (
+        <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 9l6 6 6-6" />
+        </svg>
+    );
+}
+
+/**
+ * Várias opções num campo só: o botão mostra o que está marcado e abre um painel com as opções em
+ * grupos, como pílulas. Cada toque aplica na hora; Esc, clique fora ou "Pronto" fecham e devolvem o foco.
+ */
+export function MultiSelectField({ label, value, onChange, groups, placeholder = "Qualquer uma", wide, id: idProp }: MultiSelectFieldProps) {
     const generated = useId();
     const id = idProp ?? generated;
+    const panelId = `${id}-panel`;
+    const [open, setOpen] = useState(false);
+    const rootRef = useRef<HTMLDivElement | null>(null);
+    const triggerRef = useRef<HTMLButtonElement | null>(null);
+    const labels = new Map(groups.flatMap((g) => g.items.map((i) => [i.value, i.label] as const)));
+    const selected = value.filter((v) => labels.has(v));
+
+    useEffect(() => {
+        if (!open) return;
+        function onPointer(e: PointerEvent) {
+            if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+        }
+        function onKey(e: globalThis.KeyboardEvent) {
+            if (e.key === "Escape") {
+                setOpen(false);
+                triggerRef.current?.focus();
+            }
+        }
+        document.addEventListener("pointerdown", onPointer);
+        document.addEventListener("keydown", onKey);
+        return () => {
+            document.removeEventListener("pointerdown", onPointer);
+            document.removeEventListener("keydown", onKey);
+        };
+    }, [open]);
+
+    function toggle(code: string) {
+        onChange(selected.includes(code) ? selected.filter((v) => v !== code) : [...selected, code]);
+    }
+
+    const summary = selected.length === 0
+        ? placeholder
+        : selected.length <= 2
+            ? selected.map((v) => labels.get(v)).join(", ")
+            : `${labels.get(selected[0])}, ${labels.get(selected[1])} +${selected.length - 2}`;
+
     return (
-        <S.CheckRow htmlFor={id} $checked={checked}>
-            <input id={id} type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-            <span>{label}</span>
-        </S.CheckRow>
+        <S.Field $wide={wide} ref={rootRef} style={{ position: "relative" }}>
+            <S.Label as="span" id={`${id}-label`}>{label}</S.Label>
+            <S.MultiTrigger
+                ref={triggerRef}
+                id={id}
+                type="button"
+                aria-haspopup="true"
+                aria-expanded={open}
+                aria-controls={panelId}
+                aria-labelledby={`${id}-label ${id}`}
+                $empty={selected.length === 0}
+                onClick={() => setOpen((v) => !v)}
+            >
+                <span>{summary}</span>
+                {selected.length > 0 && <S.MultiCount aria-label={`${selected.length} marcadas`}>{selected.length}</S.MultiCount>}
+                <ChevronIcon />
+            </S.MultiTrigger>
+            {open && (
+                <S.MultiPanel id={panelId} role="group" aria-label={label}>
+                    {groups.map((g) => (
+                        <S.MultiGroup key={g.key}>
+                            <legend>{g.label}</legend>
+                            <S.PillList>
+                                {g.items.map((item) => {
+                                    const on = selected.includes(item.value);
+                                    return (
+                                        <S.Pill key={item.value} $on={on}>
+                                            <input type="checkbox" checked={on} onChange={() => toggle(item.value)} />
+                                            <span>{item.label}</span>
+                                        </S.Pill>
+                                    );
+                                })}
+                            </S.PillList>
+                        </S.MultiGroup>
+                    ))}
+                    <S.MultiFooter>
+                        <button type="button" onClick={() => onChange([])} disabled={selected.length === 0}>Limpar</button>
+                        <button type="button" onClick={() => { setOpen(false); triggerRef.current?.focus(); }}>Pronto</button>
+                    </S.MultiFooter>
+                </S.MultiPanel>
+            )}
+        </S.Field>
     );
 }

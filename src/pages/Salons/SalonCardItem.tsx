@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 
 import SalonMark from "../../components/SalonMark";
 import VenueCover from "../../components/VenueCover";
+import { AMENITY_LABELS, sortAmenities } from "../../constants/amenities";
 import { formatCapacityRange, formatDistance, formatPlace, formatPrice } from "../../utils/salonFormat";
 import type { SalonCard } from "../../types";
 import * as S from "./styles";
@@ -18,11 +19,16 @@ export default function SalonCardItem({ salon, from, priority }: SalonCardItemPr
     const distance = formatDistance(salon.distanceKm);
     const place = formatPlace(salon.neighborhood, salon.city, salon.state);
     const price = formatPrice(salon.startingPrice);
+    // Até três comodidades no card; o resto vira "+N" (a lista toda está na página do salão).
+    const all = sortAmenities(salon.amenityList ?? [
+        ...(salon.amenities.hasPool ? ["POOL"] : []),
+        ...(salon.amenities.hasKidsArea ? ["KIDS_AREA"] : []),
+    ]);
     const amenities = [
-        salon.amenities.hasPool && "Piscina",
-        salon.amenities.hasKidsArea && "Área kids",
-        salon.venueCount > 1 && `${salon.venueCount} espaços`,
-    ].filter(Boolean) as string[];
+        ...all.slice(0, 3).map((a) => AMENITY_LABELS[a]),
+        ...(all.length > 3 ? [`+${all.length - 3}`] : []),
+        ...(salon.venueCount > 1 ? [`${salon.venueCount} espaços`] : []),
+    ];
 
     // A cor de cada card é a do próprio salão, não a do salão aberto no navegador.
     const accent = {

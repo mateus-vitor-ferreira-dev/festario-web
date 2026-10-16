@@ -96,6 +96,15 @@ describe("Vitrine de salões", () => {
         expect(screen.getByTestId("location")).toHaveTextContent("/s/salao-jardim-das-flores");
     });
 
+    it("o card mostra até três comodidades e o resto como +N", async () => {
+        captureSalons(() => listResponse([{ ...CARD, amenityList: ["POOL", "PARKING", "BUFFET", "LIVE_MUSIC", "DJ"] }]));
+        renderPage();
+        const link = await screen.findByRole("link", { name: /salão jardim das flores/i });
+        const tags = within(within(link).getByRole("list", { name: "Comodidades" })).getAllByRole("listitem").map((li) => li.textContent);
+        // a ordem é a do catálogo (estrutura antes de serviços), não a da resposta
+        expect(tags).toEqual(["Piscina", "Estacionamento", "Buffet", "+2", "2 espaços"]);
+    });
+
     it("com endereço no perfil, mede a partir dele sem pedir nada", async () => {
         const calls = captureSalons();
         renderPage({ id: "u1", name: "Ana", role: "USER", hasLocation: true, neighborhood: "Centro", city: "Lavras", state: "MG" });
@@ -170,27 +179,47 @@ describe("Vitrine de salões", () => {
         expect(await screen.findByRole("alert")).toHaveTextContent(/bloqueada/i);
     });
 
-    it("leva os filtros da URL para a API e mostra cada um como chip", async () => {
+    it("leva os filtros da URL para a API e mostra cada um como chip, uma comodidade por chip", async () => {
         const calls = captureSalons(() => listResponse([]));
-        renderPage(undefined, "/saloes?city=Lavras&minCapacity=80&hasPool=true&sort=price");
+        const user = userEvent.setup();
+        renderPage(undefined, "/saloes?city=Lavras&minCapacity=80&amenities=BUFFET,POOL&sort=price");
 
         expect(await screen.findByText("Nenhum salão com esses filtros")).toBeInTheDocument();
         const last = calls.at(-1)!;
         expect(last.get("city")).toBe("Lavras");
         expect(last.get("minCapacity")).toBe("80");
-        expect(last.get("hasPool")).toBe("true");
+        expect(last.get("amenities")).toBe("BUFFET,POOL");
         expect(last.get("sort")).toBe("price");
         expect(screen.getByRole("button", { name: /remover filtro cidade: lavras/i })).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /remover filtro com piscina/i })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Remover filtro Piscina" })).toBeInTheDocument();
+
+        // tirar uma comodidade mantém as outras
+        await user.click(screen.getByRole("button", { name: "Remover filtro Buffet" }));
+        expect(screen.getByTestId("location")).toHaveTextContent("amenities=POOL");
+        expect(screen.getByTestId("location")).not.toHaveTextContent("BUFFET");
     });
 
-    it("marcar 'Com área kids' vai para a URL", async () => {
+    it("escolhe várias comodidades no seletor, na ordem do catálogo, e fecha com Esc", async () => {
         captureSalons();
         const user = userEvent.setup();
         renderPage();
 
-        await user.click(await screen.findByRole("checkbox", { name: "Com área kids" }));
-        expect(screen.getByTestId("location")).toHaveTextContent("hasKidsArea=true");
+        const trigger = await screen.findByRole("button", { name: /comodidades/i });
+        expect(trigger).toHaveTextContent("Qualquer uma");
+        await user.click(trigger);
+        const panel = screen.getByRole("group", { name: "Comodidades" });
+        expect(within(panel).getByRole("group", { name: "Estrutura" })).toBeInTheDocument();
+        expect(within(panel).getByRole("group", { name: "Serviços" })).toBeInTheDocument();
+
+        await user.click(within(panel).getByRole("checkbox", { name: "Banda / música ao vivo" }));
+        await user.click(within(panel).getByRole("checkbox", { name: "Área kids" }));
+        await user.click(within(panel).getByRole("checkbox", { name: "Garçons" }));
+        expect(screen.getByTestId("location")).toHaveTextContent("amenities=KIDS_AREA%2CWAITERS%2CLIVE_MUSIC");
+        expect(trigger).toHaveTextContent("Área kids, Garçons +1");
+
+        await user.keyboard("{Escape}");
+        expect(screen.queryByRole("group", { name: "Comodidades" })).not.toBeInTheDocument();
+        expect(trigger).toHaveFocus();
     });
 
     it("sem nenhum salão na plataforma, diz isso em vez de sugerir limpar filtros", async () => {

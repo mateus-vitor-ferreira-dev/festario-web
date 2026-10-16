@@ -1,7 +1,8 @@
 import { useMemo, useRef } from "react";
 import { useLocation } from "react-router-dom";
 
-import { ActiveFilterChips, CheckboxField, FilterBar, NoResults, Pagination, SelectField, TextField } from "../../components";
+import { ActiveFilterChips, FilterBar, MultiSelectField, NoResults, Pagination, SelectField, TextField } from "../../components";
+import { AMENITY_GROUPS, AMENITY_LABELS, sortAmenities } from "../../constants/amenities";
 import { parseMoney } from "../../components/FilterBar";
 import { useListParams } from "../../hooks/useListParams";
 import { usePaginatedQuery } from "../../hooks/usePaginatedQuery";
@@ -14,7 +15,7 @@ import * as S from "./styles";
 
 export const SALONS_PAGE_SIZE = 12;
 
-const SALON_KEYS = ["q", "city", "minCapacity", "maxPrice", "hasPool", "hasKidsArea", "sort"] as const;
+const SALON_KEYS = ["q", "city", "minCapacity", "maxPrice", "amenities", "sort"] as const;
 type SalonKey = (typeof SALON_KEYS)[number];
 
 const onlyDigits = (v: string) => v.replace(/\D/g, "").replace(/^0+/, "");
@@ -42,15 +43,24 @@ export default function Salons() {
         onPageOutOfRange: setPage,
     });
 
-    const chipLabel: Record<Exclude<SalonKey, "sort">, () => string> = {
+    // Comodidades na URL como lista: amenities=POOL,BUFFET.
+    const amenities = sortAmenities(values.amenities ? values.amenities.split(",") : []);
+    const setAmenities = (next: string[]) => setFilter("amenities", sortAmenities(next).join(","));
+
+    const chipLabel: Record<Exclude<SalonKey, "sort" | "amenities">, () => string> = {
         q: () => `Busca: ${values.q}`,
         city: () => `Cidade: ${values.city}`,
         minCapacity: () => `Para ${values.minCapacity}+ convidados`,
         maxPrice: () => `Até ${formatPrice(Number(values.maxPrice))}`,
-        hasPool: () => "Com piscina",
-        hasKidsArea: () => "Com área kids",
     };
-    const chips = activeKeys.map((key) => ({ key, label: chipLabel[key as Exclude<SalonKey, "sort">]() }));
+    // Cada comodidade é um chip próprio: dá para tirar uma sem perder as outras.
+    const chips = activeKeys.flatMap((key) => key === "amenities"
+        ? amenities.map((a) => ({ key: `amenities:${a}`, label: AMENITY_LABELS[a] }))
+        : [{ key, label: chipLabel[key as Exclude<SalonKey, "sort" | "amenities">]() }]);
+    function removeChip(key: string) {
+        if (key.startsWith("amenities:")) setAmenities(amenities.filter((a) => `amenities:${a}` !== key));
+        else setFilter(key as SalonKey, "");
+    }
 
     // Sem origem, "mais perto" não tem como ordenar; a ordem padrão vira a dos mais procurados.
     const sortOptions = hasOrigin
@@ -82,7 +92,7 @@ export default function Salons() {
                 <FilterBar
                     label="Filtrar salões"
                     activeCount={activeKeys.length}
-                    footer={<ActiveFilterChips chips={chips} onRemove={(k) => setFilter(k as SalonKey, "")} onClearAll={clearFilters} />}
+                    footer={<ActiveFilterChips chips={chips} onRemove={removeChip} onClearAll={clearFilters} />}
                 >
                     <TextField label="Nome do salão" placeholder="Ex.: Jardim" value={values.q} onChange={(v) => setFilter("q", v)} />
                     <TextField label="Cidade" placeholder="Ex.: Lavras" type="text" value={values.city} onChange={(v) => setFilter("city", v)} />
@@ -104,8 +114,7 @@ export default function Salons() {
                         debounceMs={500}
                     />
                     <SelectField label="Ordenar por" value={sortValue} onChange={(v) => setFilter("sort", v)} options={sortOptions} />
-                    <CheckboxField label="Com piscina" checked={values.hasPool === "true"} onChange={(c) => setFilter("hasPool", c ? "true" : "")} />
-                    <CheckboxField label="Com área kids" checked={values.hasKidsArea === "true"} onChange={(c) => setFilter("hasKidsArea", c ? "true" : "")} />
+                    <MultiSelectField label="Comodidades" value={amenities} onChange={setAmenities} groups={AMENITY_GROUPS} wide />
                 </FilterBar>
             </S.FiltersSlot>
 
@@ -116,7 +125,7 @@ export default function Salons() {
             ) : salons.length === 0 ? (
                 <NoResults
                     title="Nenhum salão com esses filtros"
-                    description="Tente outra cidade, menos convidados ou um preço máximo maior."
+                    description="Tente outra cidade, menos convidados, um preço máximo maior ou menos comodidades."
                     onClear={clearFilters}
                 />
             ) : (
