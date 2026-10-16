@@ -107,7 +107,7 @@ describe("Reservations page", () => {
     });
 
     it("shows the salon and cancels on the reservation's own salon, not the stored one", async () => {
-        localStorage.setItem("recanto:tenant", JSON.stringify({ slug: "recanto-vila-rica", name: "Recanto Vila Rica" }));
+        localStorage.setItem("festario:tenant", JSON.stringify({ slug: "recanto-vila-rica", name: "Recanto Vila Rica" }));
         let cancelTenant: string | null = null;
         server.use(
             http.get(`${BASE}/reservations`, () =>

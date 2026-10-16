@@ -3,7 +3,7 @@
  * @description Instância Axios configurada para o backend da plataforma.
  *
  * Comportamentos automáticos:
- * - **Auth**: injeta o Bearer token de `localStorage["recanto:userData"]` em toda requisição.
+ * - **Auth**: injeta o Bearer token de `localStorage["festario:userData"]` em toda requisição.
  * - **Token refresh (401)**: tenta renovar o access token com o refresh token antes de deslogar.
  *   Requests concorrentes ficam na fila e são retentados com o novo token.
  *   Não se aplica a endpoints `/auth/*` (que retornam 401 por credenciais inválidas).
@@ -11,7 +11,7 @@
  *   com backoff linear (1 s, 2 s, 3 s). Não reenvía em ambiente de teste,
  *   em endpoints `/auth/*`, nem em erros 429.
  * - **Rate limit (429)**: rejeitado imediatamente sem retry.
- * - **Espaço (tenant)**: com um espaço guardado em `localStorage["recanto:tenant"]`
+ * - **Espaço (tenant)**: com um espaço guardado em `localStorage["festario:tenant"]`
  *   (convite aceito, `/login?espaco=<slug>` ou painel aberto pelo ADMIN), envia
  *   `X-Tenant-Slug` em toda requisição. Sem espaço guardado, a API usa o padrão.
  * - **403 de espaço**: `TENANT_INACTIVE` mostra um aviso único; `TENANT_ACCESS_DENIED`

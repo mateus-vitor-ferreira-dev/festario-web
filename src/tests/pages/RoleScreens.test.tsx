@@ -13,7 +13,7 @@ import { server } from "../mocks/server";
 const BASE = "http://localhost:3000";
 
 function setSession(role: string) {
-    localStorage.setItem("recanto:userData", JSON.stringify({ token: "t", user: { id: "u1", name: "Pessoa Teste", email: "p@p.com", role } }));
+    localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "u1", name: "Pessoa Teste", email: "p@p.com", role } }));
 }
 
 function LocationProbe() {
@@ -45,7 +45,7 @@ beforeEach(() => localStorage.clear());
 describe("Painel do espaço", () => {
     it("is titled 'Painel do espaço' with the stored tenant name", async () => {
         setSession("OWNER");
-        localStorage.setItem("recanto:tenant", JSON.stringify({ slug: "salao-jardim-das-flores", name: "Salão Jardim das Flores" }));
+        localStorage.setItem("festario:tenant", JSON.stringify({ slug: "salao-jardim-das-flores", name: "Salão Jardim das Flores" }));
         renderAt("/painel");
         expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/painel do espaço\s*salão jardim das flores/i);
         // OWNER não vê a barra de contexto da plataforma
@@ -111,12 +111,12 @@ describe("Painel do espaço", () => {
 
     it("lets ADMIN go back to the default tenant", async () => {
         setSession("ADMIN");
-        localStorage.setItem("recanto:tenant", JSON.stringify({ slug: "salao-jardim-das-flores", name: "Jardim" }));
+        localStorage.setItem("festario:tenant", JSON.stringify({ slug: "salao-jardim-das-flores", name: "Jardim" }));
         const user = userEvent.setup();
         renderAt("/painel");
         expect(screen.getByText(/como equipe da plataforma/i)).toBeInTheDocument();
         await user.click(screen.getByRole("button", { name: /voltar ao espaço padrão/i }));
-        expect(localStorage.getItem("recanto:tenant")).toBeNull();
+        expect(localStorage.getItem("festario:tenant")).toBeNull();
         expect(screen.getByText(/painel do espaço padrão/i)).toBeInTheDocument();
         expect(screen.getByRole("link", { name: /ir para a plataforma/i })).toHaveAttribute("href", "/plataforma");
     });
@@ -160,7 +160,7 @@ describe("Login com espaço", () => {
         const user = userEvent.setup();
         renderAt("/login?espaco=salao-jardim-das-flores");
         expect(await screen.findByText(/entrando no espaço/i)).toHaveTextContent("salao-jardim-das-flores");
-        expect(JSON.parse(localStorage.getItem("recanto:tenant")!).slug).toBe("salao-jardim-das-flores");
+        expect(JSON.parse(localStorage.getItem("festario:tenant")!).slug).toBe("salao-jardim-das-flores");
 
         await user.type(screen.getByPlaceholderText(/digite seu e-mail/i), "d@j.com");
         await user.type(screen.getByPlaceholderText(/digite sua senha/i), "dono123");
@@ -174,14 +174,14 @@ describe("Login com espaço", () => {
         renderAt("/login?espaco=salao-jardim-das-flores");
         await user.click(await screen.findByRole("button", { name: /entrar no espaço padrão/i }));
         await waitFor(() => expect(location()).toBe("/login"));
-        expect(localStorage.getItem("recanto:tenant")).toBeNull();
+        expect(localStorage.getItem("festario:tenant")).toBeNull();
         expect(screen.queryByText(/entrando no espaço/i)).not.toBeInTheDocument();
     });
 
     it("rejects an invalid ?espaco", async () => {
         renderAt("/login?espaco=Nao%20Vale");
         expect(await screen.findByText(/endereço do espaço no link é inválido/i)).toBeInTheDocument();
-        expect(localStorage.getItem("recanto:tenant")).toBeNull();
+        expect(localStorage.getItem("festario:tenant")).toBeNull();
     });
 
     it("sends ADMIN to /plataforma after login", async () => {

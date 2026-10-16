@@ -21,7 +21,7 @@ const photo = (id: string, alt: string, sortOrder: number, isCover = false): Ven
 const BRAND = { name: "Recanto Vila Rica", logoUrl: null, logoVariants: null, primaryColor: null, primaryColorDark: null };
 
 function renderTab() {
-    localStorage.setItem("recanto:userData", JSON.stringify({ token: "t", user: { id: "o1", name: "Dona", email: "d@x.com", role: "OWNER" } }));
+    localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "o1", name: "Dona", email: "d@x.com", role: "OWNER" } }));
     return render(
         <AuthProvider>
             <SalonBrandProvider>

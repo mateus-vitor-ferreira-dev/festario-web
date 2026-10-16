@@ -1,4 +1,4 @@
-name: CI/CD - Recanto Vila Rica Interface
+name: CI/CD - Festário Interface
 
 on:
   push:

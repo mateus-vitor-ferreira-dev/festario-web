@@ -96,7 +96,7 @@ describe("VenueGallery", () => {
 
 describe("Header com o salão", () => {
     function renderHeader(path = "/home") {
-        localStorage.setItem("recanto:userData", JSON.stringify({ token: "t", user: { id: "u", name: "Ana Souza", role: "USER" } }));
+        localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "u", name: "Ana Souza", role: "USER" } }));
         return render(
             <ThemeProvider>
                 <AuthProvider>

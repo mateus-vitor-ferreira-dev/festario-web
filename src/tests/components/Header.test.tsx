@@ -11,9 +11,9 @@ import { server } from "../mocks/server";
 
 function renderHeader(userData = null, path = "/home") {
     if (userData) {
-        localStorage.setItem("recanto:userData", JSON.stringify(userData));
+        localStorage.setItem("festario:userData", JSON.stringify(userData));
     } else {
-        localStorage.removeItem("recanto:userData");
+        localStorage.removeItem("festario:userData");
     }
 
     return render(
@@ -103,17 +103,17 @@ describe("Header component", () => {
         renderHeader({ user: { name: "Mateus", role: "USER" }, token: "tk" });
         const user = userEvent.setup();
         await user.click(screen.getByRole("button", { name: /sair/i }));
-        expect(localStorage.getItem("recanto:userData")).toBeNull();
+        expect(localStorage.getItem("festario:userData")).toBeNull();
     });
 
     it("renders sun icon when dark theme is active", () => {
-        localStorage.setItem("recanto:theme", "dark");
+        localStorage.setItem("festario:theme", "dark");
         renderHeader({ user: { name: "Mateus", role: "USER" } });
         expect(screen.getByTitle(/mudar para tema claro/i)).toBeInTheDocument();
     });
 
     it("toggles theme from dark to light on button click", async () => {
-        localStorage.setItem("recanto:theme", "dark");
+        localStorage.setItem("festario:theme", "dark");
         renderHeader({ user: { name: "Mateus", role: "USER" } });
         const user = userEvent.setup();
         const btn = screen.getByTitle(/mudar para tema claro/i);

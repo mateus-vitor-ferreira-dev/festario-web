@@ -51,7 +51,7 @@ describe("Login page", () => {
         await waitFor(() =>
             expect(screen.getByText("Home Page")).toBeInTheDocument()
         );
-        expect(localStorage.getItem("recanto:userData")).not.toBeNull();
+        expect(localStorage.getItem("festario:userData")).not.toBeNull();
     });
 
     it("shows fallback success toast when response has no message", async () => {

@@ -6,7 +6,7 @@ import { RoleRoute } from "../../routes/RoleRoute";
 
 function renderAt(path: string, role?: string) {
     if (role) {
-        localStorage.setItem("recanto:userData", JSON.stringify({ token: "t", user: { id: "u", name: "X", email: "x@x.com", role } }));
+        localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "u", name: "X", email: "x@x.com", role } }));
     }
     return render(
         <AuthProvider>
@@ -66,7 +66,7 @@ describe("RoleRoute", () => {
     });
 
     it("treats a session without role as USER", () => {
-        localStorage.setItem("recanto:userData", JSON.stringify({ token: "t", user: { id: "u" } }));
+        localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "u" } }));
         renderAt("/painel");
         expect(screen.getByText("Home Page")).toBeInTheDocument();
     });

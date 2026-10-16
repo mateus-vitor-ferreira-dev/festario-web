@@ -13,7 +13,7 @@
  */
 import type { TenantRef } from "../types";
 
-export const TENANT_STORAGE_KEY = "recanto:tenant";
+export const TENANT_STORAGE_KEY = "festario:tenant";
 
 /** Mesmo formato aceito pela API (kebab-case, 3–63). */
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;

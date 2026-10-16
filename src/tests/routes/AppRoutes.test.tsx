@@ -47,7 +47,7 @@ describe("AppRoutes", () => {
 
     it("renders Home for authenticated user at /home", async () => {
         localStorage.setItem(
-            "recanto:userData",
+            "festario:userData",
             JSON.stringify({ token: "t", user: { id: "u-1", role: "USER" } })
         );
         renderRoutes("/home");
@@ -57,7 +57,7 @@ describe("AppRoutes", () => {
 
     it("redirects USER from the old /admin link (now /painel) to /home", async () => {
         localStorage.setItem(
-            "recanto:userData",
+            "festario:userData",
             JSON.stringify({ token: "t", user: { id: "u-1", role: "USER" } })
         );
         renderRoutes("/admin");
@@ -67,7 +67,7 @@ describe("AppRoutes", () => {
 
     it("redirects the old /admin link to /painel for ADMIN", async () => {
         localStorage.setItem(
-            "recanto:userData",
+            "festario:userData",
             JSON.stringify({ token: "t", user: { id: "u-1", name: "Admin", role: "ADMIN" } })
         );
         renderRoutes("/admin");
@@ -76,7 +76,7 @@ describe("AppRoutes", () => {
 
     it("blocks OWNER from /plataforma and shows the panel instead", async () => {
         localStorage.setItem(
-            "recanto:userData",
+            "festario:userData",
             JSON.stringify({ token: "t", user: { id: "u-1", name: "Dona", role: "OWNER" } })
         );
         renderRoutes("/plataforma");
@@ -86,7 +86,7 @@ describe("AppRoutes", () => {
 
     it("renders the platform for ADMIN", async () => {
         localStorage.setItem(
-            "recanto:userData",
+            "festario:userData",
             JSON.stringify({ token: "t", user: { id: "u-1", name: "Admin", role: "ADMIN" } })
         );
         renderRoutes("/plataforma");

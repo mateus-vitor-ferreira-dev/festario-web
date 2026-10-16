@@ -26,7 +26,7 @@ describe("X-Tenant-Slug", () => {
     });
 
     it("ignores an invalid stored slug", async () => {
-        localStorage.setItem("recanto:tenant", JSON.stringify({ slug: "Não Vale!" }));
+        localStorage.setItem("festario:tenant", JSON.stringify({ slug: "Não Vale!" }));
         const result = await requestFulfilled({ headers: {} });
         expect(result.headers["X-Tenant-Slug"]).toBeUndefined();
         expect(readTenant()).toBeNull();
@@ -59,9 +59,9 @@ describe("tenantStorage", () => {
     });
 
     it("tolerates corrupted storage", () => {
-        localStorage.setItem("recanto:tenant", "{oops");
+        localStorage.setItem("festario:tenant", "{oops");
         expect(readTenant()).toBeNull();
-        localStorage.setItem("recanto:tenant", "42");
+        localStorage.setItem("festario:tenant", "42");
         expect(readTenant()).toBeNull();
     });
 
@@ -93,28 +93,28 @@ describe("403 de espaço", () => {
     });
 
     it("TENANT_ACCESS_DENIED warns, signs out and goes to /login", async () => {
-        localStorage.setItem("recanto:userData", SESSION);
+        localStorage.setItem("festario:userData", SESSION);
         const error = forbidden("TENANT_ACCESS_DENIED");
         await expect(responseRejected(error)).rejects.toBe(error);
         expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/outro espaço/i), expect.objectContaining({ toastId: "tenant-access-denied" }));
-        expect(localStorage.getItem("recanto:userData")).toBeNull();
+        expect(localStorage.getItem("festario:userData")).toBeNull();
         expect(window.location.href).toBe("/login");
     });
 
     it("TENANT_ACCESS_DENIED on /platform only rejects (no sign out)", async () => {
-        localStorage.setItem("recanto:userData", SESSION);
+        localStorage.setItem("festario:userData", SESSION);
         const error = forbidden("TENANT_ACCESS_DENIED", "/platform/tenants");
         await expect(responseRejected(error)).rejects.toBe(error);
         expect(toastError).not.toHaveBeenCalled();
-        expect(localStorage.getItem("recanto:userData")).not.toBeNull();
+        expect(localStorage.getItem("festario:userData")).not.toBeNull();
     });
 
     it("TENANT_INACTIVE warns once and keeps the session", async () => {
-        localStorage.setItem("recanto:userData", SESSION);
+        localStorage.setItem("festario:userData", SESSION);
         const error = forbidden("TENANT_INACTIVE");
         await expect(responseRejected(error)).rejects.toBe(error);
         expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/desativado/i), expect.objectContaining({ toastId: "tenant-inactive" }));
-        expect(localStorage.getItem("recanto:userData")).not.toBeNull();
+        expect(localStorage.getItem("festario:userData")).not.toBeNull();
         expect(window.location.href).toBe("/painel");
     });
 

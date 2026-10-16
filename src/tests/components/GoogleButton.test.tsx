@@ -56,7 +56,7 @@ describe("GoogleButton", () => {
         await waitFor(() =>
             expect(screen.getByText(/login com google realizado/i)).toBeInTheDocument()
         );
-        expect(localStorage.getItem("recanto:userData")).not.toBeNull();
+        expect(localStorage.getItem("festario:userData")).not.toBeNull();
         expect(navigate).toHaveBeenCalledWith("/home");
     });
 

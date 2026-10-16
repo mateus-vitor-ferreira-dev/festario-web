@@ -23,7 +23,7 @@ function renderPage() {
 describe("Home extra coverage", () => {
     it("falls back gracefully when user name is missing", async () => {
         localStorage.setItem(
-            "recanto:userData",
+            "festario:userData",
             JSON.stringify({
                 user: {},
                 token: "fake-token",
@@ -55,7 +55,7 @@ describe("Home extra coverage", () => {
 
     it("shows empty upcoming reservations state when list is empty", async () => {
         localStorage.setItem(
-            "recanto:userData",
+            "festario:userData",
             JSON.stringify({
                 user: { name: "Alex" },
                 token: "fake-token",
@@ -77,7 +77,7 @@ describe("Home extra coverage", () => {
 
     it("shows venues fallback when venues request fails but reservations succeed", async () => {
         localStorage.setItem(
-            "recanto:userData",
+            "festario:userData",
             JSON.stringify({
                 user: { name: "Alex" },
                 token: "fake-token",
@@ -124,7 +124,7 @@ describe("Home extra coverage", () => {
 
     it("shows reservations fallback when reservations request fails but venues succeed", async () => {
         localStorage.setItem(
-            "recanto:userData",
+            "festario:userData",
             JSON.stringify({
                 user: { name: "Alex" },
                 token: "fake-token",

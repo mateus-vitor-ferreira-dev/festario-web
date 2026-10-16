@@ -11,7 +11,7 @@ import { server } from "../mocks/server";
 const BASE = "http://localhost:3000";
 
 function renderAt(url: string) {
-    localStorage.setItem("recanto:userData", JSON.stringify({ token: "t", user: { id: "o1", name: "Dona", email: "dono@x.com", role: "OWNER" } }));
+    localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "o1", name: "Dona", email: "dono@x.com", role: "OWNER" } }));
     return render(
         <AuthProvider>
             <MemoryRouter initialEntries={[url]}>

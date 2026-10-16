@@ -66,7 +66,7 @@ function MoonIcon() {
 /**
  * Barra de navegação principal da aplicação.
  *
- * Lê o perfil do usuário do `localStorage` (`recanto:userData`) para exibir
+ * Lê o perfil do usuário do `localStorage` (`festario:userData`) para exibir
  * iniciais no avatar e os atalhos por papel: OWNER vê "Painel"; ADMIN vê
  * "Plataforma" e "Painel"; USER vê só a navegação de cliente.
  * Inclui botão de toggle de tema claro/escuro e botão de logout. Abaixo de

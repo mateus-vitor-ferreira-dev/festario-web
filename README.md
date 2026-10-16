@@ -4,10 +4,10 @@
 
 <h1>Festário — Web App</h1>
 
-<p><strong>Interface de reservas de espaços de festa (SaaS multi-espaço, repositório <code>recanto-vila-rica-web</code>): o cliente escolhe a data, assina o contrato e paga; o dono administra a agenda</strong></p>
+<p><strong>Interface de reservas de espaços de festa (SaaS multi-espaço, repositório <code>festario-web</code>): o cliente escolhe a data, assina o contrato e paga; o dono administra a agenda</strong></p>
 
 <p>
-  <img src="https://github.com/mateus-vitor-ferreira-dev/recanto-vila-rica-web/actions/workflows/ci.yml/badge.svg" alt="CI"/>
+  <img src="https://github.com/mateus-vitor-ferreira-dev/festario-web/actions/workflows/ci.yml/badge.svg" alt="CI"/>
   &nbsp;
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React 19"/>
   <img src="https://img.shields.io/badge/TypeScript-6.0_strict-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript 6"/>
@@ -37,7 +37,7 @@ flowchart TB
     APP["<b>Web App · React 19 + Vite 8</b><br/>intenção de reserva · checkout · negociações<br/>indicações · promoções · perfil · painel admin"]
 
     APP --> AX["Axios · refresh de token + retry com jitter"]
-    AX --> API["API (recanto-vila-rica-api)"]
+    AX --> API["API (festario-api)"]
 
     APP --> G["Google OAuth · login"]
     APP --> PDF["@react-pdf/renderer<br/>contrato gerado no browser"]
@@ -89,7 +89,7 @@ flowchart TB
 
 O link antigo <code>/admin</code> redireciona para <code>/painel</code>. O dono convidado cria a conta em <code>/convite/:token</code>.
 
-**Espaço (tenant).** A API escolhe o estabelecimento pelo cabeçalho `X-Tenant-Slug`; sem ele, usa o espaço padrão. O web guarda o slug em `localStorage["recanto:tenant"]` e o envia em toda requisição quando ele existe. O slug é guardado ao aceitar o convite, ao abrir `/login?espaco=<slug>` (é o link de acesso do dono de um estabelecimento que não é o padrão — ex.: `/login?espaco=salao-jardim-das-flores`) ou quando a equipe da plataforma abre o painel de um estabelecimento. No login, "Entrar no espaço padrão" apaga o slug guardado.
+**Espaço (tenant).** A API escolhe o estabelecimento pelo cabeçalho `X-Tenant-Slug`; sem ele, usa o espaço padrão. O web guarda o slug em `localStorage["festario:tenant"]` e o envia em toda requisição quando ele existe. O slug é guardado ao aceitar o convite, ao abrir `/login?espaco=<slug>` (é o link de acesso do dono de um estabelecimento que não é o padrão — ex.: `/login?espaco=salao-jardim-das-flores`) ou quando a equipe da plataforma abre o painel de um estabelecimento. No login, "Entrar no espaço padrão" apaga o slug guardado.
 
 ---
 
@@ -166,7 +166,7 @@ O cancelamento devolve conforme a distância até o evento — **100%** acima de
 |---|---|---|
 | **Node.js** | **20.x** | versão usada em todos os jobs do CI (`.github/workflows/ci.yml`) |
 | **npm** | 10+ | acompanha o Node 20; o projeto usa `package-lock.json` |
-| **API da plataforma** | — | precisa estar rodando — repositório `recanto-vila-rica-api` (privado, código de cliente) |
+| **API da plataforma** | — | precisa estar rodando — repositório `festario-api` (privado, código de cliente) |
 
 > Sem a API no ar a aplicação abre, mas login, salões e reservas falham — todo dado vem dela.
 
@@ -174,8 +174,8 @@ O cancelamento devolve conforme a distância até o evento — **100%** acima de
 
 ```bash
 # 1. Clone e instale
-git clone https://github.com/mateus-vitor-ferreira-dev/recanto-vila-rica-web.git
-cd recanto-vila-rica-web
+git clone https://github.com/mateus-vitor-ferreira-dev/festario-web.git
+cd festario-web
 npm install
 
 # 2. Suba a API primeiro (noutro terminal), em http://localhost:3000
@@ -282,6 +282,6 @@ A cobertura tem **thresholds que reprovam o build**: 84% de linhas, 82% de funç
 
 <div align="center">
   <sub>
-    <a href="https://github.com/mateus-vitor-ferreira-dev/recanto-vila-rica-landing-page">Landing page</a>
+    <a href="https://github.com/mateus-vitor-ferreira-dev/festario-landing-page">Landing page</a>
   </sub>
 </div>
