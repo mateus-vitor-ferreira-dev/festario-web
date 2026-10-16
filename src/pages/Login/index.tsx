@@ -8,6 +8,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { isValidTenantSlug } from "../../config/tenantStorage";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { homePathFor } from "../../utils/roles";
+import { RETURN_PARAM, safeReturnPath, withReturn } from "../../utils/returnPath";
 import api from "../../services/api";
 import * as S from "./styles";
 
@@ -80,7 +81,7 @@ export default function Login({ introFinished = true }) {
             login(data.data);
 
             toast.success(data.message || "Login realizado com sucesso.");
-            navigate(homePathFor(data.data?.user?.role ?? data.data?.role));
+            navigate(safeReturnPath(searchParams.get(RETURN_PARAM)) ?? homePathFor(data.data?.user?.role ?? data.data?.role));
         } catch (error) {
             toast.error(getErrorMessage(error, "Erro ao fazer login."));
         } finally {
@@ -141,7 +142,7 @@ export default function Login({ introFinished = true }) {
                 <GoogleButton navigate={navigate} />
 
                 <S.FooterText>
-                    Ainda não tem conta? <Link to="/cadastro">Criar conta</Link>
+                    Ainda não tem conta? <Link to={withReturn("/cadastro", searchParams.get(RETURN_PARAM))}>Criar conta</Link>
                 </S.FooterText>
             </S.Form>
         </AuthLayout>

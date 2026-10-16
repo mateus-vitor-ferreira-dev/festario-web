@@ -1,11 +1,12 @@
 import { useGoogleOAuth } from "@react-oauth/google";
 import { useCallback, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
-import type { NavigateFunction } from "react-router-dom";
+import { useSearchParams, type NavigateFunction } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import api from "../../services/api";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { homePathFor } from "../../utils/roles";
+import { RETURN_PARAM, safeReturnPath } from "../../utils/returnPath";
 import * as S from "./styles";
 
 interface GoogleButtonProps {
@@ -14,6 +15,8 @@ interface GoogleButtonProps {
 
 export default function GoogleButton({ navigate }: GoogleButtonProps) {
     const { login } = useAuth();
+    const [searchParams] = useSearchParams();
+    const returnPath = safeReturnPath(searchParams.get(RETURN_PARAM));
     const { clientId, scriptLoadedSuccessfully } = useGoogleOAuth();
     const overlayRef = useRef(null);
 
@@ -27,12 +30,12 @@ export default function GoogleButton({ navigate }: GoogleButtonProps) {
                 const { data } = await api.post("/auth/google", { id_token: credential });
                 login(data.data);
                 toast.success(data.message || "Sucesso com Google.");
-                navigate(homePathFor(data.data?.user?.role));
+                navigate(returnPath ?? homePathFor(data.data?.user?.role));
             } catch (error) {
                 toast.error(getErrorMessage(error, "Erro ao autenticar com Google."));
             }
         },
-        [login, navigate]
+        [login, navigate, returnPath]
     );
 
     useEffect(() => {

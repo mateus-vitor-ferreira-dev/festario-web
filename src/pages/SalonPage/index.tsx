@@ -1,5 +1,5 @@
 import { CSSProperties, useEffect, useState } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import SalonMark from "../../components/SalonMark";
 import VenueCover from "../../components/VenueCover";
@@ -9,6 +9,7 @@ import { getSalon } from "../../services/salon";
 import { getHttpStatus, isAbortError } from "../../utils/errors";
 import { getLoadErrorMessage } from "../../utils/getErrorMessage";
 import { isManagerRole } from "../../utils/roles";
+import { withReturn } from "../../utils/returnPath";
 import { formatCapacityRange, formatDistance, formatPlace, formatPrice } from "../../utils/salonFormat";
 import type { SalonDetail, SalonVenue } from "../../types";
 import * as S from "./styles";
@@ -37,6 +38,8 @@ type LoadState = { status: "loading" } | { status: "ready"; salon: SalonDetail }
  * Página pública de um salão: apresentação, contatos e os espaços, cada um com "Reservar".
  * Para o cliente, abrir a página passa a enviar o `X-Tenant-Slug` deste salão: o header mostra a
  * marca dele e a reserva vai para ele. Donos e a equipe continuam no próprio salão (só leem a página).
+ * É pública: sem login, "Reservar" leva ao login e volta aqui com `?reservar=<espaço>`, que segue
+ * direto para a reserva daquele espaço.
  *
  * @see GET /salons/:slug
  */
@@ -44,7 +47,9 @@ export default function SalonPage() {
     const { slug = "" } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
-    const { user, tenant, setTenant } = useAuth();
+    const { user, tenant, setTenant, isAuthenticated } = useAuth();
+    const [searchParams] = useSearchParams();
+    const pendingVenueId = searchParams.get("reservar");
     const origin = useSalonOrigin();
     const [state, setState] = useState<LoadState>({ status: "loading" });
     const [reload, setReload] = useState(0);
@@ -68,16 +73,28 @@ export default function SalonPage() {
     const salon = state.status === "ready" ? state.salon : null;
 
     useEffect(() => {
-        if (!salon || !canReserve || tenant?.slug === salon.slug) return;
+        if (!salon || !isAuthenticated || !canReserve || tenant?.slug === salon.slug) return;
         setTenant({ slug: salon.slug, name: salon.name });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [salon?.slug, canReserve]);
+    }, [salon?.slug, canReserve, isAuthenticated]);
 
-    function reserve(venue: SalonVenue) {
+    function reserve(venue: SalonVenue, { replace = false } = {}) {
         if (!salon) return;
+        if (!isAuthenticated) {
+            navigate(withReturn("/login", `/s/${salon.slug}?reservar=${venue.id}`));
+            return;
+        }
         if (tenant?.slug !== salon.slug) setTenant({ slug: salon.slug, name: salon.name });
-        navigate(`/reservation-intent/${venue.id}`);
+        navigate(`/reservation-intent/${venue.id}`, { replace });
     }
+
+    // Voltou do login para reservar um espaço: segue direto para a reserva dele.
+    useEffect(() => {
+        if (!salon || !isAuthenticated || !canReserve || !pendingVenueId) return;
+        const venue = salon.venues.find((v) => v.id === pendingVenueId);
+        if (venue) reserve(venue, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [salon?.slug, isAuthenticated, pendingVenueId]);
 
     const back = <S.BackLink as={Link} to={`/saloes${from}`}>Todos os salões</S.BackLink>;
 

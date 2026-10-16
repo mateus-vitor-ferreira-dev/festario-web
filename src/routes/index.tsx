@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { MainLayout } from "../components";
 import ErrorBoundary from "../components/ErrorBoundary";
 import PageLoader from "../components/PageLoader";
+import ShowcaseLayout from "../components/ShowcaseLayout";
 import { PrivateRoute } from "./PrivateRoute";
 import { RoleRoute } from "./RoleRoute";
 
@@ -53,7 +54,8 @@ function LegacyAdminRedirect() {
 /**
  * Árvore de rotas da aplicação.
  *
- * Vitrine: `/saloes` (todos os salões) e `/s/:slug` (página de um salão, que leva à reserva).
+ * Vitrine pública: `/saloes` (todos os salões) e `/s/:slug` (página de um salão, que leva à reserva).
+ * Sem login, abrem com o cabeçalho de visitante (`ShowcaseLayout`); `/` leva para lá.
  *
  * Áreas por papel (ver `utils/roles`): `/painel` (OWNER e ADMIN — painel do espaço),
  * `/plataforma` (só ADMIN). `/convite/:token` é pública (aceite do convite do dono).
@@ -71,7 +73,7 @@ export function AppRoutes({ introFinished }: AppRoutesProps) {
         <ErrorBoundary fallback={<PageErrorFallback />}>
             <Suspense fallback={<PageLoader />}>
                 <Routes>
-                    <Route path="/" element={<Navigate to="/cadastro" replace />} />
+                    <Route path="/" element={<Navigate to="/saloes" replace />} />
                     <Route
                         path="/cadastro"
                         element={<SignUp introFinished={introFinished} />}
@@ -84,11 +86,15 @@ export function AppRoutes({ introFinished }: AppRoutesProps) {
                     <Route path="/redefinir-senha" element={<ResetPassword />} />
                     <Route path="/convite/:token" element={<InviteAccept />} />
 
+                    {/* Vitrine pública: quem não tem conta vê os salões; o login só é pedido ao reservar. */}
+                    <Route element={<ShowcaseLayout />}>
+                        <Route path="/saloes" element={<Salons />} />
+                        <Route path="/s/:slug" element={<SalonPage />} />
+                    </Route>
+
                     <Route element={<PrivateRoute />}>
                         <Route element={<MainLayout />}>
                             <Route path="/home" element={<Home />} />
-                            <Route path="/saloes" element={<Salons />} />
-                            <Route path="/s/:slug" element={<SalonPage />} />
                             <Route path="/venues" element={<Venues />} />
                             <Route path="/reservations" element={<Reservations />} />
                             <Route
