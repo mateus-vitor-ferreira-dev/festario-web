@@ -28,7 +28,7 @@ function pay(over: Partial<ReservationPayment> = {}, summary: Partial<Reservatio
 }
 
 function renderPanel() {
-    localStorage.setItem("recanto:userData", JSON.stringify({ token: "t", user: { id: "o1", name: "Dona", email: "dono@x.com", role: "OWNER" } }));
+    localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "o1", name: "Dona", email: "dono@x.com", role: "OWNER" } }));
     return render(
         <AuthProvider>
             <MemoryRouter initialEntries={["/painel?tab=reservations"]}>

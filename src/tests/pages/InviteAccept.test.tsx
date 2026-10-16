@@ -131,10 +131,10 @@ describe("InviteAccept - aceite", () => {
 
         expect(await screen.findByText("Painel Page")).toBeInTheDocument();
         expect(body).toEqual({ name: "Sócia Nova", password: "Senha@123" });
-        const session = JSON.parse(localStorage.getItem("recanto:userData")!);
+        const session = JSON.parse(localStorage.getItem("festario:userData")!);
         expect(session.user.role).toBe("OWNER");
         expect(session.token).toBe("owner-token");
-        expect(JSON.parse(localStorage.getItem("recanto:tenant")!)).toEqual({ slug: "salao-jardim-das-flores", name: "Salão Jardim das Flores" });
+        expect(JSON.parse(localStorage.getItem("festario:tenant")!)).toEqual({ slug: "salao-jardim-das-flores", name: "Salão Jardim das Flores" });
     });
 
     it("switches to the expired state when the API says INVITE_EXPIRED", async () => {
@@ -160,7 +160,7 @@ describe("InviteAccept - aceite", () => {
     });
 
     it("warns that an existing session will be replaced", async () => {
-        localStorage.setItem("recanto:userData", JSON.stringify({ token: "t", user: { id: "a", name: "Admin", email: "admin@x.com", role: "ADMIN" } }));
+        localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "a", name: "Admin", email: "admin@x.com", role: "ADMIN" } }));
         renderAt();
         expect(await screen.findByText(/você está conectado como/i)).toHaveTextContent("admin@x.com");
     });

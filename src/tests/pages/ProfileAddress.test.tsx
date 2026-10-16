@@ -12,7 +12,7 @@ const BASE = "http://localhost:3000";
 const ME = { id: "u1", name: "Ana Souza", email: "ana@x.com", role: "USER", emailVerifiedAt: "2026-01-01" };
 
 function renderPage() {
-    localStorage.setItem("recanto:userData", JSON.stringify({ token: "t", user: ME }));
+    localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: ME }));
     return render(
         <AuthProvider>
             <MemoryRouter><Profile /><ToastContainer /></MemoryRouter>

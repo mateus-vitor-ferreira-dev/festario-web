@@ -18,14 +18,14 @@ function renderHeader() {
 
 describe("Header extra coverage", () => {
     it("handles invalid JSON in localStorage gracefully", () => {
-        localStorage.setItem("recanto:userData", "INVALID_JSON");
+        localStorage.setItem("festario:userData", "INVALID_JSON");
         renderHeader();
         expect(screen.getByText(/usuário/i)).toBeInTheDocument();
     });
 
     it("handles missing name field safely", () => {
         localStorage.setItem(
-            "recanto:userData",
+            "festario:userData",
             JSON.stringify({ user: {} })
         );
         renderHeader();
@@ -34,7 +34,7 @@ describe("Header extra coverage", () => {
 
     it("shows Plataforma link for migrated legacy session with ADMIN role", () => {
         localStorage.setItem(
-            "recanto:userData",
+            "festario:userData",
             JSON.stringify({ id: "u1", name: "Admin Root", email: "a@a.com", role: "ADMIN", token: "t" })
         );
         renderHeader();
@@ -43,7 +43,7 @@ describe("Header extra coverage", () => {
 
     it("does not show Admin link when nested user role is USER", () => {
         localStorage.setItem(
-            "recanto:userData",
+            "festario:userData",
             JSON.stringify({ token: "t", user: { name: "Alex", role: "USER" } })
         );
         renderHeader();
@@ -54,7 +54,7 @@ describe("Header extra coverage", () => {
 
     it("shows Usuário when format is unrecognized (no token or required fields)", () => {
         localStorage.setItem(
-            "recanto:userData",
+            "festario:userData",
             JSON.stringify({ name: "Alex Root", user: { role: "USER" } })
         );
         renderHeader();
@@ -63,7 +63,7 @@ describe("Header extra coverage", () => {
 
     it("shows Usuário when format is unrecognized (partial nested user, no token)", () => {
         localStorage.setItem(
-            "recanto:userData",
+            "festario:userData",
             JSON.stringify({ role: "ADMIN", user: { name: "Alex" } })
         );
         renderHeader();

@@ -6,9 +6,9 @@ import { PrivateRoute } from "../../routes/PrivateRoute";
 
 function renderWithRoute(userData) {
     if (userData) {
-        localStorage.setItem("recanto:userData", JSON.stringify(userData));
+        localStorage.setItem("festario:userData", JSON.stringify(userData));
     } else {
-        localStorage.removeItem("recanto:userData");
+        localStorage.removeItem("festario:userData");
     }
 
     return render(

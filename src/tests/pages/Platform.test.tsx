@@ -18,7 +18,7 @@ function LocationProbe() {
 }
 
 function renderAt(url: string) {
-    localStorage.setItem("recanto:userData", JSON.stringify({ token: "t", user: { id: "admin-1", name: "Admin", email: "a@a.com", role: "ADMIN" } }));
+    localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "admin-1", name: "Admin", email: "a@a.com", role: "ADMIN" } }));
     return render(
         <AuthProvider>
             <MemoryRouter initialEntries={[url]}>
@@ -255,7 +255,7 @@ describe("Plataforma - detalhe e convites", () => {
         renderAt("/plataforma/espacos/salao-jardim-das-flores");
         await user.click(await screen.findByRole("button", { name: /abrir painel do espaço/i }));
         expect(await screen.findByText("Painel Page")).toBeInTheDocument();
-        expect(JSON.parse(localStorage.getItem("recanto:tenant")!)).toEqual({ slug: "salao-jardim-das-flores", name: "Salão Jardim das Flores" });
+        expect(JSON.parse(localStorage.getItem("festario:tenant")!)).toEqual({ slug: "salao-jardim-das-flores", name: "Salão Jardim das Flores" });
     });
 
     it("disables panel and invites for an inactive tenant", async () => {

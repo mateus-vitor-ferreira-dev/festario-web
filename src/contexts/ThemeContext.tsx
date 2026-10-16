@@ -2,7 +2,7 @@
  * @module contexts/ThemeContext
  * @description Contexto de tema (claro/escuro) para toda a aplicação.
  *
- * O tema ativo é persistido em `localStorage` (`recanto:theme`) e aplicado como
+ * O tema ativo é persistido em `localStorage` (`festario:theme`) e aplicado como
  * atributo `data-theme` no `<html>`, permitindo que o CSS (CSS variables ou
  * styled-components) reactive automaticamente.
  */
@@ -23,7 +23,7 @@ const ThemeContext = createContext<ThemeContextValue>({ theme: "light", toggleTh
  * @param {React.ReactNode} props.children
  */
 function getInitialTheme(): "light" | "dark" {
-  const stored = localStorage.getItem("recanto:theme");
+  const stored = localStorage.getItem("festario:theme");
   if (stored === "light" || stored === "dark") return stored;
   try {
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -37,7 +37,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("recanto:theme", theme);
+    localStorage.setItem("festario:theme", theme);
   }, [theme]);
 
   function toggleTheme() {

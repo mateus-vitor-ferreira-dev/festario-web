@@ -15,10 +15,10 @@ describe("AuthContext + espaço", () => {
         const { result } = renderHook(() => useAuth(), { wrapper });
         act(() => result.current.login({ user: { id: "o", name: "Dona", email: "d@d.com", role: "OWNER" }, token: "t" }, { slug: "salao-x", name: "Salão X" }));
         expect(result.current.tenant).toEqual({ slug: "salao-x", name: "Salão X" });
-        expect(JSON.parse(localStorage.getItem("recanto:tenant")!)).toEqual({ slug: "salao-x", name: "Salão X" });
+        expect(JSON.parse(localStorage.getItem("festario:tenant")!)).toEqual({ slug: "salao-x", name: "Salão X" });
         act(() => result.current.setTenant(null));
         expect(result.current.tenant).toBeNull();
-        expect(localStorage.getItem("recanto:tenant")).toBeNull();
+        expect(localStorage.getItem("festario:tenant")).toBeNull();
     });
 
     it("OWNER logout keeps the tenant for the next login; ADMIN logout drops it", () => {
