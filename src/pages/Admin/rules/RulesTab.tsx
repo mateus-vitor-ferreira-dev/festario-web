@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { BookingSection } from "./BookingSection";
 import { ContractRulesSection } from "./ContractRulesSection";
 import { ItemsSection } from "./ItemsSection";
+import { OnlinePaymentSection } from "./OnlinePaymentSection";
 import { PackagesSection } from "./PackagesSection";
 import * as S from "./styles";
 
@@ -11,6 +12,7 @@ const SECTIONS = [
     { key: "items", label: "Itens e adicionais", hint: "Monitor, buffet, garçom, piscina..." },
     { key: "booking", label: "Reserva e cancelamento", hint: "Prazo, antecedência e reembolso" },
     { key: "contract", label: "Contrato e contato", hint: "Locador, contatos e regras do espaço" },
+    { key: "online", label: "Pagamento online", hint: "Pix e cartão pelo Asaas, na conta do salão" },
 ] as const;
 
 type SectionKey = (typeof SECTIONS)[number]["key"];
@@ -43,6 +45,7 @@ export function RulesTab() {
                 {active === "items" && <ItemsSection />}
                 {active === "booking" && <BookingSection />}
                 {active === "contract" && <ContractRulesSection />}
+                {active === "online" && <OnlinePaymentSection />}
             </div>
         </S.Layout>
     );

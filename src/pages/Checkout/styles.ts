@@ -441,3 +441,130 @@ export const EntryAmount = styled.span<{ $refund?: boolean }>`
   font-variant-numeric: lining-nums tabular-nums;
   color: ${({ $refund }) => ($refund ? "var(--status-cancelled-text)" : "var(--text-primary)")} !important;
 `;
+
+/* ─── Pagar online (Asaas) ─── */
+
+export const PayNow = styled.section`
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--brand-border);
+  background: var(--brand-subtle);
+`;
+
+export const PayNowText = styled.p`
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+`;
+
+/** Pix ou cartão: dois botões de rádio grandes, fáceis de tocar. */
+export const MethodChoice = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+`;
+
+export const MethodOption = styled.button<{ $on: boolean }>`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 64px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 2px solid ${({ $on }) => ($on ? "var(--brand)" : "var(--border-default)")};
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  strong {
+    font-size: var(--text-base);
+  }
+
+  span {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+`;
+
+export const CpfField = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  input {
+    min-height: 48px;
+    padding: 0 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-medium);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: var(--text-base);
+    font-variant-numeric: tabular-nums;
+  }
+
+  input:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 1px;
+  }
+
+  small {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+`;
+
+export const PayButton = styled.button`
+  ${action}
+  border: 0;
+  background: var(--brand);
+  color: var(--on-brand);
+  font-family: inherit;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--brand-dark);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+`;
+
+export const PayError = styled.p`
+  color: var(--status-error-text);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+`;
+
+export const Confirming = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: var(--status-info-bg);
+  border: 1px solid var(--status-info-border);
+  color: var(--status-info-text);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+`;

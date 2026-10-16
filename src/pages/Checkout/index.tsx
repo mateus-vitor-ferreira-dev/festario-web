@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useGSAP } from "@gsap/react";
 
@@ -12,6 +12,7 @@ import { packageLabel, formatDate, formatDateFull, formatTime, formatCents, calc
 import { METHOD_LABELS, formatDeadline, instagramLink, whatsappLink } from "../../utils/paymentFormat";
 import { animateFadeInUp } from "../../utils/animations";
 import type { Reservation, ReservationPayment } from "../../types";
+import OnlinePay from "./OnlinePay";
 import * as S from "./styles";
 
 /** Mensagem pronta para o WhatsApp do salão. */
@@ -27,6 +28,15 @@ function headline(p: ReservationPayment): { title: string; text: string; tone: "
     const { summary } = p;
     if (p.reservationStatus === "PENDING") {
         const amount = formatCents(summary.missingToConfirmCents);
+        if (p.mode === "ONLINE") {
+            return {
+                title: "Pague para confirmar a reserva",
+                text: summary.netCents > 0
+                    ? `Já entraram ${formatCents(summary.netCents)}. Faltam ${amount} para confirmar a reserva.`
+                    : `A reserva é confirmada com ${amount}${p.depositCents != null ? " de sinal" : ""}.`,
+                tone: "pending",
+            };
+        }
         return {
             title: "Combine o pagamento com o salão",
             text: summary.netCents > 0
@@ -51,10 +61,14 @@ function headline(p: ReservationPayment): { title: string; text: string; tone: "
     return { title: "Reserva expirada", text: "O pagamento não foi registrado no prazo e a data voltou a ficar livre.", tone: "neutral" };
 }
 
+/** Depois de pagar no Asaas: consulta a cada 4 s, por até 1 min, até o webhook lançar o pagamento. */
+const CONFIRM_POLL_MS = 4000;
+const CONFIRM_POLL_TRIES = 15;
+
 /**
- * Pagamento da reserva. Não há cobrança online: o cliente paga direto ao salão, que registra o que
- * recebeu. A tela mostra quanto confirma a reserva (o sinal ou o total), o prazo, como pagar (o texto do
- * salão e os contatos) e os pagamentos já registrados.
+ * Pagamento da reserva. Com o salão no modo online, o cliente paga por Pix ou cartão pelo Asaas e a reserva
+ * confirma sozinha; sem ele (ou se preferir), combina com o salão, que registra o que recebeu. A tela mostra
+ * quanto confirma a reserva (o sinal ou o total), o prazo, como pagar e os pagamentos já lançados.
  *
  * @see GET /reservations/:id
  * @see GET /payments/reservation/:id
@@ -63,6 +77,9 @@ function headline(p: ReservationPayment): { title: string; text: string; tone: "
 export default function Checkout() {
     const { reservationId } = useParams<{ reservationId: string }>();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const returnedFromPayment = searchParams.get("pago") === "1";
+    const [confirming, setConfirming] = useState(returnedFromPayment);
     const containerRef = useRef<HTMLDivElement | null>(null);
 
     const [reservation, setReservation] = useState<Reservation | null>(null);
@@ -92,6 +109,33 @@ export default function Checkout() {
         return () => controller.abort();
     }, [reservationId, navigate]);
 
+    // Voltou do Asaas: o pagamento chega pelo webhook alguns segundos depois. Até lá, a tela avisa e consulta.
+    const netBefore = useRef<number | null>(null);
+    useEffect(() => {
+        if (!confirming || !payment || !reservationId) return;
+        if (netBefore.current === null) netBefore.current = payment.summary.netCents;
+        let tries = 0;
+        const timer = window.setInterval(async () => {
+            tries += 1;
+            try {
+                const fresh = await getReservationPayment(reservationId, payment.tenant?.slug);
+                if (fresh.summary.netCents > (netBefore.current ?? 0) || tries >= CONFIRM_POLL_TRIES) {
+                    window.clearInterval(timer);
+                    setPayment(fresh);
+                    setConfirming(false);
+                    setSearchParams({}, { replace: true });
+                    if (fresh.summary.netCents > (netBefore.current ?? 0)) {
+                        toast.success(fresh.reservationStatus === "PAID" && payment.reservationStatus === "PENDING" ? "Pagamento aprovado. Reserva confirmada!" : "Pagamento aprovado.");
+                    }
+                }
+            } catch {
+                // Falha passageira: tenta de novo no próximo intervalo.
+            }
+        }, CONFIRM_POLL_MS);
+        return () => window.clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [confirming, payment === null, reservationId]);
+
     useGSAP(() => {
         if (isLoading || !reservation || !containerRef.current) return;
         animateFadeInUp(containerRef.current.querySelector(".anim-header"));
@@ -117,13 +161,17 @@ export default function Checkout() {
     const wa = contacts?.whatsapp ? whatsappLink(contacts.whatsapp, whatsappMessage(reservation, payment)) : null;
     const open = payment.reservationStatus === "PENDING" || (payment.reservationStatus === "PAID" && summary.balanceCents > 0);
     const hasContact = Boolean(wa || contacts?.instagram || contacts?.phone || contacts?.email);
+    const isOnline = payment.mode === "ONLINE";
+    const canPayOnline = isOnline && open && (payment.online?.payableCents ?? 0) > 0 && !confirming;
 
     return (
         <S.Container ref={containerRef}>
             <S.PageHeader className="anim-header">
                 <S.PageTitle>Pagamento da reserva</S.PageTitle>
                 <S.PageDescription>
-                    O pagamento é combinado direto com {payment.tenant?.name ?? "o salão"}. Assim que o salão registrar o que recebeu, a reserva é confirmada e você recebe o aviso por e-mail e WhatsApp.
+                    {isOnline
+                        ? <>Pague por Pix ou cartão, direto para a conta de {payment.tenant?.name ?? "o salão"}, ou combine com o salão. Assim que o pagamento entrar, a reserva é atualizada e você recebe o aviso por e-mail e WhatsApp.</>
+                        : <>O pagamento é combinado direto com {payment.tenant?.name ?? "o salão"}. Assim que o salão registrar o que recebeu, a reserva é confirmada e você recebe o aviso por e-mail e WhatsApp.</>}
                 </S.PageDescription>
             </S.PageHeader>
 
@@ -173,15 +221,15 @@ export default function Checkout() {
                     </S.SummaryCard>
 
                     <S.SummaryCard as="section" aria-labelledby="entries-title">
-                        <S.SectionTitle id="entries-title">Pagamentos registrados pelo salão</S.SectionTitle>
+                        <S.SectionTitle id="entries-title">{isOnline ? "Pagamentos" : "Pagamentos registrados pelo salão"}</S.SectionTitle>
                         {payment.entries.length === 0 ? (
-                            <S.Muted>Nenhum ainda. Depois de pagar, o salão registra aqui e a reserva é atualizada.</S.Muted>
+                            <S.Muted>{isOnline ? "Nenhum ainda. O pagamento online aparece aqui assim que for aprovado." : "Nenhum ainda. Depois de pagar, o salão registra aqui e a reserva é atualizada."}</S.Muted>
                         ) : (
                             <S.EntryList>
                                 {payment.entries.map((e) => (
                                     <S.EntryItem key={e.id} $refund={e.kind === "REFUND"}>
                                         <div>
-                                            <strong>{e.kind === "REFUND" ? "Devolução" : "Pagamento"} · {METHOD_LABELS[e.method]}</strong>
+                                            <strong>{e.kind === "REFUND" ? "Devolução" : "Pagamento"} · {METHOD_LABELS[e.method]}{e.online ? " (online)" : ""}</strong>
                                             <span>{formatDate(e.paidAt)}{e.note ? ` — ${e.note}` : ""}</span>
                                         </div>
                                         <S.EntryAmount $refund={e.kind === "REFUND"}>{e.kind === "REFUND" ? "−" : ""}{formatCents(e.amountCents)}</S.EntryAmount>
@@ -216,13 +264,22 @@ export default function Checkout() {
                     {payment.confirmBy && (
                         <S.Deadline role="note">
                             <strong>Prazo: {formatDeadline(payment.confirmBy)}</strong>
-                            <span>Se o salão não registrar o pagamento até lá, a reserva expira e a data volta a ficar livre.</span>
+                            <span>{isOnline ? "Sem pagamento até lá, a reserva expira e a data volta a ficar livre." : "Se o salão não registrar o pagamento até lá, a reserva expira e a data volta a ficar livre."}</span>
                         </S.Deadline>
                     )}
 
+                    {confirming && (
+                        <S.Confirming role="status">
+                            <S.Spinner aria-hidden="true" />
+                            <span>Confirmando o seu pagamento com o Asaas. Isso leva alguns segundos; pode ficar nesta tela.</span>
+                        </S.Confirming>
+                    )}
+
+                    {canPayOnline && <OnlinePay payment={payment} />}
+
                     {open && (
                         <S.HowToPay aria-labelledby="how-title">
-                            <S.SectionTitle as="h3" id="how-title">Como pagar</S.SectionTitle>
+                            <S.SectionTitle as="h3" id="how-title">{isOnline ? "Prefere combinar com o salão?" : "Como pagar"}</S.SectionTitle>
                             {contacts?.text
                                 ? <S.Instructions>{contacts.text}</S.Instructions>
                                 : <S.Muted>O salão combina a forma de pagamento com você. Fale com ele pelos contatos abaixo.</S.Muted>}

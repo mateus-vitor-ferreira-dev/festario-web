@@ -175,6 +175,7 @@ export function BookingSection() {
                 <S.Intro>
                     O cliente paga direto ao salão (PIX, dinheiro, cartão na maquininha) e você registra o que recebeu em
                     <strong> Reservas → Pagamentos</strong>. A reserva é confirmada quando o valor abaixo é atingido.
+                    Para o cliente pagar por Pix ou cartão, ligue o <strong>Pagamento online</strong>: o sinal e o restante seguem as mesmas regras.
                 </S.Intro>
                 <S.InlineFields>
                     <S.NumberField>

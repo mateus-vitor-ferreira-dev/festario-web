@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 import PaymentMeter from "../../../components/PaymentMeter";
-import { deletePaymentEntry, getReservationPayment, recordPaymentEntry } from "../../../services/payment";
-import type { PaymentEntryKind, PaymentMethod, Reservation, ReservationPayment } from "../../../types";
+import { deletePaymentEntry, getReservationPayment, recordPaymentEntry, refundOnlineEntry } from "../../../services/payment";
+import type { PaymentEntry, PaymentEntryKind, PaymentMethod, Reservation, ReservationPayment } from "../../../types";
 import { isAbortError } from "../../../utils/errors";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
 import { METHOD_LABELS, PAYMENT_METHODS, formatDeadline } from "../../../utils/paymentFormat";
@@ -48,6 +48,11 @@ export function PaymentsModal({ reservation, onClose, onChanged }: PaymentsModal
     const [error, setError] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
     const [removingId, setRemovingId] = useState<string | null>(null);
+    /** Pagamento online sendo devolvido pelo Asaas, e o valor digitado. */
+    const [refunding, setRefunding] = useState<PaymentEntry | null>(null);
+    const [refundAmount, setRefundAmount] = useState("");
+    const [refundError, setRefundError] = useState<string | null>(null);
+    const [refundSaving, setRefundSaving] = useState(false);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -65,7 +70,7 @@ export function PaymentsModal({ reservation, onClose, onChanged }: PaymentsModal
         return () => controller.abort();
     }, [reservation.id]);
 
-    const busy = saving || removingId !== null;
+    const busy = saving || removingId !== null || refundSaving;
     const closed = payment?.reservationStatus === "CANCELLED" || payment?.reservationStatus === "EXPIRED";
     const canRefund = (payment?.summary.netCents ?? 0) > 0;
 
@@ -120,6 +125,40 @@ export function PaymentsModal({ reservation, onClose, onChanged }: PaymentsModal
         }
     }
 
+    function startRefund(e: PaymentEntry) {
+        setRefunding(e);
+        setRefundError(null);
+        // Sugere o que ainda pode ser devolvido, limitado ao que a política manda devolver quando houver.
+        const due = payment?.refundDueCents != null ? Math.max(0, payment.refundDueCents - payment.summary.refundedCents) : null;
+        const max = e.refundableCents ?? 0;
+        setRefundAmount(reais(due != null && due > 0 ? Math.min(due, max) : max));
+    }
+
+    async function handleOnlineRefund(ev: React.FormEvent) {
+        ev.preventDefault();
+        if (!refunding) return;
+        const value = Number(refundAmount.replace(/\./g, "").replace(",", "."));
+        if (!(value > 0)) { setRefundError("Informe o valor."); return; }
+        if (Math.round(value * 100) > (refunding.refundableCents ?? 0)) {
+            setRefundError(`O máximo deste pagamento é ${formatCents(refunding.refundableCents ?? 0)}.`);
+            return;
+        }
+        if (!window.confirm(`Devolver ${formatCents(Math.round(value * 100))} ao cliente pelo Asaas? O valor sai da conta do salão.`)) return;
+        try {
+            setRefundSaving(true);
+            setRefundError(null);
+            const updated = await refundOnlineEntry(reservation.id, refunding.id, Math.round(value * 100) / 100);
+            setPayment(updated);
+            setRefunding(null);
+            toast.success("Devolução feita pelo Asaas. O cliente recebe um aviso.");
+            onChanged();
+        } catch (err) {
+            setRefundError(getErrorMessage(err, "O Asaas não fez a devolução."));
+        } finally {
+            setRefundSaving(false);
+        }
+    }
+
     const s = payment?.summary;
 
     return (
@@ -165,15 +204,23 @@ export function PaymentsModal({ reservation, onClose, onChanged }: PaymentsModal
                                         return (
                                             <R.ItemRow key={e.id}>
                                                 <R.ItemName>
-                                                    <strong>{e.kind === "REFUND" ? "−" : ""}{formatCents(e.amountCents)} · {METHOD_LABELS[e.method]}</strong>
+                                                    <strong>{e.kind === "REFUND" ? "−" : ""}{formatCents(e.amountCents)} · {METHOD_LABELS[e.method]}{e.online ? " · online" : ""}</strong>
                                                     <span>
                                                         {e.kind === "REFUND" ? "Devolução" : "Pagamento"} em {formatDate(e.paidAt)}
                                                         {e.recordedBy ? `, por ${e.recordedBy.name}` : ""}{e.note ? ` — ${e.note}` : ""}
                                                     </span>
                                                 </R.ItemName>
-                                                <S.SecondaryButton type="button" $size="sm" onClick={() => handleRemove(e.id, label)} disabled={busy} aria-label={`Desfazer ${label}`}>
-                                                    {removingId === e.id ? "Desfazendo..." : "Desfazer"}
-                                                </S.SecondaryButton>
+                                                {e.online ? (
+                                                    (e.refundableCents ?? 0) > 0 && (
+                                                        <S.SecondaryButton type="button" $size="sm" onClick={() => startRefund(e)} disabled={busy} aria-label={`Devolver pelo Asaas: ${label}`}>
+                                                            Devolver pelo Asaas
+                                                        </S.SecondaryButton>
+                                                    )
+                                                ) : (
+                                                    <S.SecondaryButton type="button" $size="sm" onClick={() => handleRemove(e.id, label)} disabled={busy} aria-label={`Desfazer ${label}`}>
+                                                        {removingId === e.id ? "Desfazendo..." : "Desfazer"}
+                                                    </S.SecondaryButton>
+                                                )}
                                             </R.ItemRow>
                                         );
                                     })}
@@ -181,7 +228,26 @@ export function PaymentsModal({ reservation, onClose, onChanged }: PaymentsModal
                             )}
                         </section>
 
-                        {closed && !canRefund ? (
+                        {refunding && (
+                            <S.Form onSubmit={handleOnlineRefund} noValidate aria-label="Devolver pelo Asaas">
+                                <S.ModalNote>
+                                    Devolução do pagamento online de {formatCents(refunding.amountCents)} ({METHOD_LABELS[refunding.method]}). O valor sai da conta do salão no Asaas e volta para o cliente{refunding.method === "CARD" ? " na fatura do cartão (pode levar até 10 dias úteis)" : " pelo Pix"}.
+                                </S.ModalNote>
+                                {refundError && <R.Errors role="alert"><li>{refundError}</li></R.Errors>}
+                                <S.FormGroup>
+                                    <label htmlFor="refund-amount">Valor a devolver (R$), até {formatCents(refunding.refundableCents ?? 0)}</label>
+                                    <S.TextInput id="refund-amount" inputMode="decimal" value={refundAmount} onChange={(ev) => setRefundAmount(ev.target.value)} placeholder="0,00" autoFocus />
+                                </S.FormGroup>
+                                <S.ModalActions>
+                                    <S.SecondaryButton type="button" onClick={() => setRefunding(null)} disabled={refundSaving}>Voltar</S.SecondaryButton>
+                                    <S.PrimaryButton type="submit" disabled={refundSaving} aria-busy={refundSaving}>
+                                        {refundSaving ? "Devolvendo..." : "Devolver pelo Asaas"}
+                                    </S.PrimaryButton>
+                                </S.ModalActions>
+                            </S.Form>
+                        )}
+
+                        {refunding ? null : closed && !canRefund ? (
                             <S.ModalNote>Reserva {payment.reservationStatus === "CANCELLED" ? "cancelada" : "expirada"} sem valor recebido: não há o que registrar.</S.ModalNote>
                         ) : (
                             <S.Form onSubmit={handleSubmit} noValidate aria-label="Registrar lançamento">

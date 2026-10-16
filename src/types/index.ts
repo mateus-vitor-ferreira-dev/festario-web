@@ -82,13 +82,24 @@ export interface PaymentEntry {
   note: string | null;
   createdAt: string;
   recordedBy: { id: string; name: string } | null;
+  /** Lançado pelo pagamento online: não se apaga, e a devolução sai pelo Asaas. */
+  online?: boolean;
+  /** Quanto ainda dá para devolver pelo Asaas deste pagamento. */
+  refundableCents?: number;
 }
 
 /** GET /payments/reservation/:id — pagamento combinado com o salão. Valores em centavos. */
 export interface ReservationPayment {
   reservationId: string;
   reservationStatus: ReservationStatus;
-  mode: "MANUAL";
+  /** ONLINE: o cliente pode pagar por Pix ou cartão pelo Asaas, na conta do salão. */
+  mode: "MANUAL" | "ONLINE";
+  online?: {
+    /** Quanto dá para pagar agora: o que falta para confirmar, ou o restante. */
+    payableCents: number;
+    /** Cobrança aberta no Asaas (continuar o pagamento). */
+    pendingCharge: { id: string; method: OnlineMethod; amountCents: number; invoiceUrl: string; dueDate: string } | null;
+  } | null;
   summary: {
     totalCents: number;
     /** Valor que confirma a reserva: o sinal ou o total. */
@@ -762,4 +773,50 @@ export interface SalonOriginParams {
   lng?: number;
   cep?: string;
   origin?: "profile";
+}
+
+// ─── Pagamento online (Asaas) ─────────────────────────────────────────────────
+
+export type OnlineMethod = "PIX" | "CARD";
+
+/** POST /payments/reservation/:id/online */
+export interface OnlineChargeResult {
+  chargeId: string;
+  invoiceUrl: string;
+  amountCents: number;
+  method: OnlineMethod;
+  dueDate: string;
+}
+
+export type PaymentAccountStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+/** GET /admin/payment-account */
+export interface PaymentAccountInfo {
+  /** A plataforma oferece pagamento online. */
+  available: boolean;
+  mode: "MANUAL" | "ONLINE";
+  account: {
+    status: PaymentAccountStatus;
+    detail: string | null;
+    checkedAt: string | null;
+    createdAt: string;
+    /** Link para o titular enviar os documentos (vem ao atualizar a situação). */
+    onboardingUrl: string | null;
+  } | null;
+}
+
+/** Titular da conta do salão no Asaas. */
+export interface PaymentAccountHolder {
+  name: string;
+  email: string;
+  cpfCnpj: string;
+  birthDate?: string | null;
+  companyType?: "MEI" | "LIMITED" | "INDIVIDUAL" | "ASSOCIATION" | null;
+  mobilePhone: string;
+  incomeValue: number;
+  address: string;
+  addressNumber: string;
+  complement?: string | null;
+  province: string;
+  postalCode: string;
 }
