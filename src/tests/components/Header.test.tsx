@@ -51,7 +51,7 @@ describe("Header component", () => {
     it("renders nav links", () => {
         renderHeader({ user: { name: "Mateus", role: "USER" } });
         expect(screen.getByRole("link", { name: /início/i })).toBeInTheDocument();
-        expect(screen.getByRole("link", { name: /espaços/i })).toBeInTheDocument();
+        expect(screen.getByRole("link", { name: /salões/i })).toHaveAttribute("href", "/saloes");
         expect(screen.getByRole("link", { name: /reservas/i })).toBeInTheDocument();
         expect(screen.getByRole("link", { name: /promoções/i })).toBeInTheDocument();
     });

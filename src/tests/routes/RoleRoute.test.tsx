@@ -13,7 +13,7 @@ function renderAt(path: string, role?: string) {
             <MemoryRouter initialEntries={[path]}>
                 <Routes>
                     <Route path="/login" element={<div>Login Page</div>} />
-                    <Route path="/home" element={<div>Home Page</div>} />
+                    <Route path="/saloes" element={<div>Salons Page</div>} />
                     <Route element={<RoleRoute roles={["OWNER", "ADMIN"]} />}>
                         <Route path="/painel" element={<div>Painel Page</div>} />
                     </Route>
@@ -29,15 +29,15 @@ function renderAt(path: string, role?: string) {
 describe("RoleRoute", () => {
     afterEach(() => localStorage.clear());
 
-    it("blocks USER from /painel (goes to /home)", () => {
+    it("blocks USER from /painel (goes to the salon showcase)", () => {
         renderAt("/painel", "USER");
-        expect(screen.getByText("Home Page")).toBeInTheDocument();
+        expect(screen.getByText("Salons Page")).toBeInTheDocument();
         expect(screen.queryByText("Painel Page")).not.toBeInTheDocument();
     });
 
-    it("blocks USER from /plataforma (goes to /home)", () => {
+    it("blocks USER from /plataforma (goes to the salon showcase)", () => {
         renderAt("/plataforma", "USER");
-        expect(screen.getByText("Home Page")).toBeInTheDocument();
+        expect(screen.getByText("Salons Page")).toBeInTheDocument();
         expect(screen.queryByText("Plataforma Page")).not.toBeInTheDocument();
     });
 
@@ -68,6 +68,6 @@ describe("RoleRoute", () => {
     it("treats a session without role as USER", () => {
         localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "u" } }));
         renderAt("/painel");
-        expect(screen.getByText("Home Page")).toBeInTheDocument();
+        expect(screen.getByText("Salons Page")).toBeInTheDocument();
     });
 });

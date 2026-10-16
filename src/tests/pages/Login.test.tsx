@@ -14,7 +14,7 @@ function renderPage() {
             <MemoryRouter initialEntries={["/login"]}>
                 <Routes>
                     <Route path="/login" element={<Login />} />
-                    <Route path="/home" element={<div>Home Page</div>} />
+                    <Route path="/saloes" element={<div>Salons Page</div>} />
                     <Route path="/cadastro" element={<div>Cadastro Page</div>} />
                 </Routes>
                 <ToastContainer />
@@ -42,14 +42,14 @@ describe("Login page", () => {
         );
     });
 
-    it("navigates to /home on successful login", async () => {
+    it("navigates the client to the salon showcase on successful login", async () => {
         const user = userEvent.setup();
         renderPage();
         await user.type(screen.getByPlaceholderText(/digite seu e-mail/i), "mateus@email.com");
         await user.type(screen.getByPlaceholderText(/digite sua senha/i), "123456");
         await user.click(screen.getByRole("button", { name: /^entrar$/i }));
         await waitFor(() =>
-            expect(screen.getByText("Home Page")).toBeInTheDocument()
+            expect(screen.getByText("Salons Page")).toBeInTheDocument()
         );
         expect(localStorage.getItem("festario:userData")).not.toBeNull();
     });

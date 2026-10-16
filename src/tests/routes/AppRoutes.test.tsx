@@ -55,13 +55,13 @@ describe("AppRoutes", () => {
         expect(await screen.findByText(/total de reservas/i, {}, LAZY_TIMEOUT)).toBeInTheDocument();
     });
 
-    it("redirects USER from the old /admin link (now /painel) to /home", async () => {
+    it("redirects USER from the old /admin link (now /painel) to the salon showcase", async () => {
         localStorage.setItem(
             "festario:userData",
             JSON.stringify({ token: "t", user: { id: "u-1", role: "USER" } })
         );
         renderRoutes("/admin");
-        expect(await screen.findByText(/total de reservas/i, {}, LAZY_TIMEOUT)).toBeInTheDocument();
+        expect(await screen.findByRole("heading", { name: /salões de festa/i }, LAZY_TIMEOUT)).toBeInTheDocument();
         expect(screen.queryByText(/painel do espaço/i)).not.toBeInTheDocument();
     });
 

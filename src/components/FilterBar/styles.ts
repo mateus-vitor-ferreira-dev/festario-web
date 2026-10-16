@@ -356,3 +356,33 @@ export const NoResults = styled.div`
     padding: 24px 20px;
   }
 `;
+
+/** Linha de checkbox com a mesma altura dos campos, para alinhar pela base da grade. */
+export const CheckRow = styled.label<{ $checked: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--control-h);
+  padding: 0 14px;
+  border: 1px solid ${({ $checked }) => ($checked ? "var(--brand-border)" : "var(--border-default)")};
+  border-radius: var(--radius-md);
+  background: ${({ $checked }) => ($checked ? "var(--brand-subtle)" : "var(--bg-surface)")};
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+
+  input {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    accent-color: var(--brand);
+    cursor: pointer;
+  }
+
+  &:focus-within {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+`;

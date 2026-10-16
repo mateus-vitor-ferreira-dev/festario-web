@@ -24,6 +24,8 @@ const Referrals         = lazy(() => import("../pages/Referrals"));
 const ReservationIntent = lazy(() => import("../pages/ReservationIntent"));
 const Reservations      = lazy(() => import("../pages/Reservations"));
 const ResetPassword     = lazy(() => import("../pages/ResetPassword"));
+const SalonPage         = lazy(() => import("../pages/SalonPage"));
+const Salons            = lazy(() => import("../pages/Salons"));
 const SignUp            = lazy(() => import("../pages/SignUp"));
 const Venues            = lazy(() => import("../pages/Venues"));
 
@@ -50,6 +52,8 @@ function LegacyAdminRedirect() {
 
 /**
  * Árvore de rotas da aplicação.
+ *
+ * Vitrine: `/saloes` (todos os salões) e `/s/:slug` (página de um salão, que leva à reserva).
  *
  * Áreas por papel (ver `utils/roles`): `/painel` (OWNER e ADMIN — painel do espaço),
  * `/plataforma` (só ADMIN). `/convite/:token` é pública (aceite do convite do dono).
@@ -83,6 +87,8 @@ export function AppRoutes({ introFinished }: AppRoutesProps) {
                     <Route element={<PrivateRoute />}>
                         <Route element={<MainLayout />}>
                             <Route path="/home" element={<Home />} />
+                            <Route path="/saloes" element={<Salons />} />
+                            <Route path="/s/:slug" element={<SalonPage />} />
                             <Route path="/venues" element={<Venues />} />
                             <Route path="/reservations" element={<Reservations />} />
                             <Route
