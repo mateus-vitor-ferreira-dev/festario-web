@@ -453,3 +453,62 @@ export const PreviewName = styled.p`
   color: var(--text-primary);
   overflow-wrap: anywhere;
 `;
+
+/** Modelos de pacote no primeiro passo: botões grandes com o que cada um traz. */
+export const Templates = styled.div`
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  > span {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+  }
+
+  ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  button {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    width: 100%;
+    min-height: 64px;
+    margin: 0;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-default);
+    background: var(--bg-field);
+    color: var(--text-primary);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  button:hover {
+    border-color: var(--brand);
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  strong {
+    font-size: var(--text-sm);
+  }
+
+  small {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+`;

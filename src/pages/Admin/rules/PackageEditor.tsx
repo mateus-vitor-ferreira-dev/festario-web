@@ -8,6 +8,7 @@ import * as A from "../styles";
 import { CHARGE_LABELS, WEEK, clockToMinutes, describePrice, formatBRL, formatHours, minutesToClock } from "../../../utils/packageFormat";
 import * as S from "./styles";
 import { TimeWindow, WeekStrip } from "../../../components/PackageVisuals";
+import type { PackageTemplate } from "./packageTemplates";
 
 type Mode = "NONE" | "INCLUDED" | "OPTIONAL";
 
@@ -33,13 +34,13 @@ interface FormState {
 const ALL_DAYS = [1, 2, 3, 4, 5, 6, 0];
 const num = (v: string) => (v.trim() === "" ? null : Number(v.replace(",", ".")));
 
-function toForm(pkg: SalonPackage | null, items: SalonItem[]): FormState {
+function toForm(pkg: Partial<SalonPackage> | null, items: SalonItem[]): FormState {
     const byItem = new Map((pkg?.items ?? []).map((pi) => [pi.item.id, pi]));
     const end = pkg?.latestEndMinute ?? null;
     return {
         name: pkg?.name ?? "",
         description: pkg?.description ?? "",
-        price: pkg ? String(Number(pkg.basePriceAmount)) : "",
+        price: pkg?.basePriceAmount != null ? String(Number(pkg.basePriceAmount)) : "",
         venueId: pkg?.venueId ?? "",
         days: pkg?.validWeekdays ?? ALL_DAYS,
         holidays: pkg?.validOnHolidays ?? true,
@@ -112,6 +113,8 @@ interface Props {
     items: SalonItem[];
     venues: Venue[];
     nextSortOrder: number;
+    /** Pacote novo a partir de um modelo: vem preenchido, menos o preço. */
+    template?: PackageTemplate | null;
     onSaved: () => void;
     onCancel: () => void;
 }
@@ -120,9 +123,9 @@ interface Props {
  * Editor de pacote: o que é, quando vale, horário, convidados e itens, com a prévia de como
  * o cliente vê e um orçamento de exemplo. Abre no lugar da lista (o formulário é longo para um modal).
  */
-export function PackageEditor({ pkg, items, venues, nextSortOrder, onSaved, onCancel }: Props) {
+export function PackageEditor({ pkg, items, venues, nextSortOrder, template = null, onSaved, onCancel }: Props) {
     const activeItems = useMemo(() => items.filter((it) => it.isActive), [items]);
-    const [form, setForm] = useState<FormState>(() => toForm(pkg, activeItems));
+    const [form, setForm] = useState<FormState>(() => toForm(pkg ?? template?.values ?? null, activeItems));
     const [errors, setErrors] = useState<string[]>([]);
     const [saving, setSaving] = useState(false);
 
@@ -173,6 +176,11 @@ export function PackageEditor({ pkg, items, venues, nextSortOrder, onSaved, onCa
                 <A.SectionTitle>{pkg ? `Editar ${pkg.name}` : "Novo pacote"}</A.SectionTitle>
                 <A.SecondaryButton type="button" onClick={onCancel}>Voltar aos pacotes</A.SecondaryButton>
             </A.SectionHeader>
+            {template && !pkg && (
+                <A.FieldHint role="note">
+                    Começando do modelo <strong>{template.title}</strong>. Ajuste o nome, os dias e o horário ao seu salão e informe o preço.
+                </A.FieldHint>
+            )}
 
             <S.EditorLayout>
                 <A.Form onSubmit={handleSubmit} noValidate aria-describedby={errors.length ? "package-errors" : undefined}>
@@ -195,7 +203,7 @@ export function PackageEditor({ pkg, items, venues, nextSortOrder, onSaved, onCa
                         <A.FormRow>
                             <A.FormGroup>
                                 <label htmlFor="pkg-price">Preço (R$)</label>
-                                <A.TextInput id="pkg-price" inputMode="decimal" value={form.price} onChange={(e) => set("price", e.target.value)} placeholder="1200" />
+                                <A.TextInput id="pkg-price" inputMode="decimal" value={form.price} onChange={(e) => set("price", e.target.value)} placeholder="Ex.: 1200" />
                             </A.FormGroup>
                             <A.FormGroup>
                                 <label htmlFor="pkg-venue">Espaço</label>
@@ -325,7 +333,7 @@ export function PackageEditor({ pkg, items, venues, nextSortOrder, onSaved, onCa
                     <h3>Como o cliente vê</h3>
                     <S.PackageHead>
                         <S.PreviewName>{form.name || "Nome do pacote"}</S.PreviewName>
-                        <S.Price>{formatBRL(payload.basePriceAmount || 0)}</S.Price>
+                        <S.Price>{(payload.basePriceAmount ?? 0) > 0 ? formatBRL(payload.basePriceAmount) : "Preço a definir"}</S.Price>
                     </S.PackageHead>
                     <WeekStrip weekdays={form.days.length === 7 ? null : form.days} holidays={form.holidays} />
                     <TimeWindow earliest={payload.earliestStartMinute ?? null} latest={payload.latestEndMinute ?? null} />
@@ -337,7 +345,7 @@ export function PackageEditor({ pkg, items, venues, nextSortOrder, onSaved, onCa
 
                     <h3>Orçamento de exemplo</h3>
                     <S.PreviewLines>
-                        <dt>Pacote</dt><dd>{formatBRL(example.base)}</dd>
+                        <dt>Pacote</dt><dd>{example.base > 0 ? formatBRL(example.base) : "a definir"}</dd>
                         {example.extras.map((x) => <FragmentLine key={x.name} name={x.name} total={x.total} />)}
                         <dt><strong>Com todos os adicionais</strong></dt>
                         <dd><strong>{formatBRL(example.base + example.extras.reduce((s, x) => s + x.total, 0))}</strong></dd>
