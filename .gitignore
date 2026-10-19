@@ -46,3 +46,6 @@ coverage
 storybook-static
 storybook-static
 .vercel
+
+# Cache local do wrangler dev
+.wrangler/

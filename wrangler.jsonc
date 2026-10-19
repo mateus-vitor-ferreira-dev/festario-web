@@ -1,0 +1,15 @@
+// Publicação no Cloudflare Workers, no lugar da Vercel. O app são só arquivos estáticos
+// (o build do Vite em dist/), sem código de servidor. Deploy pelo Workers Builds:
+// "npm run build" e "npx wrangler deploy".
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "festario-web",
+  "compatibility_date": "2026-10-19",
+  "assets": {
+    "directory": "./dist",
+    // Rota que o servidor não conhece (/eventos/123, /login...) devolve o index.html
+    "not_found_handling": "single-page-application"
+  },
+  // Cada branch ganha um link próprio de preview, como na Vercel
+  "previews": {}
+}

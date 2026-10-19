@@ -1,0 +1,5 @@
+# Cabeçalhos do Cloudflare Pages (no lugar dos "headers" do vercel.json).
+# O popup do login com Google precisa conversar com a janela do app; sem este
+# cabeçalho, o navegador isola os dois e o login não volta.
+/*
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
