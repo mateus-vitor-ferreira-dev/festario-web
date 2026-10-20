@@ -18,6 +18,8 @@ dist-ssr
 .env
 .env.*
 !.env.example
+# Valores públicos de produção, embutidos no build (sem segredos)
+!.env.production
 
 # Local files
 *.local
@@ -46,3 +48,6 @@ coverage
 storybook-static
 storybook-static
 .vercel
+
+# Cache local do wrangler dev
+.wrangler/
