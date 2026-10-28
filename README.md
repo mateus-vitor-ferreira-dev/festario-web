@@ -151,7 +151,7 @@ O cancelamento devolve conforme a distância até o evento — **100%** acima de
     </tr>
     <tr>
       <td><strong>CI/CD</strong></td>
-      <td><img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white"/> <img src="https://img.shields.io/badge/Snyk-4C4A73?style=flat-square&logo=snyk&logoColor=white"/> <img src="https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white"/> — deploy a cada push em <code>main</code></td>
+      <td><img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white"/> <img src="https://img.shields.io/badge/Snyk-4C4A73?style=flat-square&logo=snyk&logoColor=white"/> <img src="https://img.shields.io/badge/Cloudflare_Workers-F38020?style=flat-square&logo=cloudflare&logoColor=white"/> — deploy pelo Workers Builds a cada push em <code>main</code></td>
     </tr>
   </tbody>
 </table>
@@ -217,11 +217,11 @@ Há ainda uma variável de **build**, lida via `process.env` no `vite.config.ts`
 ```ini
 # Token do Sentry para upload de source maps no build de produção.
 # Opcional: sem ela o sentryVitePlugin roda em modo silencioso e não sobe nada.
-# Usada apenas em CI/Vercel — não precisa localmente.
+# Usada apenas no build de produção (Workers Builds) — não precisa localmente.
 SENTRY_AUTH_TOKEN=
 ```
 
-> `.env` e `.env.*` estão no `.gitignore`. Nunca commite nenhum deles — as chaves reais vivem na Vercel e nos secrets do GitHub.
+> `.env` e `.env.*` estão no `.gitignore`. Nunca commite nenhum deles — os valores públicos de produção ficam no `.env.production`, e os segredos de build nas variáveis do Workers Builds e nos secrets do GitHub.
 
 ### Endereços locais
 
@@ -245,7 +245,7 @@ SENTRY_AUTH_TOKEN=
 | Vite não sobe: "Port 5173 is already in use" | `strictPort: true` faz o Vite falhar em vez de pular para outra porta — libere a 5173 (o app depende dela para o OAuth e o CORS da API baterem). |
 | Mudou o `.env.local` e nada aconteceu | Variáveis `VITE_*` são inlined no build. Reinicie o `npm run dev` — HMR não recarrega env. |
 | Erros de CORS em toda chamada | A API precisa liberar `http://localhost:5173` como origem. Confira a config de CORS no repo da API. |
-| Login com Google abre o popup e ele fecha sozinho | Falta o header `Cross-Origin-Opener-Policy: same-origin-allow-popups`. O `vite.config.ts` já o define em dev e o `vercel.json` em produção — se você serve o build por outro meio, replique-o. |
+| Login com Google abre o popup e ele fecha sozinho | Falta o header `Cross-Origin-Opener-Policy: same-origin-allow-popups`. O `vite.config.ts` já o define em dev e o `public/_headers` em produção — se você serve o build por outro meio, replique-o. |
 | Não aparece o botão "Entrar com Google" | `VITE_GOOGLE_CLIENT_ID` vazia no `.env.local` (ou o `npm run dev` não foi reiniciado depois de preencher). |
 | `VITE_GOOGLE_CLIENT_ID` definida mas o Google recusa | `http://localhost:5173` não está nas origens autorizadas do OAuth client. |
 | O Google abre, mas a API responde 401 | `GOOGLE_CLIENT_ID` da API diferente do `VITE_GOOGLE_CLIENT_ID` do web. |
@@ -279,7 +279,7 @@ Os testes rodam em **jsdom** e batem numa API falsa servida por **MSW**, com `on
 
 A cobertura tem **thresholds que reprovam o build**: 84% de linhas, 82% de funções e 75% de branches (`vite.config.ts`). Arquivos sem lógica testável — estilos, assets, barris de export e componentes puramente visuais — ficam fora do cálculo, para a métrica medir comportamento e não `export * from`.
 
-**Pipeline** (`.github/workflows/ci.yml`), a cada push em qualquer branch: `lint` → `test` (com cobertura) → `security` (Snyk, falha em vulnerabilidade high/critical) → `build` → `deploy` na Vercel, este último só em push na `main`.
+**Pipeline** (`.github/workflows/ci.yml`), a cada push em qualquer branch: `lint` → `test` (com cobertura) → `security` (Snyk, falha em vulnerabilidade high/critical) → `build`. O deploy não sai daqui: o Workers Builds do Cloudflare builda e publica a `main` a cada push, e cada branch ganha um link de preview.
 
 ---
 
