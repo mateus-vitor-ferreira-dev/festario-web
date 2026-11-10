@@ -10,6 +10,9 @@
     // Rota que o servidor não conhece (/eventos/123, /login...) devolve o index.html
     "not_found_handling": "single-page-application"
   },
+  // O "wrangler deploy" liga o domínio ao worker e o Cloudflare cria o DNS e o certificado.
+  // O endereço *.workers.dev continua respondendo.
+  "routes": [{ "pattern": "app.festario.com.br", "custom_domain": true }],
   // Cada branch ganha um link próprio de preview, como na Vercel
   "previews": {}
 }
