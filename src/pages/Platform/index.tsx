@@ -10,6 +10,8 @@ import { CreateTenantModal, ToggleActiveModal } from "./components";
 import { subscriptionLabel, TENANT_STATUS_OPTIONS, TENANTS_PAGE_SIZE, trialText } from "./constants";
 import type { Tenant } from "../../types";
 import * as S from "./styles";
+import * as SS from "../Admin/subscription/styles";
+import { subscriptionSummary } from "../../utils/subscription";
 
 const FILTER_KEYS = ["q", "status"] as const;
 type FilterKey = (typeof FILTER_KEYS)[number];
@@ -18,6 +20,18 @@ const STATUS_TO_PARAM: Record<string, string> = { active: "true", inactive: "fal
 
 function count(n: number | undefined) {
     return (n ?? 0).toLocaleString("pt-BR");
+}
+
+/** Situação da cobrança da assinatura: selo + vencimento. Cobrança desligada: só o traço. */
+function BillingCell({ tenant }: { tenant: Tenant }) {
+    const summary = tenant.subscription?.billingEnabled === false ? null : subscriptionSummary(tenant.subscription);
+    if (!summary) return <span aria-label="Cobrança desligada">—</span>;
+    return (
+        <S.PlanCell>
+            <SS.ToneBadge $tone={summary.tone}>{summary.label}</SS.ToneBadge>
+            {summary.detail && <span>{summary.detail}</span>}
+        </S.PlanCell>
+    );
 }
 
 /**
@@ -106,6 +120,7 @@ export default function Platform() {
                                     <tr>
                                         <A.Th>Estabelecimento</A.Th>
                                         <A.Th>Assinatura</A.Th>
+                                        <A.Th>Cobrança</A.Th>
                                         <A.Th>Situação</A.Th>
                                         <A.Th $num>Espaços</A.Th>
                                         <A.Th $num>Donos</A.Th>
@@ -129,6 +144,9 @@ export default function Platform() {
                                                     {subscriptionLabel(t)}
                                                     {trialText(t) && <span>{trialText(t)}</span>}
                                                 </S.PlanCell>
+                                            </A.Td>
+                                            <A.Td>
+                                                <BillingCell tenant={t} />
                                             </A.Td>
                                             <A.Td>
                                                 <A.ActiveBadge $active={t.isActive}>{t.isActive ? "Ativo" : "Desativado"}</A.ActiveBadge>

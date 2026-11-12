@@ -21,7 +21,7 @@ export function subscriptionLabel(tenant?: Pick<Tenant, "subscription"> | null):
 
 /**
  * Situação do mês grátis: "Grátis até 12/12/2026" durante o teste e "Mês grátis até 12/12/2026" depois
- * dele. Ainda não há cobrança automática, então o fim do teste é só informativo. Sem data, `null`.
+ * dele. A situação da cobrança fica na coluna Cobrança (utils/subscription). Sem data, `null`.
  */
 export function trialText(tenant: Pick<Tenant, "trialEndsAt" | "subscription">, now: Date = new Date()): string | null {
     const end = tenant.subscription?.trialEndsAt ?? tenant.trialEndsAt;

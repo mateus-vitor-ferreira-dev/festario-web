@@ -16,6 +16,7 @@ import { CopyLink, ToggleActiveModal } from "./components";
 import { INVITE_STATUS_LABELS, INVITE_STATUS_OPTIONS, INVITES_PAGE_SIZE, subscriptionLabel, tenantLoginUrl, trialText } from "./constants";
 import type { CreateInviteResult, ListParams, OwnerInvite, Tenant } from "../../types";
 import * as S from "./styles";
+import { SubscriptionSection } from "./SubscriptionSection";
 
 const INVITE_KEYS = ["status"] as const;
 
@@ -174,6 +175,8 @@ export default function TenantDetail() {
                     url={tenantLoginUrl(tenant.slug)}
                 />
             </S.Panel>
+
+            <SubscriptionSection tenant={tenant} onChanged={reloadTenant} />
 
             <InvitesSection tenant={tenant} disabled={!tenant.isActive} onChanged={reloadTenant} />
 
