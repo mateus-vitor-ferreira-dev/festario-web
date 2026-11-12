@@ -292,7 +292,18 @@ export interface AuthContextValue {
 
 // ─── Plataforma (estabelecimentos e convites) ─────────────────────────────────
 
-export type TenantPlan = "FREE" | "STARTER" | "PRO";
+/** Plano único da plataforma: Assinatura Festário. */
+export type TenantPlan = "FESTARIO";
+
+/** Assinatura do estabelecimento como a API devolve (sem cobrança automática por enquanto). */
+export interface TenantSubscription {
+  plan: TenantPlan;
+  name: string;
+  monthlyPriceCents: number;
+  /** Fim do mês grátis. */
+  trialEndsAt: string | null;
+  inTrial: boolean;
+}
 export type InviteStatus = "valid" | "expired" | "accepted" | "revoked";
 
 export interface TenantStats {
@@ -309,6 +320,9 @@ export interface Tenant {
   slug: string;
   name: string;
   plan: TenantPlan;
+  /** Fim do mês grátis da assinatura. */
+  trialEndsAt?: string | null;
+  subscription?: TenantSubscription;
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;

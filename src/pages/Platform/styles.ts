@@ -64,6 +64,20 @@ export const NameCell = styled.div`
   }
 `;
 
+/** Assinatura na tabela: o plano e, embaixo, até quando é grátis. */
+export const PlanCell = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 180px;
+  white-space: normal;
+
+  span {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+  }
+`;
+
 export const RowActions = styled.div`
   display: flex;
   justify-content: flex-end;

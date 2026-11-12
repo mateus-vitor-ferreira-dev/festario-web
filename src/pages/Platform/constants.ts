@@ -1,15 +1,35 @@
-import type { InviteStatus, TenantPlan } from "../../types";
+import type { InviteStatus, Tenant } from "../../types";
 
 export const TENANTS_PAGE_SIZE = 20;
 export const INVITES_PAGE_SIZE = 10;
 
-export const PLAN_LABELS: Record<TenantPlan, string> = {
-    FREE: "Gratuito",
-    STARTER: "Inicial",
-    PRO: "Profissional",
-};
+/** Plano único da plataforma: uma assinatura por estabelecimento, com quantos espaços ele tiver. */
+export const SUBSCRIPTION_NAME = "Assinatura Festário";
+export const SUBSCRIPTION_MONTHLY_PRICE_CENTS = 10_000;
+export const SUBSCRIPTION_TRIAL_DAYS = 30;
 
-export const PLAN_OPTIONS = (Object.keys(PLAN_LABELS) as TenantPlan[]).map((value) => ({ value, label: PLAN_LABELS[value] }));
+function reais(cents: number): string {
+    return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: cents % 100 ? 2 : 0 });
+}
+
+/** "Assinatura Festário: R$ 100/mês" (com o nome e o preço que a API mandar, se mandar). */
+export function subscriptionLabel(tenant?: Pick<Tenant, "subscription"> | null): string {
+    const name = tenant?.subscription?.name ?? SUBSCRIPTION_NAME;
+    const cents = tenant?.subscription?.monthlyPriceCents ?? SUBSCRIPTION_MONTHLY_PRICE_CENTS;
+    return `${name}: ${reais(cents)}/mês`;
+}
+
+/**
+ * Situação do mês grátis: "Grátis até 12/12/2026" durante o teste e "Mês grátis até 12/12/2026" depois
+ * dele. Ainda não há cobrança automática, então o fim do teste é só informativo. Sem data, `null`.
+ */
+export function trialText(tenant: Pick<Tenant, "trialEndsAt" | "subscription">, now: Date = new Date()): string | null {
+    const end = tenant.subscription?.trialEndsAt ?? tenant.trialEndsAt;
+    if (!end) return null;
+    const date = new Date(end).toLocaleDateString("pt-BR");
+    const inTrial = tenant.subscription?.inTrial ?? new Date(end) > now;
+    return inTrial ? `Grátis até ${date}` : `Mês grátis até ${date}`;
+}
 
 export const TENANT_STATUS_OPTIONS = [
     { value: "", label: "Todos" },

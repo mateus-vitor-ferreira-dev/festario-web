@@ -62,6 +62,11 @@ describe("Plataforma - lista de espaços", () => {
         expect(within(row).getByText("Desativado")).toBeInTheDocument();
         expect(within(row).getByText("48")).toBeInTheDocument();
         expect(within(row).getByText(/R\$\s?28\.190,50/)).toBeInTheDocument();
+        // Plano único: a assinatura e até quando foi (ou é) grátis.
+        expect(within(row).getByText(/Assinatura Festário: R\$\s?100\/mês/)).toBeInTheDocument();
+        expect(within(row).getByText("Mês grátis até 19/09/2025")).toBeInTheDocument();
+        const jardim = screen.getByRole("link", { name: "Salão Jardim das Flores" }).closest("tr")!;
+        expect(within(jardim).getByText("Grátis até 31/12/2099")).toBeInTheDocument();
         expect(screen.getByText("2 estabelecimentos")).toBeInTheDocument();
     });
 
@@ -95,11 +100,12 @@ describe("Plataforma - lista de espaços", () => {
         const dialog = screen.getByRole("dialog");
         await user.type(within(dialog).getByLabelText("Nome do estabelecimento"), "Buffet Ípê Amarelo");
         expect(within(dialog).getByLabelText("Endereço (slug)")).toHaveValue("buffet-ipe-amarelo");
-        await user.selectOptions(within(dialog).getByLabelText("Plano"), "PRO");
+        expect(within(dialog).getByText(/Assinatura Festário: R\$\s?100\/mês/)).toBeInTheDocument();
+        expect(within(dialog).getByText(/30 dias são grátis/)).toBeInTheDocument();
         await user.click(within(dialog).getByRole("button", { name: /cadastrar estabelecimento/i }));
 
         await waitFor(() => expect(location()).toBe("/plataforma/espacos/buffet-ipe-amarelo"));
-        expect(body).toEqual({ name: "Buffet Ípê Amarelo", slug: "buffet-ipe-amarelo", plan: "PRO" });
+        expect(body).toEqual({ name: "Buffet Ípê Amarelo", slug: "buffet-ipe-amarelo" });
     });
 
     it("keeps an edited slug and shows the conflict inline (409)", async () => {
@@ -166,6 +172,7 @@ describe("Plataforma - detalhe e convites", () => {
         renderAt("/plataforma/espacos/salao-jardim-das-flores");
         expect(await screen.findByRole("heading", { name: "Salão Jardim das Flores" })).toBeInTheDocument();
         expect(screen.getByText(/R\$\s?3\.320,00/)).toBeInTheDocument();
+        expect(screen.getByText(/Assinatura Festário: R\$\s?100\/mês · Grátis até 31\/12\/2099/)).toBeInTheDocument();
         expect(screen.getByText(/\/login\?espaco=salao-jardim-das-flores/)).toBeInTheDocument();
 
         const table = await screen.findByRole("table");
@@ -277,7 +284,7 @@ describe("Plataforma - detalhe e convites", () => {
             calls += 1;
             return calls === 1
                 ? HttpResponse.json({ error: { message: "boom" } }, { status: 500 })
-                : HttpResponse.json({ data: [{ id: "tenant-1", slug: "salao-jardim-das-flores", name: "Jardim", plan: "FREE", isActive: true }], pagination: { page: 1, limit: 100, total: 1, totalPages: 1 } });
+                : HttpResponse.json({ data: [{ id: "tenant-1", slug: "salao-jardim-das-flores", name: "Jardim", plan: "FESTARIO", isActive: true }], pagination: { page: 1, limit: 100, total: 1, totalPages: 1 } });
         }));
         const user = userEvent.setup();
         renderAt("/plataforma/espacos/salao-jardim-das-flores");

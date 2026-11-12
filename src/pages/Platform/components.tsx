@@ -5,8 +5,8 @@ import { getErrorMessage } from "../../utils/getErrorMessage";
 import { getApiErrorCode } from "../../utils/errors";
 import { ModalHeader } from "../Admin/ModalHeader";
 import * as A from "../Admin/styles";
-import { copyText, PLAN_OPTIONS, slugify, validateSlug } from "./constants";
-import type { Tenant, TenantPlan } from "../../types";
+import { copyText, slugify, subscriptionLabel, SUBSCRIPTION_TRIAL_DAYS, validateSlug } from "./constants";
+import type { Tenant } from "../../types";
 import * as S from "./styles";
 
 // ─── Novo estabelecimento ──────────────────────────────────────────────────────────────
@@ -21,11 +21,10 @@ interface CreateTenantModalProps {
  * enquanto a pessoa não o editar; depois disso, fica como ela escreveu.
  */
 export function CreateTenantModal({ onClose, onCreated }: CreateTenantModalProps) {
-    const ids = { name: useId(), slug: useId(), plan: useId(), slugHelp: useId(), slugError: useId() };
+    const ids = { name: useId(), slug: useId(), slugHelp: useId(), slugError: useId() };
     const [name, setName] = useState("");
     const [slug, setSlug] = useState("");
     const [slugEdited, setSlugEdited] = useState(false);
-    const [plan, setPlan] = useState<TenantPlan>("FREE");
     const [errors, setErrors] = useState<{ name?: string; slug?: string }>({});
     const [isSaving, setIsSaving] = useState(false);
 
@@ -54,7 +53,7 @@ export function CreateTenantModal({ onClose, onCreated }: CreateTenantModalProps
 
         try {
             setIsSaving(true);
-            const tenant = await createTenant({ name: name.trim(), slug, plan });
+            const tenant = await createTenant({ name: name.trim(), slug });
             toast.success(`“${tenant.name}” cadastrado. Agora convide o dono.`);
             onCreated(tenant);
         } catch (error) {
@@ -108,12 +107,9 @@ export function CreateTenantModal({ onClose, onCreated }: CreateTenantModalProps
                         </S.FieldHelp>
                     </A.FormGroup>
 
-                    <A.FormGroup>
-                        <label htmlFor={ids.plan}>Plano</label>
-                        <A.Select id={ids.plan} value={plan} onChange={(e) => setPlan(e.target.value as TenantPlan)}>
-                            {PLAN_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                        </A.Select>
-                    </A.FormGroup>
+                    <S.FieldHelp>
+                        {subscriptionLabel()}, com quantos espaços o estabelecimento tiver. Os primeiros {SUBSCRIPTION_TRIAL_DAYS} dias são grátis.
+                    </S.FieldHelp>
 
                     <A.ModalActions>
                         <A.SecondaryButton type="button" onClick={onClose} disabled={isSaving}>Cancelar</A.SecondaryButton>

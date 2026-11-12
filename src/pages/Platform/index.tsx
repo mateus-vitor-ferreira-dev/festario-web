@@ -7,7 +7,7 @@ import { listTenantsPage } from "../../services/platform";
 import { formatCurrency } from "../Admin/tabs/constants";
 import * as A from "../Admin/styles";
 import { CreateTenantModal, ToggleActiveModal } from "./components";
-import { PLAN_LABELS, TENANT_STATUS_OPTIONS, TENANTS_PAGE_SIZE } from "./constants";
+import { subscriptionLabel, TENANT_STATUS_OPTIONS, TENANTS_PAGE_SIZE, trialText } from "./constants";
 import type { Tenant } from "../../types";
 import * as S from "./styles";
 
@@ -105,7 +105,7 @@ export default function Platform() {
                                 <thead>
                                     <tr>
                                         <A.Th>Estabelecimento</A.Th>
-                                        <A.Th>Plano</A.Th>
+                                        <A.Th>Assinatura</A.Th>
                                         <A.Th>Situação</A.Th>
                                         <A.Th $num>Espaços</A.Th>
                                         <A.Th $num>Donos</A.Th>
@@ -124,7 +124,12 @@ export default function Platform() {
                                                     <span>{t.slug}</span>
                                                 </S.NameCell>
                                             </A.Td>
-                                            <A.Td>{PLAN_LABELS[t.plan] ?? t.plan}</A.Td>
+                                            <A.Td>
+                                                <S.PlanCell>
+                                                    {subscriptionLabel(t)}
+                                                    {trialText(t) && <span>{trialText(t)}</span>}
+                                                </S.PlanCell>
+                                            </A.Td>
                                             <A.Td>
                                                 <A.ActiveBadge $active={t.isActive}>{t.isActive ? "Ativo" : "Desativado"}</A.ActiveBadge>
                                             </A.Td>
