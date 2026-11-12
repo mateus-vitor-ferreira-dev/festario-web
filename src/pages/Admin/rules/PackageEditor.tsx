@@ -2,10 +2,10 @@ import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
 
 import { createPackage, updatePackage } from "../../../services/salonRules";
-import type { PackageItemInput, SalonItem, SalonPackage, SalonPackageInput, Venue } from "../../../types";
+import type { PackageItemInput, PackagePricingMode, SalonItem, SalonPackage, SalonPackageInput, Venue } from "../../../types";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
 import * as A from "../styles";
-import { CHARGE_LABELS, WEEK, clockToMinutes, describePrice, formatBRL, formatHours, minutesToClock } from "../../../utils/packageFormat";
+import { CHARGE_LABELS, PRICE_FIELD_LABELS, PRICING_MODE_OPTIONS, WEEK, clockToMinutes, describePackagePrice, describePrice, formatBRL, formatHours, minutesToClock, packageBaseTotal } from "../../../utils/packageFormat";
 import * as S from "./styles";
 import { TimeWindow, WeekStrip } from "../../../components/PackageVisuals";
 import type { PackageTemplate } from "./packageTemplates";
@@ -16,6 +16,7 @@ interface FormState {
     name: string;
     description: string;
     price: string;
+    pricingMode: PackagePricingMode;
     venueId: string;
     days: number[];
     holidays: boolean;
@@ -41,6 +42,7 @@ function toForm(pkg: Partial<SalonPackage> | null, items: SalonItem[]): FormStat
         name: pkg?.name ?? "",
         description: pkg?.description ?? "",
         price: pkg?.basePriceAmount != null ? String(Number(pkg.basePriceAmount)) : "",
+        pricingMode: pkg?.pricingMode ?? "FIXED",
         venueId: pkg?.venueId ?? "",
         days: pkg?.validWeekdays ?? ALL_DAYS,
         holidays: pkg?.validOnHolidays ?? true,
@@ -88,6 +90,7 @@ function toPayload(f: FormState, items: SalonItem[]): SalonPackageInput {
         name: f.name.trim(),
         description: f.description.trim() || null,
         basePriceAmount: Number(f.price.replace(",", ".")),
+        pricingMode: f.pricingMode,
         venueId: f.venueId || null,
         validWeekdays: f.days.length === 7 ? null : f.days,
         validOnHolidays: f.holidays,
@@ -146,8 +149,11 @@ export function PackageEditor({ pkg, items, venues, nextSortOrder, template = nu
             const qty = it.chargeType === "PER_GUEST" ? guests : it.chargeType === "PER_HOUR" ? hours : 1;
             return { name: it.name, total: unit * qty };
         });
-        return { guests, hours, extras, base: payload.basePriceAmount || 0 };
-    }, [payload, form.items, activeItems]);
+        const base = packageBaseTotal(payload.basePriceAmount || 0, form.pricingMode, {
+            durationMinutes: hours * 60, guests, minDurationMinutes: payload.minDurationMinutes, minGuests: payload.minGuests,
+        });
+        return { guests, hours, extras, base: base.total, baseQuantity: base.quantity };
+    }, [payload, form.items, form.pricingMode, activeItems]);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -200,10 +206,27 @@ export function PackageEditor({ pkg, items, venues, nextSortOrder, template = nu
                             <label htmlFor="pkg-desc">O que o cliente precisa saber</label>
                             <S.TextArea id="pkg-desc" value={form.description} onChange={(e) => set("description", e.target.value)} maxLength={500} placeholder="Ex.: Salão e jardim, com som ambiente. Ideal para aniversários." />
                         </A.FormGroup>
+                        <A.FormGroup>
+                            <label id="pkg-pricing-label">Como cobrar este pacote</label>
+                            <S.Segmented role="radiogroup" aria-labelledby="pkg-pricing-label" aria-describedby="pkg-pricing-hint">
+                                {PRICING_MODE_OPTIONS.map((o) => (
+                                    <S.SegmentButton key={o.value} type="button" role="radio" aria-checked={form.pricingMode === o.value} $on={form.pricingMode === o.value} onClick={() => set("pricingMode", o.value)}>
+                                        {o.label}
+                                    </S.SegmentButton>
+                                ))}
+                            </S.Segmented>
+                            <A.FieldHint id="pkg-pricing-hint">
+                                {form.pricingMode === "PER_HOUR"
+                                    ? "O preço é multiplicado pelas horas da festa. Hora começada conta inteira (5h10 cobra 6h), e a duração mínima é o mínimo cobrado."
+                                    : form.pricingMode === "PER_GUEST"
+                                        ? "O preço é multiplicado pelos convidados. O cliente informa quantos antes de ver o valor, e o mínimo de convidados é o mínimo cobrado."
+                                        : "Um valor só pela festa, seja qual for a duração ou o número de convidados."}
+                            </A.FieldHint>
+                        </A.FormGroup>
                         <A.FormRow>
                             <A.FormGroup>
-                                <label htmlFor="pkg-price">Preço (R$)</label>
-                                <A.TextInput id="pkg-price" inputMode="decimal" value={form.price} onChange={(e) => set("price", e.target.value)} placeholder="Ex.: 1200" />
+                                <label htmlFor="pkg-price">{PRICE_FIELD_LABELS[form.pricingMode]}</label>
+                                <A.TextInput id="pkg-price" inputMode="decimal" value={form.price} onChange={(e) => set("price", e.target.value)} placeholder={form.pricingMode === "PER_HOUR" ? "Ex.: 300" : form.pricingMode === "PER_GUEST" ? "Ex.: 50" : "Ex.: 1200"} />
                             </A.FormGroup>
                             <A.FormGroup>
                                 <label htmlFor="pkg-venue">Espaço</label>
@@ -333,7 +356,7 @@ export function PackageEditor({ pkg, items, venues, nextSortOrder, template = nu
                     <h3>Como o cliente vê</h3>
                     <S.PackageHead>
                         <S.PreviewName>{form.name || "Nome do pacote"}</S.PreviewName>
-                        <S.Price>{(payload.basePriceAmount ?? 0) > 0 ? formatBRL(payload.basePriceAmount) : "Preço a definir"}</S.Price>
+                        <S.Price>{(payload.basePriceAmount ?? 0) > 0 ? describePackagePrice(payload.basePriceAmount!, form.pricingMode) : "Preço a definir"}</S.Price>
                     </S.PackageHead>
                     <WeekStrip weekdays={form.days.length === 7 ? null : form.days} holidays={form.holidays} />
                     <TimeWindow earliest={payload.earliestStartMinute ?? null} latest={payload.latestEndMinute ?? null} />
@@ -345,7 +368,13 @@ export function PackageEditor({ pkg, items, venues, nextSortOrder, template = nu
 
                     <h3>Orçamento de exemplo</h3>
                     <S.PreviewLines>
-                        <dt>Pacote</dt><dd>{example.base > 0 ? formatBRL(example.base) : "a definir"}</dd>
+                        <dt>
+                            Pacote
+                            {example.base > 0 && form.pricingMode !== "FIXED" && (
+                                <> ({form.pricingMode === "PER_HOUR" ? `${example.baseQuantity}h` : `${example.baseQuantity} convidados`} × {formatBRL(payload.basePriceAmount)})</>
+                            )}
+                        </dt>
+                        <dd>{example.base > 0 ? formatBRL(example.base) : "a definir"}</dd>
                         {example.extras.map((x) => <FragmentLine key={x.name} name={x.name} total={x.total} />)}
                         <dt><strong>Com todos os adicionais</strong></dt>
                         <dd><strong>{formatBRL(example.base + example.extras.reduce((s, x) => s + x.total, 0))}</strong></dd>

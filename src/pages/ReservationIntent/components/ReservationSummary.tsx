@@ -1,4 +1,5 @@
 import { formatCents } from "../../../utils/reservationFormat";
+import { planBaseMath } from "../../../utils/packageFormat";
 import type { QuoteResult, Venue, VenuePackage } from "../../../types";
 import * as S from "../styles";
 
@@ -75,7 +76,10 @@ export function ReservationSummary({
                         <S.QuoteList>
                             {quote.items.map((item, i) => (
                                 <S.SummaryItem key={`${item.type}-${i}`}>
-                                    <span>{item.type === "PLAN_BASE" ? `Pacote ${quote.packageName ?? selectedPackage?.name ?? ""}`.trim() : item.description}</span>
+                                    <span>
+                                        {item.type === "PLAN_BASE" ? `Pacote ${quote.packageName ?? selectedPackage?.name ?? ""}`.trim() : item.description}
+                                        {item.type === "PLAN_BASE" && planBaseMath(item, selectedPackage) && <S.LineMath>{planBaseMath(item, selectedPackage)}</S.LineMath>}
+                                    </span>
                                     <strong>{item.type === "INCLUDED_ITEM" ? "Incluso" : formatCents(item.totalAmountCents)}</strong>
                                 </S.SummaryItem>
                             ))}

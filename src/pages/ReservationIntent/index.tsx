@@ -10,7 +10,7 @@ import { getErrorMessage } from "../../utils/getErrorMessage";
 import { isAbortError } from "../../utils/errors";
 import { animateFadeInUp } from "../../utils/animations";
 import { formatCents } from "../../utils/reservationFormat";
-import { describeWindow, formatBRL, formatHours } from "../../utils/packageFormat";
+import { describePackagePrice, describeWindow, formatHours } from "../../utils/packageFormat";
 import type { Venue, VenuePackage } from "../../types";
 
 import { bookingDateRange, choosableItems, useReservationForm } from "./useReservationForm";
@@ -126,7 +126,7 @@ export default function ReservationIntent() {
                                 : form.quote
                                     ? formatCents(form.quote.totalCents)
                                     : pkg
-                                        ? `a partir de ${formatBRL(pkg.basePriceAmount)}`
+                                        ? `a partir de ${describePackagePrice(pkg.basePriceAmount, pkg.pricingMode)}`
                                         : "—"}
                         </strong>
                         <small>{pkg ? pkg.name : "Escolha um pacote"}</small>
@@ -212,8 +212,17 @@ export default function ReservationIntent() {
                                     value={form.guests}
                                     onChange={(e) => form.setGuests(e.target.value.replace(/\D/g, ""))}
                                     placeholder={Number.isFinite(guestLimit) ? `até ${guestLimit}` : "quantas pessoas"}
+                                    aria-describedby={pkg?.pricingMode === "PER_GUEST" ? "guest-pricing-hint" : undefined}
                                 />
                             </S.FormRow>
+                            {pkg?.pricingMode === "PER_GUEST" && (
+                                <S.Hint id="guest-pricing-hint">
+                                    O pacote {pkg.name} é cobrado por convidado: informe quantos para ver o valor{pkg.minGuests ? ` (mínimo cobrado: ${pkg.minGuests})` : ""}.
+                                </S.Hint>
+                            )}
+                            {pkg?.pricingMode === "PER_HOUR" && (
+                                <S.Hint>O pacote {pkg.name} é cobrado por hora; hora começada conta inteira.</S.Hint>
+                            )}
                             {form.endsNextDay && <S.Hint>O término é no dia seguinte: a festa passa da meia-noite.</S.Hint>}
                         </S.Card>
 

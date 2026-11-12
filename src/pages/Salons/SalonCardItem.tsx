@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 import SalonMark from "../../components/SalonMark";
 import VenueCover from "../../components/VenueCover";
 import { AMENITY_LABELS, sortAmenities } from "../../constants/amenities";
-import { formatCapacityRange, formatDistance, formatPlace, formatPrice } from "../../utils/salonFormat";
+import { formatCapacityRange, formatDistance, formatPlace, formatStartingPrice } from "../../utils/salonFormat";
 import type { SalonCard } from "../../types";
 import * as S from "./styles";
 
@@ -18,7 +18,7 @@ interface SalonCardItemProps {
 export default function SalonCardItem({ salon, from, priority }: SalonCardItemProps) {
     const distance = formatDistance(salon.distanceKm);
     const place = formatPlace(salon.neighborhood, salon.city, salon.state);
-    const price = formatPrice(salon.startingPrice);
+    const price = formatStartingPrice(salon.startingPrice, salon.startingPriceMode);
     // Até três comodidades no card; o resto vira "+N" (a lista toda está na página do salão).
     const all = sortAmenities(salon.amenityList ?? [
         ...(salon.amenities.hasPool ? ["POOL"] : []),

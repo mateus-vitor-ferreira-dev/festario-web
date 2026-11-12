@@ -1,7 +1,7 @@
 import { useRef, type KeyboardEvent } from "react";
 
 import { TimeWindow, WeekStrip } from "../../../components/PackageVisuals";
-import { describeDays, describeWindow, formatBRL, formatHours } from "../../../utils/packageFormat";
+import { describeDays, describePackagePrice, describeWindow, formatHours } from "../../../utils/packageFormat";
 import type { VenuePackage } from "../../../types";
 import * as S from "../styles";
 
@@ -100,7 +100,7 @@ export function PackageSelector({ packages, loading, eventDate, isHoliday, selec
                                         ? <S.PlanUnavailable>Não vale nesta data</S.PlanUnavailable>
                                         : `${describeDays(pkg.validWeekdays, pkg.validOnHolidays)}. ${describeWindow(pkg.earliestStartMinute, pkg.latestEndMinute)}${pkg.maxDurationMinutes ? `, até ${formatHours(pkg.maxDurationMinutes)} de festa` : ""}.`}
                                 </S.PlanDays>
-                                <S.PlanPrice>{formatBRL(pkg.basePriceAmount)}</S.PlanPrice>
+                                <S.PlanPrice>{describePackagePrice(pkg.basePriceAmount, pkg.pricingMode)}</S.PlanPrice>
                                 <S.PlanDetails>
                                     <WeekStrip weekdays={pkg.validWeekdays} holidays={pkg.validOnHolidays} compact />
                                     <TimeWindow earliest={pkg.earliestStartMinute} latest={pkg.latestEndMinute} />

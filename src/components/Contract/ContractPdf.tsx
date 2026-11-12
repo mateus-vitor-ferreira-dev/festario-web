@@ -123,6 +123,7 @@ export function ContractPdf({ contract: c }: { contract: ContractDocument }) {
                     <Fact label="Data" value={c.event.date} />
                     <Fact label="Horário" value={`${c.event.start} às ${c.event.end}`} />
                     <Fact label="Pacote" value={c.package.name} />
+                    {c.package.pricing ? <Fact label="Preço do pacote" value={c.package.pricing} /> : null}
                     <Fact label="Convidados" value={c.event.guests ? String(c.event.guests) : "a informar"} />
                     {c.event.address ? <Fact label="Endereço" value={c.event.address} /> : null}
                 </View>

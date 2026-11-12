@@ -172,7 +172,10 @@ export function useReservationForm({ venueId }: { venueId: string | undefined })
     if (!eventDate) missing.push("a data");
     if (!selectedPackage) missing.push("o pacote");
     if (!startTime || !endTime) missing.push("o horário");
-    if (!guests || !Number.isInteger(guestCount) || guestCount < 1) missing.push("o número de convidados");
+    // Todo orçamento pede os convidados; no pacote por convidado, o preço depende deles.
+    if (!guests || !Number.isInteger(guestCount) || guestCount < 1) {
+        missing.push(selectedPackage?.pricingMode === "PER_GUEST" ? "o número de convidados (o pacote é cobrado por convidado)" : "o número de convidados");
+    }
 
     const quotePayload: QuotePayload | null = useMemo(() => {
         if (!venueId || !selectedPackage || !eventDate || !startTime || !endTime || !Number.isInteger(guestCount) || guestCount < 1) return null;
