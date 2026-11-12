@@ -221,6 +221,64 @@ describe("ReservationIntent", () => {
         expect(screen.getByRole("button", { name: /reservar e ver como pagar/i })).toBeDisabled();
     });
 
+    it("per-hour package: shows the price per hour and the math of the quote (6 h × R$ 300)", async () => {
+        server.use(
+            http.get(`${BASE}/venues/:id/packages`, ({ request }) => {
+                const date = new URL(request.url).searchParams.get("date");
+                const perHour = { ...SATURDAY, basePriceAmount: "300.00", pricingMode: "PER_HOUR" as const };
+                return HttpResponse.json({ data: { date, holiday: date ? false : null, packages: [perHour, WEEKDAY].map((p) => ({ ...p, ...(date && { availableOnDate: p.id === "pkg-sab" }) })) } });
+            }),
+            http.post(`${BASE}/reservations/quote`, () => HttpResponse.json({
+                data: {
+                    currency: "BRL", packageId: "pkg-sab", packageName: "Sábado", guestCount: 80,
+                    items: [{ type: "PLAN_BASE", description: "Pacote Sábado — 6h × R$ 300,00 por hora", quantity: 6, unitAmountCents: 30000, totalAmountCents: 180000, metadata: { pricingMode: "PER_HOUR" } }],
+                    cancellationPolicy: { tiers: [], notes: null, summary: [] }, subtotalCents: 180000, discountCents: 0, totalCents: 180000, discountApplied: null,
+                },
+            })),
+        );
+        const user = userEvent.setup();
+        const { container } = renderPage();
+        const group = await screen.findByRole("radiogroup", { name: /escolha o pacote/i });
+        expect(within(group).getByText(/R\$\s?300,00 por hora/)).toBeInTheDocument();
+        await fillSaturday(user, container, { start: "13:00", end: "18:10" });
+        expect(screen.getByText(/cobrado por hora; hora começada conta inteira/i)).toBeInTheDocument();
+        const summary = await screen.findByText("Resumo da reserva").then((h) => h.closest("div")!.parentElement!);
+        expect(await within(summary).findByText(/6 h × R\$\s?300,00/, {}, { timeout: 2000 })).toBeInTheDocument();
+    });
+
+    it("per-guest package: guests are required before the quote, and the hint says why", async () => {
+        const bodies: unknown[] = [];
+        server.use(
+            http.get(`${BASE}/venues/:id/packages`, ({ request }) => {
+                const date = new URL(request.url).searchParams.get("date");
+                const perGuest = { ...SATURDAY, basePriceAmount: "50.00", pricingMode: "PER_GUEST" as const };
+                return HttpResponse.json({ data: { date, holiday: date ? false : null, packages: [perGuest, WEEKDAY].map((p) => ({ ...p, ...(date && { availableOnDate: p.id === "pkg-sab" }) })) } });
+            }),
+            http.post(`${BASE}/reservations/quote`, async ({ request }) => {
+                bodies.push(await request.json());
+                return HttpResponse.json({
+                    data: {
+                        currency: "BRL", packageId: "pkg-sab", packageName: "Sábado", guestCount: 80,
+                        items: [{ type: "PLAN_BASE", description: "Pacote Sábado — 80 convidados × R$ 50,00 por convidado", quantity: 80, unitAmountCents: 5000, totalAmountCents: 400000, metadata: { pricingMode: "PER_GUEST" } }],
+                        cancellationPolicy: { tiers: [], notes: null, summary: [] }, subtotalCents: 400000, discountCents: 0, totalCents: 400000, discountApplied: null,
+                    },
+                });
+            }),
+        );
+        const user = userEvent.setup();
+        const { container } = renderPage();
+        await fillSaturday(user, container, { guests: "" });
+        expect(screen.getByText(/cobrado por convidado: informe quantos para ver o valor \(mínimo cobrado: 20\)/i)).toBeInTheDocument();
+        expect(screen.getByText(/falta escolher o número de convidados \(o pacote é cobrado por convidado\)/i)).toBeInTheDocument();
+        await new Promise((r) => setTimeout(r, 600));
+        expect(bodies).toHaveLength(0);
+
+        await user.type(screen.getByLabelText("Convidados"), "80");
+        await waitFor(() => expect(bodies).toHaveLength(1), { timeout: 2000 });
+        const summary = await screen.findByText("Resumo da reserva").then((h) => h.closest("div")!.parentElement!);
+        expect(await within(summary).findByText(/80 convidados × R\$\s?50,00/)).toBeInTheDocument();
+    });
+
     it("lists what is missing before quoting", async () => {
         mockPackages();
         renderPage();

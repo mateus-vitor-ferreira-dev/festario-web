@@ -11,7 +11,8 @@ import { getLoadErrorMessage } from "../../utils/getErrorMessage";
 import { isManagerRole } from "../../utils/roles";
 import { withReturn } from "../../utils/returnPath";
 import { AMENITY_LABELS, sortAmenities } from "../../constants/amenities";
-import { formatCapacityRange, formatDistance, formatPlace, formatPrice } from "../../utils/salonFormat";
+import { pricingUnit } from "../../utils/packageFormat";
+import { formatCapacityRange, formatDistance, formatPlace, formatPrice, formatStartingPrice } from "../../utils/salonFormat";
 import type { SalonDetail, SalonVenue } from "../../types";
 import * as S from "./styles";
 
@@ -30,7 +31,11 @@ function instagramUrl(raw: string): string {
 function priceText(salon: SalonDetail): string | null {
     if (!salon.priceRange) return null;
     const { min, max } = salon.priceRange;
-    return min === max ? `a partir de ${formatPrice(min)}` : `de ${formatPrice(min)} a ${formatPrice(max)}`;
+    // Pacotes cobrados de jeitos diferentes não formam uma faixa: fica o menor, com a unidade dele.
+    const modes = new Set(salon.venues.map((v) => v.startingPriceMode ?? "FIXED"));
+    if (modes.size > 1) return `a partir de ${formatStartingPrice(min, salon.startingPriceMode)}`;
+    const unit = pricingUnit([...modes][0]);
+    return min === max ? `a partir de ${formatPrice(min)}${unit}` : `de ${formatPrice(min)} a ${formatPrice(max)}${unit}`;
 }
 
 type LoadState = { status: "loading" } | { status: "ready"; salon: SalonDetail } | { status: "missing" } | { status: "error"; message: string };
@@ -186,7 +191,7 @@ export default function SalonPage() {
                     <S.Venues>
                         {s.venues.map((venue, i) => {
                             const venueDistance = formatDistance(venue.distanceKm);
-                            const venuePrice = formatPrice(venue.startingPrice);
+                            const venuePrice = formatStartingPrice(venue.startingPrice, venue.startingPriceMode);
                             const venuePlace = formatPlace(venue.neighborhood, venue.city, venue.state) || venue.location;
                             return (
                                 <S.Venue key={venue.id}>

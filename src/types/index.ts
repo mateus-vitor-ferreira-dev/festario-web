@@ -49,6 +49,8 @@ export interface Venue {
   basePrice?: number | null;
   /** Menor preço de plano ativo, em reais — é o "a partir de" do card e a base do filtro `maxPrice`. */
   startingPrice?: number | string | null;
+  /** Unidade do "a partir de": pela festa, por hora ou por convidado. */
+  startingPriceMode?: PackagePricingMode | null;
   location?: string | null;
   latitude?: number | null;
   longitude?: number | null;
@@ -292,7 +294,18 @@ export interface AuthContextValue {
 
 // ─── Plataforma (estabelecimentos e convites) ─────────────────────────────────
 
-export type TenantPlan = "FREE" | "STARTER" | "PRO";
+/** Plano único da plataforma: Assinatura Festário. */
+export type TenantPlan = "FESTARIO";
+
+/** Assinatura do estabelecimento como a API devolve (sem cobrança automática por enquanto). */
+export interface TenantSubscription {
+  plan: TenantPlan;
+  name: string;
+  monthlyPriceCents: number;
+  /** Fim do mês grátis. */
+  trialEndsAt: string | null;
+  inTrial: boolean;
+}
 export type InviteStatus = "valid" | "expired" | "accepted" | "revoked";
 
 export interface TenantStats {
@@ -309,6 +322,9 @@ export interface Tenant {
   slug: string;
   name: string;
   plan: TenantPlan;
+  /** Fim do mês grátis da assinatura. */
+  trialEndsAt?: string | null;
+  subscription?: TenantSubscription;
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -413,6 +429,8 @@ export interface QuoteLine {
   quantity: number;
   unitAmountCents: number;
   totalAmountCents: number;
+  /** Na linha PLAN_BASE, `pricingMode` diz como o pacote foi cobrado. */
+  metadata?: { pricingMode?: PackagePricingMode } & Record<string, unknown>;
 }
 
 export interface QuoteResult {
@@ -429,6 +447,9 @@ export interface QuoteResult {
   /** Como o salão recebe: sinal que confirma a reserva e prazo do restante. */
   paymentTerms?: { depositCents: number | null; depositPercent: number | null; balanceDueDays: number | null };
 }
+
+/** Como o preço base do pacote é cobrado: pela festa, por hora (horas cheias) ou por convidado. */
+export type PackagePricingMode = "FIXED" | "PER_HOUR" | "PER_GUEST";
 
 /** Item do pacote como a vitrine recebe (GET /venues/:id/packages). */
 export interface VenuePackageItem {
@@ -451,6 +472,8 @@ export interface VenuePackage {
   name: string;
   description: string | null;
   basePriceAmount: string;
+  /** Ausente em respostas antigas = FIXED. */
+  pricingMode?: PackagePricingMode;
   validWeekdays: number[] | null;
   validOnHolidays: boolean;
   earliestStartMinute: number | null;
@@ -562,7 +585,8 @@ export interface ContractDocument {
   landlord: { name: string; tradeName: string; document: string | null; address: string | null; phone: string | null; email: string | null };
   renter: { name: string; email: string; phone: string | null };
   event: { venue: string; address: string | null; date: string; start: string; end: string; guests: number | null; keyDelivery: string | null };
-  package: { name: string; description: string | null; included: string[] };
+  /** `pricing`: preço com a unidade ("R$ 300,00 por hora"); ausente em contratos antigos. */
+  package: { name: string; description: string | null; included: string[]; pricing?: string | null };
   charges: { lines: { description: string; amount: string }[]; discount: string | null; total: string };
   payment: string;
   clauses: { title: string; text: string }[];
@@ -620,6 +644,7 @@ export interface SalonPackage {
   sortOrder: number;
   isActive: boolean;
   basePriceAmount: string;
+  pricingMode?: PackagePricingMode;
   validWeekdays: number[] | null;
   validOnHolidays: boolean;
   earliestStartMinute: number | null;
@@ -723,6 +748,7 @@ export interface SalonCard {
   state: string | null;
   capacity: { min: number; max: number };
   startingPrice: number | null;
+  startingPriceMode?: PackagePricingMode | null;
   amenities: { hasPool: boolean; hasKidsArea: boolean };
   /** Comodidades dos espaços do salão (códigos do catálogo, na ordem dele). */
   amenityList?: string[];
@@ -745,6 +771,7 @@ export interface SalonVenue {
   state: string | null;
   location: string | null;
   startingPrice: number | null;
+  startingPriceMode?: PackagePricingMode | null;
   photos: VenuePhoto[];
   mapsUrl: string | null;
   distanceKm: number | null;

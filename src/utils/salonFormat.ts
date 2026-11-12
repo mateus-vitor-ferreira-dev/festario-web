@@ -1,6 +1,8 @@
 /**
  * Textos curtos da vitrine: distância, endereço, preço e capacidade de um salão ou espaço.
  */
+import type { PackagePricingMode } from "../types";
+import { pricingUnit } from "./packageFormat";
 
 /** "a 850 m", "a 3,2 km", "a 48 km". */
 export function formatDistance(km: number | null | undefined): string | null {
@@ -20,6 +22,12 @@ export function formatPlace(neighborhood?: string | null, city?: string | null, 
 export function formatPrice(value: number | null | undefined): string | null {
     if (value == null) return null;
     return Number(value).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+}
+
+/** "R$ 1.200", "R$ 300 por hora" ou "R$ 50 por convidado": o "a partir de" com a unidade do pacote. */
+export function formatStartingPrice(value: number | string | null | undefined, mode?: PackagePricingMode | null): string | null {
+    if (value == null) return null;
+    return `${formatPrice(Number(value))}${pricingUnit(mode)}`;
 }
 
 /** "até 150 convidados" ou "de 40 a 150 convidados". */

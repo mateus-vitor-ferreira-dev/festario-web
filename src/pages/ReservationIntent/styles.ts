@@ -556,6 +556,15 @@ export const SummaryItem = styled.div`
   }
 `;
 
+/** A conta do pacote por hora/por convidado, embaixo do nome ("6 h × R$ 300,00"). */
+export const LineMath = styled.small`
+  display: block;
+  margin-top: 2px;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-variant-numeric: lining-nums tabular-nums;
+`;
+
 export const QuoteList = styled.div`
   display: flex;
   flex-direction: column;

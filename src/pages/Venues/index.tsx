@@ -9,6 +9,7 @@ import { ActiveFilterChips, FilterBar, NoResults, Pagination, TextField } from "
 import { parseMoney } from "../../components/FilterBar";
 import { animateFadeInUp } from "../../utils/animations";
 import VenueCover from "../../components/VenueCover";
+import { formatStartingPrice } from "../../utils/salonFormat";
 import * as S from "./styles";
 
 /**
@@ -164,13 +165,7 @@ export default function Venues() {
                                 {venue.startingPrice != null && (
                                     <S.PlansTag>
                                         <span>A partir de</span>
-                                        <strong>
-                                            {Number(venue.startingPrice).toLocaleString("pt-BR", {
-                                                style: "currency",
-                                                currency: "BRL",
-                                                maximumFractionDigits: 0,
-                                            })}
-                                        </strong>
+                                        <strong>{formatStartingPrice(venue.startingPrice, venue.startingPriceMode)}</strong>
                                     </S.PlansTag>
                                 )}
                             </S.CardHeader>

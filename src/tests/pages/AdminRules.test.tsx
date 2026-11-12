@@ -105,7 +105,39 @@ describe("Regras do salão", () => {
         await user.click(screen.getByRole("button", { name: /^criar pacote$/i }));
 
         await waitFor(() => expect(body).not.toBeNull());
-        expect(body).toMatchObject({ name: "Domingo", basePriceAmount: 900, validWeekdays: null, items: [{ itemId: "it-1", mode: "INCLUDED" }] });
+        expect(body).toMatchObject({ name: "Domingo", basePriceAmount: 900, pricingMode: "FIXED", validWeekdays: null, items: [{ itemId: "it-1", mode: "INCLUDED" }] });
+    });
+
+    it("chooses how to charge the package: the price label follows the choice", async () => {
+        let body: Record<string, unknown> | null = null;
+        server.use(
+            http.get(`${BASE}/admin/items`, () => HttpResponse.json({ data: [] })),
+            http.post(`${BASE}/admin/plans`, async ({ request }) => {
+                body = await request.json() as Record<string, unknown>;
+                return HttpResponse.json({ data: { ...PACKAGE, id: "pkg-3" } }, { status: 201 });
+            }),
+        );
+        const user = userEvent.setup();
+        renderAt("/painel?tab=rules");
+        await user.click(await screen.findByRole("button", { name: "Criar do zero" }));
+
+        const howToCharge = screen.getByRole("radiogroup", { name: "Como cobrar este pacote" });
+        expect(within(howToCharge).getByRole("radio", { name: "Valor fixo pela festa" })).toHaveAttribute("aria-checked", "true");
+
+        await user.click(within(howToCharge).getByRole("radio", { name: "Por convidado" }));
+        expect(screen.getByLabelText("Preço por convidado (R$)")).toBeInTheDocument();
+
+        await user.click(within(howToCharge).getByRole("radio", { name: "Por hora" }));
+        expect(screen.queryByLabelText("Preço por convidado (R$)")).not.toBeInTheDocument();
+        await user.type(screen.getByLabelText("Nome"), "Hora livre");
+        await user.type(screen.getByLabelText("Preço por hora (R$)"), "300");
+        // Prévia: "R$ 300,00 por hora", e o exemplo multiplica pelas horas.
+        expect(screen.getByText(/R\$\s?300,00 por hora/)).toBeInTheDocument();
+        expect(screen.getByText(/4h × R\$\s?300,00/)).toBeInTheDocument();
+
+        await user.click(screen.getByRole("button", { name: /^criar pacote$/i }));
+        await waitFor(() => expect(body).not.toBeNull());
+        expect(body).toMatchObject({ name: "Hora livre", basePriceAmount: 300, pricingMode: "PER_HOUR" });
     });
 
     it("saves the cancellation policy", async () => {

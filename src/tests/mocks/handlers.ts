@@ -340,7 +340,9 @@ export const mockTenants = [
         id: "tenant-1",
         slug: "salao-jardim-das-flores",
         name: "Salão Jardim das Flores",
-        plan: "STARTER",
+        plan: "FESTARIO",
+        trialEndsAt: "2099-12-31T12:00:00.000Z",
+        subscription: { plan: "FESTARIO", name: "Assinatura Festário", monthlyPriceCents: 10000, trialEndsAt: "2099-12-31T12:00:00.000Z", inTrial: true },
         isActive: true,
         createdAt: "2026-03-28T14:39:45.615Z",
         updatedAt: "2026-10-14T14:39:45.955Z",
@@ -350,7 +352,9 @@ export const mockTenants = [
         id: "tenant-2",
         slug: "recanto-vila-rica",
         name: "Recanto Vila Rica",
-        plan: "FREE",
+        plan: "FESTARIO",
+        trialEndsAt: "2025-09-19T14:39:45.615Z",
+        subscription: { plan: "FESTARIO", name: "Assinatura Festário", monthlyPriceCents: 10000, trialEndsAt: "2025-09-19T14:39:45.615Z", inTrial: false },
         isActive: false,
         createdAt: "2025-08-20T14:39:45.615Z",
         updatedAt: "2026-10-14T14:39:45.650Z",
@@ -386,7 +390,7 @@ export const platformHandlers = [
     http.post(`${BASE_URL}/platform/tenants`, async ({ request }) => {
         const body = (await request.json()) as { name: string; slug: string; plan?: string };
         return HttpResponse.json(
-            { message: "created", data: { id: "tenant-new", isActive: true, plan: "FREE", ...body } },
+            { message: "created", data: { id: "tenant-new", isActive: true, plan: "FESTARIO", ...body } },
             { status: 201 },
         );
     }),

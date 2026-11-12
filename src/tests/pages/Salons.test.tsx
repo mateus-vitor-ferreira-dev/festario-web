@@ -96,6 +96,13 @@ describe("Vitrine de salões", () => {
         expect(screen.getByTestId("location")).toHaveTextContent("/s/salao-jardim-das-flores");
     });
 
+    it("o \"a partir de\" do card diz a unidade quando o pacote é por hora", async () => {
+        captureSalons(() => listResponse([{ ...CARD, startingPrice: 300, startingPriceMode: "PER_HOUR" }]));
+        renderPage();
+        const link = await screen.findByRole("link", { name: /salão jardim das flores/i });
+        expect(within(link).getByText(/R\$\s?300 por hora/)).toBeInTheDocument();
+    });
+
     it("o card mostra até três comodidades e o resto como +N", async () => {
         captureSalons(() => listResponse([{ ...CARD, amenityList: ["POOL", "PARKING", "BUFFET", "LIVE_MUSIC", "DJ"] }]));
         renderPage();
