@@ -7,7 +7,7 @@ import type { SalonItem, SalonPackage, SalonPackageInput, Venue } from "../../..
 import { isAbortError } from "../../../utils/errors";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
 import * as A from "../styles";
-import { describeDays, describeWindow, formatBRL, formatHours } from "../../../utils/packageFormat";
+import { describeDays, describePackagePrice, describeWindow, formatHours } from "../../../utils/packageFormat";
 import { PackageEditor } from "./PackageEditor";
 import { PACKAGE_TEMPLATES, type PackageTemplate } from "./packageTemplates";
 import * as S from "./styles";
@@ -16,7 +16,7 @@ import { TimeWindow, WeekStrip } from "../../../components/PackageVisuals";
 /** Pacote → corpo de criação (para duplicar). */
 function asInput(p: SalonPackage, overrides: Partial<SalonPackageInput>): SalonPackageInput {
     return {
-        name: p.name, description: p.description, basePriceAmount: Number(p.basePriceAmount), venueId: p.venueId,
+        name: p.name, description: p.description, basePriceAmount: Number(p.basePriceAmount), pricingMode: p.pricingMode ?? "FIXED", venueId: p.venueId,
         validWeekdays: p.validWeekdays, validOnHolidays: p.validOnHolidays,
         earliestStartMinute: p.earliestStartMinute, latestEndMinute: p.latestEndMinute,
         minDurationMinutes: p.minDurationMinutes, maxDurationMinutes: p.maxDurationMinutes,
@@ -177,7 +177,7 @@ export function PackagesSection({ onGoTo }: { onGoTo: (section: string) => void 
                         <S.PackageCard key={p.id} $inactive={!p.isActive}>
                             <S.PackageHead>
                                 <h3>{p.name}</h3>
-                                <S.Price>{formatBRL(p.basePriceAmount)}</S.Price>
+                                <S.Price>{describePackagePrice(p.basePriceAmount, p.pricingMode)}</S.Price>
                                 <S.Meta>{p.venue?.name ?? "Todos os espaços"}{p.maxGuests ? `, até ${p.maxGuests} convidados` : ""}</S.Meta>
                                 {!p.isActive && <S.Tag>Desativado: não aparece para os clientes</S.Tag>}
                                 {included.length > 0 && <S.Meta>Incluso: {included.join(", ")}</S.Meta>}

@@ -13,7 +13,7 @@ import { formatCurrency, formatDate, formatDateTime } from "../Admin/tabs/consta
 import { ModalHeader } from "../Admin/ModalHeader";
 import * as A from "../Admin/styles";
 import { CopyLink, ToggleActiveModal } from "./components";
-import { INVITE_STATUS_LABELS, INVITE_STATUS_OPTIONS, INVITES_PAGE_SIZE, PLAN_LABELS, tenantLoginUrl } from "./constants";
+import { INVITE_STATUS_LABELS, INVITE_STATUS_OPTIONS, INVITES_PAGE_SIZE, subscriptionLabel, tenantLoginUrl, trialText } from "./constants";
 import type { CreateInviteResult, ListParams, OwnerInvite, Tenant } from "../../types";
 import * as S from "./styles";
 
@@ -110,7 +110,10 @@ export default function TenantDetail() {
                     <A.Title>{tenant.name}</A.Title>
                     <S.MetaList>
                         <div><dt>Endereço</dt><dd>{tenant.slug}</dd></div>
-                        <div><dt>Plano</dt><dd>{PLAN_LABELS[tenant.plan] ?? tenant.plan}</dd></div>
+                        <div>
+                            <dt>Assinatura</dt>
+                            <dd>{subscriptionLabel(tenant)}{trialText(tenant) && <> · {trialText(tenant)}</>}</dd>
+                        </div>
                         <div>
                             <dt>Situação</dt>
                             <dd><A.ActiveBadge $active={tenant.isActive}>{tenant.isActive ? "Ativo" : "Desativado"}</A.ActiveBadge></dd>
