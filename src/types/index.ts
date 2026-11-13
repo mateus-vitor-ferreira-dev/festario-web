@@ -297,7 +297,38 @@ export interface AuthContextValue {
 /** Plano único da plataforma: Assinatura Festário. */
 export type TenantPlan = "FESTARIO";
 
-/** Assinatura do estabelecimento como a API devolve (sem cobrança automática por enquanto). */
+/** Situação da assinatura (cobrança pelo Pix Automático da Efí). */
+export type SubscriptionStatus = "TRIAL" | "AUTORIZACAO_PENDENTE" | "ATIVA" | "EM_ATRASO" | "SUSPENSA" | "CANCELADA";
+
+/** Autorização do Pix Automático: nenhuma, falta aprovar no banco, aprovada, ou recusada/cancelada. */
+export type AutomaticPaymentState = "NONE" | "PENDING" | "APPROVED" | "ENDED";
+
+export interface AutomaticPayment {
+  state: AutomaticPaymentState;
+  requestedAt: string | null;
+  authorizedAt: string | null;
+  payerName: string | null;
+  /** CPF/CNPJ mascarado. */
+  payerDocument: string | null;
+  /** Pix copia e cola da autorização (só para o dono, enquanto falta aprovar). */
+  code?: string | null;
+}
+
+export type SubscriptionChargeStatus = "PENDENTE" | "AGENDADA" | "PAGA" | "FALHOU" | "CANCELADA";
+
+export interface SubscriptionCharge {
+  id: string;
+  /** AAAA-MM-DD */
+  dueDate: string;
+  amountCents: number;
+  status: SubscriptionChargeStatus;
+  method: "PIX_AUTOMATICO" | "MANUAL";
+  paidAt: string | null;
+  failureReason?: string | null;
+  note?: string | null;
+}
+
+/** Assinatura do estabelecimento como a API devolve. Os campos da cobrança vêm da API com a cobrança ligada ou não. */
 export interface TenantSubscription {
   plan: TenantPlan;
   name: string;
@@ -305,6 +336,31 @@ export interface TenantSubscription {
   /** Fim do mês grátis. */
   trialEndsAt: string | null;
   inTrial: boolean;
+  /** Cobrança automática ligada (sem ela nada é bloqueado). */
+  billingEnabled?: boolean;
+  status?: SubscriptionStatus;
+  /** Próximo vencimento (AAAA-MM-DD): pago ou grátis até este dia. */
+  nextDueDate?: string;
+  daysUntilDue?: number;
+  overdueDays?: number;
+  /** Último dia da tolerância (AAAA-MM-DD), quando em atraso. */
+  graceEndsOn?: string | null;
+  /** Painel do dono só para consulta. */
+  readOnly?: boolean;
+  lastPaidAt?: string | null;
+  automaticPayment?: AutomaticPayment;
+}
+
+/** Assinatura com o histórico (painel do dono e detalhe da plataforma). */
+export interface SubscriptionDetail extends TenantSubscription {
+  billingEnabled: boolean;
+  status: SubscriptionStatus;
+  nextDueDate: string;
+  daysUntilDue: number;
+  overdueDays: number;
+  readOnly: boolean;
+  automaticPayment: AutomaticPayment;
+  charges: SubscriptionCharge[];
 }
 export type InviteStatus = "valid" | "expired" | "accepted" | "revoked";
 

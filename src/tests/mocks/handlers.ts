@@ -375,6 +375,30 @@ const paginate = <T,>(data: T[], url: URL) => {
     return { message: "ok", data, pagination: { page, limit, total: data.length, totalPages: Math.max(1, Math.ceil(data.length / limit)) } };
 };
 
+/** Assinatura padrão dos testes: cobrança desligada (como hoje), no mês grátis. */
+export const mockSubscription = {
+    plan: "FESTARIO",
+    name: "Assinatura Festário",
+    monthlyPriceCents: 10000,
+    trialEndsAt: "2099-12-31T12:00:00.000Z",
+    inTrial: true,
+    billingEnabled: false,
+    status: "TRIAL",
+    nextDueDate: "2099-12-31",
+    daysUntilDue: 400,
+    overdueDays: 0,
+    graceEndsOn: null,
+    readOnly: false,
+    lastPaidAt: null,
+    automaticPayment: { state: "NONE", requestedAt: null, authorizedAt: null, payerName: null, payerDocument: null, code: null },
+    charges: [],
+};
+
+export const subscriptionHandlers = [
+    http.get(`${BASE_URL}/tenant/subscription`, () => HttpResponse.json({ message: "ok", data: mockSubscription })),
+    http.get(`${BASE_URL}/platform/tenants/:id/subscription`, () => HttpResponse.json({ message: "ok", data: mockSubscription })),
+];
+
 export const platformHandlers = [
     http.get(`${BASE_URL}/platform/tenants`, ({ request }) => {
         const url = new URL(request.url);
@@ -456,6 +480,7 @@ export const platformHandlers = [
 // ─── All handlers ─────────────────────────────────────────────────────────────
 
 export const handlers = [
+    ...subscriptionHandlers,
     ...availabilityHandlers,  // must come before reservationHandlers (/reservations/:id would match /reservations/occupied-dates)
     ...authHandlers,
     ...userHandlers,

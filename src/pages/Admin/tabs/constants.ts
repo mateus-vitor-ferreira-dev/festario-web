@@ -12,6 +12,7 @@ export const TABS = [
     { key: "rules", label: "Regras do salão" },
     { key: "brand", label: "Marca e fotos" },
     { key: "venues", label: "Espaços" },
+    { key: "subscription", label: "Assinatura" },
 ];
 
 
