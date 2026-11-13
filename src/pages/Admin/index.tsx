@@ -15,6 +15,8 @@ import { VenueTab } from "./tabs/VenueTab";
 import { RulesTab } from "./rules/RulesTab";
 import { BrandTab } from "./brand/BrandTab";
 import { AgendaClosedNotice } from "./AgendaClosedNotice";
+import { SubscriptionNotice } from "./subscription/SubscriptionNotice";
+import { SubscriptionTab } from "./subscription/SubscriptionTab";
 import * as S from "./styles";
 
 const TAB_COMPONENTS = {
@@ -28,6 +30,7 @@ const TAB_COMPONENTS = {
     rules:        RulesTab,
     brand:        BrandTab,
     venues:       VenueTab,
+    subscription: SubscriptionTab,
 };
 
 /**
@@ -111,6 +114,10 @@ export default function Admin() {
                         </>
                     )}
                 </S.ContextBar>
+            )}
+
+            {activeTab !== "subscription" && (
+                <SubscriptionNotice refreshKey={searchParams.toString()} onOpen={() => setSearchParams({ tab: "subscription" })} />
             )}
 
             {/* Na seção de pacotes o passo a passo já orienta: o aviso só aparece nas outras telas. */}

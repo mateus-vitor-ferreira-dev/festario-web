@@ -20,6 +20,11 @@ export const API_ERROR_CODE_MESSAGES: Record<string, string> = {
     INVITE_REVOKED: "Este convite foi cancelado. Peça um novo convite à equipe da plataforma.",
     INVITE_ALREADY_ACCEPTED: "Este convite já foi aceito. Entre com o e-mail e a senha cadastrados.",
     EMAIL_ALREADY_IN_USE: "Este e-mail já tem uma conta.",
+    SUBSCRIPTION_READ_ONLY: "O painel está só para consulta porque a assinatura está com o pagamento atrasado. Regularize na aba Assinatura; suas reservas e clientes continuam normais.",
+    AUTHORIZATION_ALREADY_APPROVED: "O Pix Automático já está autorizado.",
+    BILLING_DISABLED: "A cobrança automática ainda não está ligada na plataforma.",
+    INVALID_PAYER_DOCUMENT: "Confira o CPF ou CNPJ de quem vai pagar.",
+    EXTEND_DATE_INVALID: "Escolha uma data depois de hoje e depois do vencimento atual.",
 };
 
 /**
