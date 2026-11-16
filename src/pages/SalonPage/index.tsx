@@ -41,8 +41,11 @@ type LoadState = { status: "loading" } | { status: "ready"; salon: SalonDetail }
 
 /**
  * Página pública de um salão: apresentação, contatos e os espaços, cada um com "Reservar".
- * Para o cliente, abrir a página passa a enviar o `X-Tenant-Slug` deste salão: o header mostra a
- * marca dele e a reserva vai para ele. Donos e a equipe continuam no próprio salão (só leem a página).
+ * Abrir a página não troca o espaço guardado no navegador: a vitrine (`/salons/:slug`) não depende
+ * dele, e trocar só por visitar deixaria qualquer link decidir para qual salão vão as próximas
+ * mensagens e reservas do cliente. O salão passa a ser o do navegador quando o cliente clica em
+ * "Reservar" (a reserva precisa do `X-Tenant-Slug` dele). Donos e a equipe continuam no próprio
+ * salão (só leem a página).
  * É pública: sem login, "Reservar" leva ao login e volta aqui com `?reservar=<espaço>`, que segue
  * direto para a reserva daquele espaço.
  *
@@ -76,12 +79,6 @@ export default function SalonPage() {
     }, [slug, origin.params, reload]);
 
     const salon = state.status === "ready" ? state.salon : null;
-
-    useEffect(() => {
-        if (!salon || !isAuthenticated || !canReserve || tenant?.slug === salon.slug) return;
-        setTenant({ slug: salon.slug, name: salon.name });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [salon?.slug, canReserve, isAuthenticated]);
 
     function reserve(venue: SalonVenue, { replace = false } = {}) {
         if (!salon) return;

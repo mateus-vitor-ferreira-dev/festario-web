@@ -25,6 +25,7 @@ import { readSession, clearSession, updateSessionTokens } from "../config/authSt
 import { readTenant, tenantHeaders } from "../config/tenantStorage";
 import { getApiErrorCode, isAbortError } from "../utils/errors";
 import { API_ERROR_CODE_MESSAGES } from "../utils/getErrorMessage";
+import { revokeStoredRefreshToken } from "./revokeSession";
 
 const BASE_URL = env.apiUrl;
 
@@ -71,6 +72,7 @@ function drainQueue(newToken: string | null) {
 }
 
 function invalidateSession() {
+    revokeStoredRefreshToken();
     clearSession();
     window.location.href = "/login";
 }

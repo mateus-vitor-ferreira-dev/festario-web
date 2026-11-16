@@ -35,4 +35,26 @@ describe("AuthContext + espaço", () => {
         act(() => result.current.logout());
         expect(result.current.tenant).toBeNull();
     });
+
+    it("USER logout drops the tenant and revokes the refresh token with the salon header", () => {
+        const { result } = renderHook(() => useAuth(), { wrapper });
+        act(() => result.current.login({ user: { id: "c", name: "Cliente", email: "c@c.com", role: "USER" }, token: "t", refreshToken: "r-user" }, { slug: "salao-x" }));
+        act(() => result.current.logout());
+        expect(result.current.tenant).toBeNull();
+        expect(localStorage.getItem("festario:tenant")).toBeNull();
+        expect(localStorage.getItem("festario:userData")).toBeNull();
+        expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/auth/logout"), expect.objectContaining({
+            method: "POST",
+            body: JSON.stringify({ refreshToken: "r-user" }),
+            headers: expect.objectContaining({ "X-Tenant-Slug": "salao-x" }),
+        }));
+    });
+
+    it("logout without a refresh token does not call the API", () => {
+        vi.mocked(fetch).mockClear();
+        const { result } = renderHook(() => useAuth(), { wrapper });
+        act(() => result.current.login({ user: { id: "c", name: "Cliente", email: "c@c.com", role: "USER" }, token: "t" }));
+        act(() => result.current.logout());
+        expect(fetch).not.toHaveBeenCalled();
+    });
 });

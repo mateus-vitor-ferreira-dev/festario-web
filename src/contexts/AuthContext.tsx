@@ -5,9 +5,9 @@
  * localStorage nas páginas consumidoras.
  */
 import { ReactNode, createContext, useContext, useEffect, useState } from "react";
-import { env } from "../config/env";
 import { readSession, writeSession, clearSession } from "../config/authStorage";
-import { clearTenant, readTenant, tenantHeaders, writeTenant } from "../config/tenantStorage";
+import { clearTenant, readTenant, writeTenant } from "../config/tenantStorage";
+import { revokeStoredRefreshToken } from "../services/revokeSession";
 import { setUserContext } from "../config/sentry";
 import type { AuthContextValue, AuthSession, TenantRef, User, UserRole } from "../types";
 
@@ -76,17 +76,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     function logout() {
         const stored = readSession();
-        if (stored?.refreshToken) {
-            // Fire-and-forget: revoke on backend; local logout happens regardless
-            fetch(`${env.apiUrl}/auth/logout`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", ...tenantHeaders() },
-                body: JSON.stringify({ refreshToken: stored.refreshToken }),
-            }).catch(() => {});
-        }
-        // O espaço escolhido pelo ADMIN vale só para a sessão dele; o do dono/cliente
-        // (convite, /login?espaco=) fica para o próximo login no mesmo navegador.
-        if (stored?.user?.role === "ADMIN") setTenant(null);
+        // Revoga antes de trocar o espaço: o logout precisa ir com o X-Tenant-Slug da sessão.
+        revokeStoredRefreshToken();
+        // Só o dono precisa do espaço guardado depois de sair: o login dele num salão que não é o
+        // padrão depende do X-Tenant-Slug (veio do convite ou de /login?espaco=). Para o cliente e
+        // para o ADMIN o espaço era só o que estavam vendo; deixá-lo para trás faria o próximo
+        // login no mesmo navegador cair num salão escolhido por outra pessoa ou por um link.
+        if (stored?.user?.role !== "OWNER") setTenant(null);
         clearSession();
         setSession(null);
     }

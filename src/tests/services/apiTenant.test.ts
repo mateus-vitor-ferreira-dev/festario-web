@@ -101,6 +101,32 @@ describe("403 de espaço", () => {
         expect(window.location.href).toBe("/login");
     });
 
+    it("a forced sign-out also revokes the stored refresh token", async () => {
+        const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null));
+        writeTenant({ slug: "salao-x" });
+        localStorage.setItem("festario:userData", JSON.stringify({ user: { id: "u1", name: "Dona", email: "d@d.com", role: "OWNER" }, token: "tok", refreshToken: "r-forced" }));
+        const error = forbidden("TENANT_ACCESS_DENIED");
+        await expect(responseRejected(error)).rejects.toBe(error);
+        expect(fetchSpy).toHaveBeenCalledWith("http://localhost:3000/auth/logout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Tenant-Slug": "salao-x" },
+            body: JSON.stringify({ refreshToken: "r-forced" }),
+        });
+        expect(localStorage.getItem("festario:userData")).toBeNull();
+        fetchSpy.mockRestore();
+    });
+
+    it("a failed revoke does not block the local sign-out", async () => {
+        const fetchSpy = vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("offline"));
+        localStorage.setItem("festario:userData", JSON.stringify({ user: { id: "u1", name: "Dona", email: "d@d.com", role: "OWNER" }, token: "tok", refreshToken: "r" }));
+        const error = forbidden("TENANT_ACCESS_DENIED");
+        await expect(responseRejected(error)).rejects.toBe(error);
+        expect(fetchSpy).toHaveBeenCalledTimes(1);
+        expect(localStorage.getItem("festario:userData")).toBeNull();
+        expect(window.location.href).toBe("/login");
+        fetchSpy.mockRestore();
+    });
+
     it("TENANT_ACCESS_DENIED on /platform only rejects (no sign out)", async () => {
         localStorage.setItem("festario:userData", SESSION);
         const error = forbidden("TENANT_ACCESS_DENIED", "/platform/tenants");

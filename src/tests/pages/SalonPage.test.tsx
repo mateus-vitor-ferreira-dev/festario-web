@@ -52,7 +52,7 @@ beforeEach(() => {
 });
 
 describe("Página do salão", () => {
-    it("mostra o salão, os contatos e os espaços; o cliente passa a operar neste salão", async () => {
+    it("mostra o salão, os contatos e os espaços sem trocar o salão do navegador", async () => {
         server.use(http.get(`${BASE}/salons/salao-jardim-das-flores`, () => HttpResponse.json({ data: SALON })));
         renderPage("USER", { from: "?city=Lavras" });
 
@@ -63,7 +63,8 @@ describe("Página do salão", () => {
         expect(screen.getByRole("heading", { level: 3, name: "Espaço Jardim" })).toBeInTheDocument();
         expect(within(screen.getByRole("article")).getByText("até 120 convidados")).toBeInTheDocument();
 
-        expect(JSON.parse(localStorage.getItem("festario:tenant")!)).toEqual({ slug: "salao-jardim-das-flores", name: "Salão Jardim das Flores" });
+        // só visitar não troca o espaço guardado; isso fica para quando o cliente reserva
+        expect(localStorage.getItem("festario:tenant")).toBeNull();
     });
 
     it("contatos e cor fora do formato não viram link nem CSS", async () => {
@@ -100,10 +101,15 @@ describe("Página do salão", () => {
     it("'Reservar' leva à reserva do espaço", async () => {
         server.use(http.get(`${BASE}/salons/salao-jardim-das-flores`, () => HttpResponse.json({ data: SALON })));
         const user = userEvent.setup();
+        localStorage.setItem("festario:tenant", JSON.stringify({ slug: "outro-salao", name: "Outro" }));
         renderPage();
 
+        // a página aberta não troca o salão; só "Reservar" troca
+        expect(await screen.findByRole("button", { name: "Reservar uma data" })).toBeInTheDocument();
+        expect(JSON.parse(localStorage.getItem("festario:tenant")!).slug).toBe("outro-salao");
         await user.click(await screen.findByRole("button", { name: "Reservar uma data" }));
         expect(screen.getByText("Reservation Intent")).toBeInTheDocument();
+        expect(JSON.parse(localStorage.getItem("festario:tenant")!)).toEqual({ slug: "salao-jardim-das-flores", name: "Salão Jardim das Flores" });
     });
 
     it("o dono vê a página sem 'Reservar' e continua no próprio salão", async () => {
