@@ -15,10 +15,15 @@ export default defineConfig({
       authToken: process.env.SENTRY_AUTH_TOKEN,
       telemetry: false,
       silent: !process.env.SENTRY_AUTH_TOKEN,
+      // Os mapas vão para o Sentry e saem do dist: publicados, entregariam o código-fonte inteiro.
+      sourcemaps: { filesToDeleteAfterUpload: ["./dist/**/*.map"] },
     }),
   ],
   build: {
-    sourcemap: true,
+    // "hidden" gera os .map para o Sentry, mas sem o comentário sourceMappingURL nos .js servidos.
+    // Sem SENTRY_AUTH_TOKEN (previews) os .map ficam no dist; o public/.assetsignore impede que
+    // o Cloudflare os publique.
+    sourcemap: "hidden",
   },
   server: {
     port: 5173,

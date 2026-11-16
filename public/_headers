@@ -5,7 +5,11 @@
 # - 'wasm-unsafe-eval': o gerador do PDF do contrato roda o layout em WebAssembly (não libera eval de JS);
 # - style 'unsafe-inline': o styled-components injeta as regras em <style> na hora;
 # - img https:: fotos e logos dos salões e prestadores vêm do armazenamento de imagens e do Google;
+#   fica aberto até o endereço público das imagens estar fechado (e aí entra a lista exata);
 # - connect: a API e o Sentry. Os previews de branch usam a mesma API.
+# report-uri: cada bloqueio vira um evento no Sentry (endpoint de segurança do mesmo projeto, com a
+# chave pública do DSN, a mesma que já vai no bundle). Mostra tentativa de injeção e também o que
+# a política quebrou, antes de alguém reclamar.
 # frame-ancestors 'none' impede que o app seja carregado dentro de outro site (clickjacking).
 #
 # Cross-Origin-Opener-Policy: o popup do login com Google precisa conversar com a janela do app;
@@ -13,7 +17,7 @@
 #
 # Referrer-Policy: links para fora não levam o caminho nem a query (ex.: o token de troca de senha).
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.festario.com.br https://*.ingest.us.sentry.io https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.festario.com.br https://*.ingest.us.sentry.io https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests; report-uri https://o4511297751220225.ingest.us.sentry.io/api/4511297764392960/security/?sentry_key=57c87820f8c6a95cc94f46257414f81a
   Cross-Origin-Opener-Policy: same-origin-allow-popups
   Referrer-Policy: strict-origin-when-cross-origin
   X-Content-Type-Options: nosniff
