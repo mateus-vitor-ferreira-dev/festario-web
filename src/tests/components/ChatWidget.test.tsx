@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AuthProvider } from "../../contexts/AuthContext";
+import { AuthProvider, useAuth } from "../../contexts/AuthContext";
 import ChatWidget from "../../components/ChatWidget";
 
 function renderWidget() {
@@ -250,5 +250,41 @@ describe("ChatWidget", () => {
         expect(signal!.aborted).toBe(false);
         unmount();
         expect(signal!.aborted).toBe(true);
+    });
+
+    it("trocou de salão: limpa a conversa da tela, cancela a resposta e começa outra conversa", async () => {
+        function SwitchTenant() {
+            const { setTenant } = useAuth();
+            return <button onClick={() => setTenant({ slug: "outro-salao", name: "Outro Salão" })}>trocar salão</button>;
+        }
+        let signal: AbortSignal | undefined;
+        const fetchMock = vi.spyOn(globalThis, "fetch")
+            .mockImplementationOnce(makeFetchMock(['data: {"conversationId":"c-1"}\n', 'data: {"text":"Resposta do primeiro"}\n', "data: [DONE]\n"]))
+            .mockImplementationOnce((_url, options) => {
+                signal = (options as RequestInit).signal!;
+                return new Promise(() => undefined);
+            })
+            .mockImplementationOnce(makeFetchMock(['data: {"text":"Novo"}\n', "data: [DONE]\n"]));
+        render(
+            <AuthProvider>
+                <SwitchTenant />
+                <ChatWidget />
+            </AuthProvider>
+        );
+        const user = await openAndSend("Primeira");
+        await waitFor(() => expect(screen.getByText("Resposta do primeiro")).toBeInTheDocument());
+        await user.type(screen.getByPlaceholderText(/digite sua dúvida/i), "Pendurada");
+        await user.click(screen.getByRole("button", { name: /enviar/i }));
+        await waitFor(() => expect(signal).toBeDefined());
+
+        await user.click(screen.getByRole("button", { name: "trocar salão" }));
+        expect(signal!.aborted).toBe(true);
+        expect(screen.queryByText("Resposta do primeiro")).not.toBeInTheDocument();
+        expect(screen.queryByText("Pendurada")).not.toBeInTheDocument();
+
+        await user.type(screen.getByPlaceholderText(/digite sua dúvida/i), "Oi de novo");
+        await user.click(screen.getByRole("button", { name: /enviar/i }));
+        await waitFor(() => expect(screen.getByText("Novo")).toBeInTheDocument());
+        expect(JSON.parse(fetchMock.mock.calls[2][1]!.body as string)).toEqual({ message: "Oi de novo" });
     });
 });

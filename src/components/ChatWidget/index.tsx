@@ -65,7 +65,7 @@ class ChatError extends Error {}
  * @component
  */
 export default function ChatWidget() {
-    const { token, tenant } = useAuth();
+    const { token, tenant, user } = useAuth();
     const assistantTitle = tenant?.name ? `Assistente · ${tenant.name}` : "Assistente de reservas";
     const [open, setOpen] = useState(false);
     const [messages, setMessages] = useState([INITIAL_MESSAGE]);
@@ -88,10 +88,20 @@ export default function ChatWidget() {
     // Saiu da tela no meio de uma resposta: cancela o pedido, e o servidor para de gerá-la.
     useEffect(() => () => abortRef.current?.abort(), []);
 
-    // A conversa guardada no servidor é do usuário e do salão: trocou um dos dois, começa outra.
+    // A conversa guardada no servidor é do usuário e do salão: trocou um dos dois, começa outra, sem
+    // deixar na tela as falas da conta (ou do salão) anterior nem uma resposta ainda chegando.
+    // Pela conta (não pelo token, que muda a cada renovação da sessão) e pelo salão.
+    const sessionKey = `${user?.id ?? ""}|${tenant?.slug ?? ""}`;
+    const [shownSession, setShownSession] = useState(sessionKey);
+    if (shownSession !== sessionKey) {
+        setShownSession(sessionKey);
+        setMessages([INITIAL_MESSAGE]);
+        setLoading(false);
+    }
     useEffect(() => {
         conversationIdRef.current = null;
-    }, [token, tenant?.slug]);
+        abortRef.current?.abort();
+    }, [sessionKey]);
 
     // Esc fecha o painel e devolve o foco ao botão flutuante.
     useEffect(() => {
