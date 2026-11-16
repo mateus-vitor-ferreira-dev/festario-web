@@ -6,7 +6,8 @@
 import type { VenuePhoto } from "./index";
 
 export type ProviderCategory =
-    | "CATERING" | "BARBECUE" | "DECORATION" | "MAKEUP" | "CAKE_SWEETS" | "PHOTOGRAPHY" | "MUSIC" | "KIDS_ENTERTAINMENT" | "DRINKS";
+    | "CATERING" | "BARBECUE" | "CAKE_SWEETS" | "DRINKS" | "WAITSTAFF" | "CEREMONIAL" | "DECORATION" | "RENTALS"
+    | "MUSIC" | "KIDS_ENTERTAINMENT" | "PHOTOGRAPHY" | "MAKEUP" | "SECURITY" | "CLEANING";
 
 export type ProviderServiceMode = "ON_SITE" | "STUDIO" | "BOTH";
 export type ProviderPriceUnit = "FIXED" | "PER_GUEST" | "PER_HOUR";
