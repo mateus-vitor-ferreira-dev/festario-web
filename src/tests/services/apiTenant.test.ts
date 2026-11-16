@@ -6,8 +6,10 @@ vi.mock("react-toastify", () => ({ toast: { error: (...args: unknown[]) => toast
 import api from "../../services/api";
 import { readTenant, tenantHeaders, writeTenant, clearTenant, isValidTenantSlug } from "../../config/tenantStorage";
 import { getErrorMessage } from "../../utils/getErrorMessage";
+import { seedSession } from "../helpers/session";
+import { readSession } from "../../config/authStorage";
 
-const SESSION = JSON.stringify({ user: { id: "u1", name: "Dona", email: "d@d.com", role: "OWNER" }, token: "tok", refreshToken: null });
+const SESSION = { user: { id: "u1", name: "Dona", email: "d@d.com", role: "OWNER" as const }, token: "tok" };
 
 describe("X-Tenant-Slug", () => {
     const requestFulfilled = api.interceptors.request.handlers[0].fulfilled;
@@ -80,7 +82,7 @@ describe("403 de espaço", () => {
     beforeEach(() => {
         localStorage.clear();
         toastError.mockClear();
-        Object.defineProperty(window, "location", { value: { href: "/painel" }, writable: true, configurable: true });
+        Object.defineProperty(window, "location", { value: { href: "/painel", hostname: "localhost" }, writable: true, configurable: true });
     });
 
     afterEach(() => {
@@ -93,28 +95,59 @@ describe("403 de espaço", () => {
     });
 
     it("TENANT_ACCESS_DENIED warns, signs out and goes to /login", async () => {
-        localStorage.setItem("festario:userData", SESSION);
+        vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null));
+        seedSession(SESSION);
         const error = forbidden("TENANT_ACCESS_DENIED");
         await expect(responseRejected(error)).rejects.toBe(error);
         expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/outro espaço/i), expect.objectContaining({ toastId: "tenant-access-denied" }));
-        expect(localStorage.getItem("festario:userData")).toBeNull();
+        expect(readSession()).toBeNull();
+        vi.mocked(fetch).mockRestore();
         expect(window.location.href).toBe("/login");
     });
 
+    it("a forced sign-out also revokes the stored refresh token", async () => {
+        const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null));
+        writeTenant({ slug: "salao-x" });
+        seedSession(SESSION);
+        const error = forbidden("TENANT_ACCESS_DENIED");
+        await expect(responseRejected(error)).rejects.toBe(error);
+        // O refresh token vai no cookie: o pedido leva as credenciais e o cabeçalho anti-CSRF.
+        expect(fetchSpy).toHaveBeenCalledWith("http://localhost:3000/auth/logout", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json", "X-Requested-With": "festario", "X-Tenant-Slug": "salao-x" },
+            body: "{}",
+        });
+        expect(readSession()).toBeNull();
+        expect(localStorage.getItem("festario:sessao")).toBeNull();
+        fetchSpy.mockRestore();
+    });
+
+    it("a failed revoke does not block the local sign-out", async () => {
+        const fetchSpy = vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("offline"));
+        seedSession(SESSION);
+        const error = forbidden("TENANT_ACCESS_DENIED");
+        await expect(responseRejected(error)).rejects.toBe(error);
+        expect(fetchSpy).toHaveBeenCalledTimes(1);
+        expect(readSession()).toBeNull();
+        expect(window.location.href).toBe("/login");
+        fetchSpy.mockRestore();
+    });
+
     it("TENANT_ACCESS_DENIED on /platform only rejects (no sign out)", async () => {
-        localStorage.setItem("festario:userData", SESSION);
+        seedSession(SESSION);
         const error = forbidden("TENANT_ACCESS_DENIED", "/platform/tenants");
         await expect(responseRejected(error)).rejects.toBe(error);
         expect(toastError).not.toHaveBeenCalled();
-        expect(localStorage.getItem("festario:userData")).not.toBeNull();
+        expect(readSession()).not.toBeNull();
     });
 
     it("TENANT_INACTIVE warns once and keeps the session", async () => {
-        localStorage.setItem("festario:userData", SESSION);
+        seedSession(SESSION);
         const error = forbidden("TENANT_INACTIVE");
         await expect(responseRejected(error)).rejects.toBe(error);
         expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/desativado/i), expect.objectContaining({ toastId: "tenant-inactive" }));
-        expect(localStorage.getItem("festario:userData")).not.toBeNull();
+        expect(readSession()).not.toBeNull();
         expect(window.location.href).toBe("/painel");
     });
 

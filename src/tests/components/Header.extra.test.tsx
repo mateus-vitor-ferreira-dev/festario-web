@@ -3,6 +3,7 @@ import { MemoryRouter } from "react-router-dom";
 import Header from "../../components/Header";
 import { AuthProvider } from "../../contexts/AuthContext";
 import { ThemeProvider } from "../../contexts/ThemeContext";
+import { seedSession } from "../helpers/session";
 
 function renderHeader() {
     return render(
@@ -24,28 +25,19 @@ describe("Header extra coverage", () => {
     });
 
     it("handles missing name field safely", () => {
-        localStorage.setItem(
-            "festario:userData",
-            JSON.stringify({ user: {} })
-        );
+        seedSession({ user: {} });
         renderHeader();
         expect(screen.getAllByText(/usuário/i).length).toBeGreaterThan(0);
     });
 
-    it("shows Plataforma link for migrated legacy session with ADMIN role", () => {
-        localStorage.setItem(
-            "festario:userData",
-            JSON.stringify({ id: "u1", name: "Admin Root", email: "a@a.com", role: "ADMIN", token: "t" })
-        );
+    it("shows Plataforma link for an ADMIN session", () => {
+        seedSession({ token: "t", user: { id: "u1", name: "Admin Root", email: "a@a.com", role: "ADMIN" } });
         renderHeader();
         expect(screen.getByRole("link", { name: /^plataforma$/i })).toBeInTheDocument();
     });
 
     it("does not show Admin link when nested user role is USER", () => {
-        localStorage.setItem(
-            "festario:userData",
-            JSON.stringify({ token: "t", user: { name: "Alex", role: "USER" } })
-        );
+        seedSession({ token: "t", user: { name: "Alex", role: "USER" } });
         renderHeader();
         expect(
             screen.queryByRole("link", { name: /plataforma|painel/i })
@@ -53,19 +45,13 @@ describe("Header extra coverage", () => {
     });
 
     it("shows Usuário when format is unrecognized (no token or required fields)", () => {
-        localStorage.setItem(
-            "festario:userData",
-            JSON.stringify({ name: "Alex Root", user: { role: "USER" } })
-        );
+        seedSession({ name: "Alex Root", user: { role: "USER" } });
         renderHeader();
         expect(screen.getAllByText(/usuário/i).length).toBeGreaterThan(0);
     });
 
     it("shows Usuário when format is unrecognized (partial nested user, no token)", () => {
-        localStorage.setItem(
-            "festario:userData",
-            JSON.stringify({ role: "ADMIN", user: { name: "Alex" } })
-        );
+        seedSession({ role: "ADMIN", user: { name: "Alex" } });
         renderHeader();
         expect(screen.queryByRole("link", { name: /plataforma|painel/i })).not.toBeInTheDocument();
     });

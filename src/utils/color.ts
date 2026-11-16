@@ -23,3 +23,14 @@ export function contrast(a: string, b: string): number {
 
 /** "4,5:1" */
 export const formatRatio = (r: number) => `${r.toFixed(1).replace(".", ",")}:1`;
+
+const SAFE_HEX = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+
+/**
+ * Cor do salão vinda da API antes de virar variável CSS ou estilo inline. A API já valida, mas um
+ * valor fora do formato (ex.: `red; background: url(...)`) não deve chegar ao CSS por nenhum
+ * caminho; nesse caso vale a cor da plataforma.
+ */
+export function safeHexColor(value: string | null | undefined): string | null {
+    return value && SAFE_HEX.test(value) ? value : null;
+}

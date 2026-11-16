@@ -3,10 +3,11 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, describe, expect, it } from "vitest";
 import { AuthProvider } from "../../contexts/AuthContext";
 import { RoleRoute } from "../../routes/RoleRoute";
+import { seedSession } from "../helpers/session";
 
 function renderAt(path: string, role?: string) {
     if (role) {
-        localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "u", name: "X", email: "x@x.com", role } }));
+        seedSession({ token: "t", user: { id: "u", name: "X", email: "x@x.com", role } });
     }
     return render(
         <AuthProvider>
@@ -66,7 +67,7 @@ describe("RoleRoute", () => {
     });
 
     it("treats a session without role as USER", () => {
-        localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "u" } }));
+        seedSession({ token: "t", user: { id: "u" } });
         renderAt("/painel");
         expect(screen.getByText("Salons Page")).toBeInTheDocument();
     });

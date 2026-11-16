@@ -7,12 +7,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider } from "../../contexts/AuthContext";
 import Profile from "../../pages/Profile";
 import { server } from "../mocks/server";
+import { seedSession } from "../helpers/session";
 
 const BASE = "http://localhost:3000";
 const ME = { id: "u1", name: "Ana Souza", email: "ana@x.com", role: "USER", emailVerifiedAt: "2026-01-01" };
 
 function renderPage() {
-    localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: ME }));
+    seedSession({ token: "t", user: ME });
     return render(
         <AuthProvider>
             <MemoryRouter><Profile /><ToastContainer /></MemoryRouter>

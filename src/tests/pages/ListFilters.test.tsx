@@ -10,6 +10,7 @@ import Negotiations from "../../pages/Negotiations";
 import Venues from "../../pages/Venues";
 import { server } from "../mocks/server";
 import { AuthProvider } from "../../contexts/AuthContext";
+import { seedSession } from "../helpers/session";
 
 const BASE = "http://localhost:3000";
 
@@ -20,7 +21,7 @@ function LocationProbe() {
 
 function renderAt(url: string) {
     // o painel é do OWNER/ADMIN; ADMIN vê também as ações de feriados
-    localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "admin-1", name: "Admin", email: "admin@x.com", role: "ADMIN" } }));
+    seedSession({ token: "t", user: { id: "admin-1", name: "Admin", email: "admin@x.com", role: "ADMIN" } });
     return render(
         <AuthProvider>
             <MemoryRouter initialEntries={[url]}>

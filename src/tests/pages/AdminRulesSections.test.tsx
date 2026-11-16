@@ -7,11 +7,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider } from "../../contexts/AuthContext";
 import Admin from "../../pages/Admin";
 import { server } from "../mocks/server";
+import { seedSession } from "../helpers/session";
 
 const BASE = "http://localhost:3000";
 
 function renderAt(url: string) {
-    localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "o1", name: "Dona", email: "dono@x.com", role: "OWNER" } }));
+    seedSession({ token: "t", user: { id: "o1", name: "Dona", email: "dono@x.com", role: "OWNER" } });
     return render(
         <AuthProvider>
             <MemoryRouter initialEntries={[url]}>

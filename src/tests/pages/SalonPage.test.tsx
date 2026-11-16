@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { AuthProvider } from "../../contexts/AuthContext";
 import SalonPage from "../../pages/SalonPage";
 import { server } from "../mocks/server";
+import { seedSession } from "../helpers/session";
 
 const BASE = "http://localhost:3000";
 
@@ -31,7 +32,7 @@ function LocationProbe() {
 }
 
 function renderPage(role: string | null = "USER", state?: unknown, search = "") {
-    if (role) localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "u1", name: "Ana", role } }));
+    if (role) seedSession({ token: "t", user: { id: "u1", name: "Ana", role } });
     return render(
         <AuthProvider>
             <MemoryRouter initialEntries={[{ pathname: "/s/salao-jardim-das-flores", search, state }]}>
@@ -52,7 +53,7 @@ beforeEach(() => {
 });
 
 describe("Página do salão", () => {
-    it("mostra o salão, os contatos e os espaços; o cliente passa a operar neste salão", async () => {
+    it("mostra o salão, os contatos e os espaços sem trocar o salão do navegador", async () => {
         server.use(http.get(`${BASE}/salons/salao-jardim-das-flores`, () => HttpResponse.json({ data: SALON })));
         renderPage("USER", { from: "?city=Lavras" });
 
@@ -63,7 +64,23 @@ describe("Página do salão", () => {
         expect(screen.getByRole("heading", { level: 3, name: "Espaço Jardim" })).toBeInTheDocument();
         expect(within(screen.getByRole("article")).getByText("até 120 convidados")).toBeInTheDocument();
 
-        expect(JSON.parse(localStorage.getItem("festario:tenant")!)).toEqual({ slug: "salao-jardim-das-flores", name: "Salão Jardim das Flores" });
+        // só visitar não troca o espaço guardado; isso fica para quando o cliente reserva
+        expect(localStorage.getItem("festario:tenant")).toBeNull();
+    });
+
+    it("contatos e cor fora do formato não viram link nem CSS", async () => {
+        server.use(http.get(`${BASE}/salons/salao-jardim-das-flores`, () => HttpResponse.json({ data: {
+            ...SALON,
+            primaryColor: "red;background:url(https://x.example/a)", primaryColorDark: "#7fd1ae",
+            contact: { ...SALON.contact, contactEmail: "oi@jardim.com?bcc=x@y.com", instagram: "https://evil.example/jardim" },
+        } })));
+        const { container } = renderPage();
+        expect(await screen.findByRole("heading", { level: 1, name: "Salão Jardim das Flores" })).toBeInTheDocument();
+        expect(screen.getByText("oi@jardim.com?bcc=x@y.com").closest("a")).toBeNull();
+        expect(screen.queryByRole("link", { name: "Instagram" })).not.toBeInTheDocument();
+        const style = (container.querySelector("[style]") as HTMLElement).getAttribute("style") ?? "";
+        expect(style).not.toContain("url(");
+        expect(style).toContain("--card-salon-dark: #7fd1ae");
     });
 
     it("lista o que cada espaço oferece, com piscina e área kids cobradas incluídas", async () => {
@@ -85,10 +102,15 @@ describe("Página do salão", () => {
     it("'Reservar' leva à reserva do espaço", async () => {
         server.use(http.get(`${BASE}/salons/salao-jardim-das-flores`, () => HttpResponse.json({ data: SALON })));
         const user = userEvent.setup();
+        localStorage.setItem("festario:tenant", JSON.stringify({ slug: "outro-salao", name: "Outro" }));
         renderPage();
 
+        // a página aberta não troca o salão; só "Reservar" troca
+        expect(await screen.findByRole("button", { name: "Reservar uma data" })).toBeInTheDocument();
+        expect(JSON.parse(localStorage.getItem("festario:tenant")!).slug).toBe("outro-salao");
         await user.click(await screen.findByRole("button", { name: "Reservar uma data" }));
         expect(screen.getByText("Reservation Intent")).toBeInTheDocument();
+        expect(JSON.parse(localStorage.getItem("festario:tenant")!)).toEqual({ slug: "salao-jardim-das-flores", name: "Salão Jardim das Flores" });
     });
 
     it("o dono vê a página sem 'Reservar' e continua no próprio salão", async () => {

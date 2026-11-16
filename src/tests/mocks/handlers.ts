@@ -15,6 +15,11 @@ export const authHandlers = [
             },
         })
     ),
+    // Sem sessão para renovar: é o que a API responde quando não há cookie.
+    http.post(`${BASE_URL}/auth/refresh`, () =>
+        HttpResponse.json({ error: { code: "REFRESH_TOKEN_MISSING" } }, { status: 401 })
+    ),
+    http.post(`${BASE_URL}/auth/logout`, () => HttpResponse.json({ data: null })),
 ];
 
 // ─── Users ───────────────────────────────────────────────────────────────────

@@ -9,7 +9,8 @@ import { getReservationPayment } from "../../services/payment";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { isAbortError } from "../../utils/errors";
 import { packageLabel, formatDate, formatDateFull, formatTime, formatCents, calcDuration } from "../../utils/reservationFormat";
-import { METHOD_LABELS, formatDeadline, instagramLink, whatsappLink } from "../../utils/paymentFormat";
+import { METHOD_LABELS, formatDeadline, whatsappLink } from "../../utils/paymentFormat";
+import { instagramHref, mailtoHref } from "../../utils/safeUrl";
 import { animateFadeInUp } from "../../utils/animations";
 import type { Reservation, ReservationPayment } from "../../types";
 import * as S from "./styles";
@@ -229,9 +230,9 @@ export default function Checkout() {
                             {hasContact && (
                                 <S.ContactActions>
                                     {wa && <S.PrimaryAction href={wa} target="_blank" rel="noopener noreferrer">Combinar pelo WhatsApp</S.PrimaryAction>}
-                                    {contacts?.instagram && <S.SecondaryAction href={instagramLink(contacts.instagram)} target="_blank" rel="noopener noreferrer">Instagram {contacts.instagram}</S.SecondaryAction>}
+                                    {instagramHref(contacts?.instagram) && <S.SecondaryAction href={instagramHref(contacts?.instagram)!} target="_blank" rel="noopener noreferrer">Instagram {contacts?.instagram}</S.SecondaryAction>}
                                     {contacts?.phone && <S.SecondaryAction href={`tel:${contacts.phone.replace(/[^\d+]/g, "")}`}>Ligar {contacts.phone}</S.SecondaryAction>}
-                                    {contacts?.email && <S.SecondaryAction href={`mailto:${contacts.email}`}>E-mail</S.SecondaryAction>}
+                                    {mailtoHref(contacts?.email) && <S.SecondaryAction href={mailtoHref(contacts?.email)!}>E-mail</S.SecondaryAction>}
                                 </S.ContactActions>
                             )}
                         </S.HowToPay>

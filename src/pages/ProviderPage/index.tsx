@@ -12,7 +12,8 @@ import { requestQuote } from "../../services/quote";
 import type { CustomerQuote, ProviderDetail } from "../../types";
 import { getApiErrorCode, getHttpStatus, isAbortError } from "../../utils/errors";
 import { getErrorMessage, getLoadErrorMessage } from "../../utils/getErrorMessage";
-import { formatEventDate, formatProviderPrice, instagramUrl } from "../../utils/providerFormat";
+import { formatEventDate, formatProviderPrice } from "../../utils/providerFormat";
+import { instagramHref } from "../../utils/safeUrl";
 import { withReturn } from "../../utils/returnPath";
 import { isManagerRole } from "../../utils/roles";
 import { formatPlace, formatPrice } from "../../utils/salonFormat";
@@ -154,8 +155,8 @@ export default function ProviderPage() {
 
                     <ReviewsSection slug={p.slug} />
 
-                    {p.instagram && (
-                        <S.Instagram href={instagramUrl(p.instagram)} target="_blank" rel="noopener noreferrer">
+                    {instagramHref(p.instagram) && (
+                        <S.Instagram href={instagramHref(p.instagram)!} target="_blank" rel="noopener noreferrer">
                             Mais trabalhos no Instagram: @{p.instagram}
                         </S.Instagram>
                     )}

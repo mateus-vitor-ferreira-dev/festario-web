@@ -19,6 +19,7 @@ import type { SalonContact } from "../../types";
 import { isAbortError } from "../../utils/errors";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { animateFadeInUp } from "../../utils/animations";
+import { instagramHref, mailtoHref } from "../../utils/safeUrl";
 import * as S from "./styles";
 
 function WhatsAppIcon() {
@@ -87,6 +88,8 @@ export default function ContactUs() {
         return () => controller.abort();
     }, []);
 
+    const emailHref = mailtoHref(contact?.email);
+    const instagramLink = instagramHref(contact?.instagram?.url);
     const hasChannels = !!contact && Boolean(contact.whatsapp || contact.phone || contact.email || contact.instagram || contact.address);
 
     useGSAP(() => {
@@ -157,7 +160,7 @@ export default function ContactUs() {
                 )}
 
                 {contact?.email && (
-                    <S.ContactItem as="a" href={`mailto:${contact.email}`}>
+                    <S.ContactItem as={emailHref ? "a" : "div"} href={emailHref ?? undefined}>
                         <S.ContactIcon><EmailIcon /></S.ContactIcon>
                         <S.ContactInfo>
                             <S.ContactLabel>E-mail</S.ContactLabel>
@@ -166,8 +169,8 @@ export default function ContactUs() {
                     </S.ContactItem>
                 )}
 
-                {contact?.instagram && (
-                    <S.ContactItem as="a" href={contact.instagram.url} target="_blank" rel="noopener noreferrer">
+                {contact?.instagram && instagramLink && (
+                    <S.ContactItem as="a" href={instagramLink} target="_blank" rel="noopener noreferrer">
                         <S.ContactIcon><InstagramIcon /></S.ContactIcon>
                         <S.ContactInfo>
                             <S.ContactLabel>Instagram</S.ContactLabel>

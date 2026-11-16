@@ -11,6 +11,7 @@ import { animateFadeInUp } from "../../utils/animations";
 import VenueCover from "../../components/VenueCover";
 import { formatStartingPrice } from "../../utils/salonFormat";
 import * as S from "./styles";
+import { safeHttpUrl } from "../../utils/safeUrl";
 
 /**
  * Página de listagem dos espaços disponíveis para reserva.
@@ -201,11 +202,11 @@ export default function Venues() {
                         </S.CardContent>
 
                         <S.Actions>
-                            {venue.mapsUrl ? (
+                            {safeHttpUrl(venue.mapsUrl) ? (
                                 <S.ActionLink
-                                    href={venue.mapsUrl}
+                                    href={safeHttpUrl(venue.mapsUrl)!}
                                     target="_blank"
-                                    rel="noreferrer"
+                                    rel="noopener noreferrer"
                                 >
                                     Rotas
                                 </S.ActionLink>

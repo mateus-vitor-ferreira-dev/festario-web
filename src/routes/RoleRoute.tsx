@@ -9,6 +9,7 @@
 import { useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { toast } from "react-toastify";
+import PageLoader from "../components/PageLoader";
 import { useAuth } from "../contexts/AuthContext";
 import { homePathFor } from "../utils/roles";
 import type { UserRole } from "../types";
@@ -31,8 +32,9 @@ function DeniedRedirect({ to }: { to: string }) {
  * @example <Route element={<RoleRoute roles={["OWNER", "ADMIN"]} />}>…</Route>
  */
 export function RoleRoute({ roles }: RoleRouteProps) {
-    const { user, isAuthenticated } = useAuth();
+    const { user, isAuthenticated, isRestoring } = useAuth();
 
+    if (isRestoring) return <PageLoader />;
     if (!isAuthenticated) return <Navigate to="/login" replace />;
 
     const role = user?.role;

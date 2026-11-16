@@ -8,6 +8,8 @@ import InviteAccept from "../../pages/InviteAccept";
 import { AuthProvider } from "../../contexts/AuthContext";
 import { server } from "../mocks/server";
 import { INVITE_TOKEN } from "../mocks/handlers";
+import { seedSession } from "../helpers/session";
+import { readSession } from "../../config/authStorage";
 
 const BASE = "http://localhost:3000";
 
@@ -131,9 +133,12 @@ describe("InviteAccept - aceite", () => {
 
         expect(await screen.findByText("Painel Page")).toBeInTheDocument();
         expect(body).toEqual({ name: "Sócia Nova", password: "Senha@123" });
-        const session = JSON.parse(localStorage.getItem("festario:userData")!);
+        const session = readSession()!;
         expect(session.user.role).toBe("OWNER");
         expect(session.token).toBe("owner-token");
+        // Fora das prévias o refresh token não é guardado pelo front, mesmo que venha no corpo.
+        expect(JSON.stringify({ ...localStorage })).not.toContain("owner-refresh");
+        expect(sessionStorage.getItem("festario:refreshToken")).toBeNull();
         expect(JSON.parse(localStorage.getItem("festario:tenant")!)).toEqual({ slug: "salao-jardim-das-flores", name: "Salão Jardim das Flores" });
     });
 
@@ -160,7 +165,7 @@ describe("InviteAccept - aceite", () => {
     });
 
     it("warns that an existing session will be replaced", async () => {
-        localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "a", name: "Admin", email: "admin@x.com", role: "ADMIN" } }));
+        seedSession({ token: "t", user: { id: "a", name: "Admin", email: "admin@x.com", role: "ADMIN" } });
         renderAt();
         expect(await screen.findByText(/você está conectado como/i)).toHaveTextContent("admin@x.com");
     });

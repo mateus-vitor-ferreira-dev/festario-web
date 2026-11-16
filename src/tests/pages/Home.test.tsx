@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider } from "../../contexts/AuthContext";
 import Home from "../../pages/Home";
 import { server } from "../mocks/server";
+import { seedSession } from "../helpers/session";
 
 const BASE = "http://localhost:3000";
 const DAY = 24 * 60 * 60 * 1000;
@@ -37,7 +38,7 @@ function mock({ reservations = [] as unknown[], grants = [] as unknown[], salons
 }
 
 function renderPage(user: Record<string, unknown> = { id: "u1", name: "Mariana Costa", email: "m@x.com", role: "USER" }) {
-    localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user }));
+    seedSession({ token: "t", user });
     return render(
         <AuthProvider>
             <MemoryRouter>

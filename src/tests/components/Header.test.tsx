@@ -8,10 +8,12 @@ import Header from "../../components/Header";
 import { AuthProvider } from "../../contexts/AuthContext";
 import { ThemeProvider } from "../../contexts/ThemeContext";
 import { server } from "../mocks/server";
+import { seedSession } from "../helpers/session";
+import { readSession } from "../../config/authStorage";
 
 function renderHeader(userData = null, path = "/home") {
     if (userData) {
-        localStorage.setItem("festario:userData", JSON.stringify(userData));
+        seedSession(userData);
     } else {
         localStorage.removeItem("festario:userData");
     }
@@ -121,8 +123,8 @@ describe("Header component", () => {
         expect(within(accountButton()).getByText("Usuário")).toBeInTheDocument();
     });
 
-    it("shows name from migrated legacy session", () => {
-        renderHeader({ id: "u1", name: "Mateus", email: "m@m.com", role: "USER", token: "t" });
+    it("shows name from the session", () => {
+        renderHeader({ token: "t", user: { id: "u1", name: "Mateus", email: "m@m.com", role: "USER" } });
         expect(within(accountButton()).getByText("Mateus")).toBeInTheDocument();
     });
 
@@ -136,7 +138,8 @@ describe("Header component", () => {
         const user = userEvent.setup();
         await user.click(accountButton());
         await user.click(screen.getByRole("button", { name: "Sair" }));
-        expect(localStorage.getItem("festario:userData")).toBeNull();
+        expect(readSession()).toBeNull();
+        expect(localStorage.getItem("festario:sessao")).toBeNull();
     });
 
     it("renders sun icon when dark theme is active", () => {

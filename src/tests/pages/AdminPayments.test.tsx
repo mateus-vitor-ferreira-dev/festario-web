@@ -8,6 +8,7 @@ import { AuthProvider } from "../../contexts/AuthContext";
 import Admin from "../../pages/Admin";
 import type { ReservationPayment } from "../../types";
 import { server } from "../mocks/server";
+import { seedSession } from "../helpers/session";
 
 const BASE = "http://localhost:3000";
 const RES = "res-1";
@@ -28,7 +29,7 @@ function pay(over: Partial<ReservationPayment> = {}, summary: Partial<Reservatio
 }
 
 function renderPanel() {
-    localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "o1", name: "Dona", email: "dono@x.com", role: "OWNER" } }));
+    seedSession({ token: "t", user: { id: "o1", name: "Dona", email: "dono@x.com", role: "OWNER" } });
     return render(
         <AuthProvider>
             <MemoryRouter initialEntries={["/painel?tab=reservations"]}>

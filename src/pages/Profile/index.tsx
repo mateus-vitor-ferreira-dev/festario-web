@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { useGSAP } from "@gsap/react";
 
 import { DatePickerInput, Input } from "../../components";
+import { updateSessionTokens } from "../../config/authStorage";
 import { useAuth } from "../../contexts/AuthContext";
 import api from "../../services/api";
 import { resendVerification, verifyCurrentPassword } from "../../services/auth";
@@ -19,6 +20,28 @@ import * as S from "./styles";
 
 interface ProfileUser extends User {
     emailVerifiedAt?: string | null;
+}
+
+interface UpdatedUserResponse extends ProfileUser {
+    /**
+     * Sessão nova devolvida quando a troca de e-mail ou de senha derruba as sessões abertas. O refresh
+     * token dela vem no cookie HttpOnly; só nas prévias aparece aqui.
+     */
+    auth?: { token: string; refreshToken?: string };
+}
+
+/**
+ * Troca de e-mail ou de senha derruba todas as sessões na API, inclusive a atual. A resposta traz um
+ * par novo: guardá-lo mantém o usuário conectado neste aparelho.
+ */
+function keepSession(response: UpdatedUserResponse | undefined, sync: () => void): ProfileUser | undefined {
+    if (!response) return response;
+    const { auth, ...user } = response;
+    if (auth?.token) {
+        updateSessionTokens(auth.token, auth.refreshToken ?? null);
+        sync();
+    }
+    return user;
 }
 
 function getInitials(name: string | undefined): string {
@@ -51,6 +74,7 @@ export default function Profile() {
     const [isVerifyingPassword, setIsVerifyingPassword] = useState(false);
     const [passwordStep, setPasswordStep] = useState("verify");
     const [isSendingVerification, setIsSendingVerification] = useState(false);
+    const [emailPassword, setEmailPassword] = useState("");
 
     const [form, setForm] = useState({
         name: "",
@@ -128,24 +152,39 @@ export default function Profile() {
 
         if (!user) return;
 
+        const emailChanged = form.email.trim().toLowerCase() !== (user.email ?? "").toLowerCase();
+        if (emailChanged && !emailPassword) {
+            return toast.error("Para trocar o e-mail, informe sua senha atual.");
+        }
+
         try {
             setIsSaving(true);
 
+            // O e-mail só vai quando muda: a API valida o formato e pede a senha só na troca, e um
+            // cadastro antigo com endereço fora do padrão continua salvando nome e telefone.
             const payload = {
                 name: form.name.trim(),
-                email: form.email.trim(),
+                ...(emailChanged && { email: form.email.trim() }),
                 phone: form.phone.replace(/\D/g, "") || undefined,
                 birthDate: form.birthDate || undefined,
+                ...(emailChanged && { currentPassword: emailPassword }),
             };
 
             const { data } = await api.patch(`/users/${user.id}`, payload);
 
-            const updated = data.data;
+            const updated = keepSession(data.data, () => updateUser({})) ?? data.data;
 
-            updateUser({ name: updated.name, email: updated.email });
+            updateUser({
+                name: updated.name,
+                email: updated.email,
+                ...(emailChanged && { emailVerified: false }),
+            });
 
             setUser(updated);
-            toast.success("Perfil atualizado com sucesso.");
+            setEmailPassword("");
+            toast.success(emailChanged
+                ? "Perfil atualizado. Enviamos um link de confirmação para o novo e-mail."
+                : "Perfil atualizado com sucesso.");
         } catch (error) {
             toast.error(getErrorMessage(error, "Erro ao atualizar o perfil."));
         } finally {
@@ -187,10 +226,11 @@ export default function Profile() {
 
         try {
             setIsChangingPassword(true);
-            await api.patch(`/users/${user.id}`, {
+            const { data } = await api.patch(`/users/${user.id}`, {
                 currentPassword: passwordForm.currentPassword,
                 password: passwordForm.newPassword,
             });
+            keepSession(data?.data, () => updateUser({}));
             toast.success("Senha alterada com sucesso.");
             handlePasswordReset();
         } catch (error) {
@@ -282,6 +322,17 @@ export default function Profile() {
                                 value={form.email}
                                 onChange={handleChange}
                             />
+
+                            {user && form.email.trim().toLowerCase() !== (user.email ?? "").toLowerCase() && (
+                                <Input
+                                    label="Senha atual"
+                                    name="emailCurrentPassword"
+                                    placeholder="Confirme sua senha para trocar o e-mail"
+                                    value={emailPassword}
+                                    onChange={(e) => setEmailPassword(e.target.value)}
+                                    showPasswordToggle
+                                />
+                            )}
 
                             <Input
                                 label="Telefone"

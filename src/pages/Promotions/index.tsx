@@ -10,6 +10,7 @@ import { isAbortError } from "../../utils/errors";
 import { animateFadeInUp } from "../../utils/animations";
 import type { PromotionGrant, PromotionStatusItem, Referral } from "../../types";
 import * as S from "./styles";
+import { safeHttpUrl } from "../../utils/safeUrl";
 
 const CAMPAIGN_CONFIGS = {
     REFERRAL_NEXT_BOOKING: {
@@ -240,9 +241,9 @@ export default function Promotions() {
                                             </>
                                         )}
 
-                                        {isActive && config.cta === "instagram" && instagram && (
+                                        {isActive && config.cta === "instagram" && safeHttpUrl(instagram?.url) && (
                                             <S.InstagramLink
-                                                href={instagram.url}
+                                                href={safeHttpUrl(instagram?.url)!}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                             >

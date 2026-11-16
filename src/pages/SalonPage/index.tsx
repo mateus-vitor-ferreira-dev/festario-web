@@ -17,17 +17,14 @@ import { formatCapacityRange, formatDistance, formatPlace, formatPrice, formatSt
 import type { SalonDetail, SalonVenue } from "../../types";
 import * as SS from "../Salons/styles";
 import * as S from "./styles";
+import { safeHexColor } from "../../utils/color";
+import { instagramHref, mailtoHref, safeHttpUrl } from "../../utils/safeUrl";
 
 /** WhatsApp guardado como "(35) 99999-0000": o link precisa do DDI e só dos números. */
 function whatsappUrl(raw: string): string | null {
     const digits = raw.replace(/\D/g, "");
     if (digits.length < 10) return null;
     return `https://wa.me/${digits.length <= 11 ? `55${digits}` : digits}`;
-}
-
-function instagramUrl(raw: string): string {
-    if (/^https?:\/\//i.test(raw)) return raw;
-    return `https://instagram.com/${raw.replace(/^@/, "").trim()}`;
 }
 
 function priceText(salon: SalonDetail): string | null {
@@ -44,8 +41,11 @@ type LoadState = { status: "loading" } | { status: "ready"; salon: SalonDetail }
 
 /**
  * Página pública de um salão: apresentação, contatos e os espaços, cada um com "Reservar".
- * Para o cliente, abrir a página passa a enviar o `X-Tenant-Slug` deste salão: o header mostra a
- * marca dele e a reserva vai para ele. Donos e a equipe continuam no próprio salão (só leem a página).
+ * Abrir a página não troca o espaço guardado no navegador: a vitrine (`/salons/:slug`) não depende
+ * dele, e trocar só por visitar deixaria qualquer link decidir para qual salão vão as próximas
+ * mensagens e reservas do cliente. O salão passa a ser o do navegador quando o cliente clica em
+ * "Reservar" (a reserva precisa do `X-Tenant-Slug` dele). Donos e a equipe continuam no próprio
+ * salão (só leem a página).
  * É pública: sem login, "Reservar" leva ao login e volta aqui com `?reservar=<espaço>`, que segue
  * direto para a reserva daquele espaço.
  *
@@ -79,12 +79,6 @@ export default function SalonPage() {
     }, [slug, origin.params, reload]);
 
     const salon = state.status === "ready" ? state.salon : null;
-
-    useEffect(() => {
-        if (!salon || !isAuthenticated || !canReserve || tenant?.slug === salon.slug) return;
-        setTenant({ slug: salon.slug, name: salon.name });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [salon?.slug, canReserve, isAuthenticated]);
 
     function reserve(venue: SalonVenue, { replace = false } = {}) {
         if (!salon) return;
@@ -139,9 +133,12 @@ export default function SalonPage() {
     const price = priceText(s);
     const contact = s.contact;
     const whatsapp = contact?.contactWhatsapp ? whatsappUrl(contact.contactWhatsapp) : null;
+    const email = mailtoHref(contact?.contactEmail);
+    const instagram = instagramHref(contact?.instagram);
+    const color = safeHexColor(s.primaryColor);
     const accent = {
-        "--card-salon": s.primaryColor ?? undefined,
-        "--card-salon-dark": s.primaryColorDark ?? s.primaryColor ?? undefined,
+        "--card-salon": color ?? undefined,
+        "--card-salon-dark": safeHexColor(s.primaryColorDark) ?? color ?? undefined,
     } as CSSProperties;
 
     return (
@@ -166,12 +163,12 @@ export default function SalonPage() {
                 </S.HeroText>
             </S.Hero>
 
-            {contact && (whatsapp || contact.contactPhone || contact.contactEmail || contact.instagram) && (
+            {contact && (whatsapp || contact.contactPhone || contact.contactEmail || instagram) && (
                 <S.Contacts aria-label="Contatos do salão">
                     {whatsapp && <li><a href={whatsapp} target="_blank" rel="noopener noreferrer">WhatsApp</a></li>}
                     {contact.contactPhone && <li><a href={`tel:${contact.contactPhone.replace(/[^\d+]/g, "")}`}>{contact.contactPhone}</a></li>}
-                    {contact.contactEmail && <li><a href={`mailto:${contact.contactEmail}`}>{contact.contactEmail}</a></li>}
-                    {contact.instagram && <li><a href={instagramUrl(contact.instagram)} target="_blank" rel="noopener noreferrer">Instagram</a></li>}
+                    {contact.contactEmail && <li>{email ? <a href={email}>{contact.contactEmail}</a> : contact.contactEmail}</li>}
+                    {instagram && <li><a href={instagram} target="_blank" rel="noopener noreferrer">Instagram</a></li>}
                 </S.Contacts>
             )}
 
@@ -227,8 +224,8 @@ export default function SalonPage() {
                                             );
                                         })()}
                                         <S.VenueActions>
-                                            {venue.mapsUrl && (
-                                                <S.SecondaryButton as="a" href={venue.mapsUrl} target="_blank" rel="noopener noreferrer">
+                                            {safeHttpUrl(venue.mapsUrl) && (
+                                                <S.SecondaryButton as="a" href={safeHttpUrl(venue.mapsUrl)!} target="_blank" rel="noopener noreferrer">
                                                     Ver no mapa
                                                 </S.SecondaryButton>
                                             )}
