@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React 19"/>
   <img src="https://img.shields.io/badge/TypeScript-6-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript 6"/>
   <img src="https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite 8"/>
-  <img src="https://img.shields.io/badge/testes-723-6E9F18?style=flat-square&logo=vitest&logoColor=white" alt="723 testes"/>
+  <img src="https://img.shields.io/badge/testes-784-6E9F18?style=flat-square&logo=vitest&logoColor=white" alt="784 testes"/>
 </p>
 
 </div>
@@ -135,7 +135,7 @@ npm run dev
 
 ## Testes e qualidade
 
-- **723 testes** em 79 arquivos, com Vitest, Testing Library e jsdom.
+- **784 testes** em 81 arquivos, com Vitest, Testing Library e jsdom.
 - A API é simulada com **MSW** (`src/tests/mocks`); bibliotecas pesadas (Google OAuth, react-pdf, datepicker) têm mocks próprios.
 - Cobertura mínima exigida em `vite.config.ts`: **linhas 84%, funções 82%, branches 75%**. Na medição atual: linhas 89,15%, funções 82,85%, branches 81,56%.
 - O CI (`.github/workflows/ci.yml`) roda a cada push: lint, testes com cobertura, análise de dependências com Snyk (falha em severidade alta ou crítica) e build.
