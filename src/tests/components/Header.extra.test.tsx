@@ -20,7 +20,7 @@ describe("Header extra coverage", () => {
     it("handles invalid JSON in localStorage gracefully", () => {
         localStorage.setItem("festario:userData", "INVALID_JSON");
         renderHeader();
-        expect(screen.getByText(/usuário/i)).toBeInTheDocument();
+        expect(screen.getAllByText(/usuário/i).length).toBeGreaterThan(0);
     });
 
     it("handles missing name field safely", () => {
@@ -29,7 +29,7 @@ describe("Header extra coverage", () => {
             JSON.stringify({ user: {} })
         );
         renderHeader();
-        expect(screen.getByText(/usuário/i)).toBeInTheDocument();
+        expect(screen.getAllByText(/usuário/i).length).toBeGreaterThan(0);
     });
 
     it("shows Plataforma link for migrated legacy session with ADMIN role", () => {
@@ -58,7 +58,7 @@ describe("Header extra coverage", () => {
             JSON.stringify({ name: "Alex Root", user: { role: "USER" } })
         );
         renderHeader();
-        expect(screen.getByText(/usuário/i)).toBeInTheDocument();
+        expect(screen.getAllByText(/usuário/i).length).toBeGreaterThan(0);
     });
 
     it("shows Usuário when format is unrecognized (partial nested user, no token)", () => {

@@ -9,7 +9,9 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { resendVerification } from "../../services/auth";
 import { animateFadeInUp } from "../../utils/animations";
 import { getHttpStatus } from "../../utils/errors";
-import { isManagerRole, MY_BUSINESS_PATH, PANEL_PATH, PLATFORM_PATH, SALONS_PATH, SERVICES_PATH } from "../../utils/roles";
+import { MY_BUSINESS_PATH, PLATFORM_PATH, SALONS_PATH, SERVICES_PATH } from "../../utils/roles";
+import AccountMenu from "./AccountMenu";
+import { accountItems, primaryItems } from "./navItems";
 import * as S from "./styles";
 
 function getInitials(name: string): string {
@@ -66,12 +68,13 @@ function MoonIcon() {
 /**
  * Barra de navegação principal da aplicação.
  *
- * Lê o perfil do usuário do `localStorage` (`festario:userData`) para exibir
- * iniciais no avatar e os atalhos por papel: OWNER vê "Painel"; ADMIN vê
- * "Plataforma" e "Painel"; USER vê só a navegação de cliente.
- * Inclui botão de toggle de tema claro/escuro e botão de logout. Abaixo de
- * 1024px a mesma `<nav>` vira um painel aberto pelo botão de menu (fecha com
- * Esc ou ao trocar de rota).
+ * Duas camadas, para a barra não virar uma fileira de links (`navItems.ts`):
+ * - navegação principal, na barra: os destinos de todo dia (cliente: Salões, Serviços, Reservas e
+ *   Orçamentos; dono e equipe: Painel, Plataforma e as vitrines);
+ * - menu da conta, no avatar: perfil, Meu negócio, Promoções, Negociações, Contate-nos e o Sair,
+ *   separado no fim. O logo leva ao início.
+ * Abaixo de 1024px a mesma `<nav>` vira um painel aberto pelo botão de menu, com a conta numa seção
+ * própria (fecha com Esc ou ao trocar de rota).
  * Anima a entrada com GSAP (`animateFadeInUp` de cima para baixo).
  *
  * @component
@@ -109,6 +112,8 @@ export default function Header() {
 
     const userName = user?.name || "Usuário";
     const userRole = user?.role;
+    const primary = primaryItems(userRole);
+    const account = accountItems(userRole);
     const emailVerified = user?.emailVerified ?? true;
 
     async function handleResendVerification() {
@@ -156,87 +161,39 @@ export default function Header() {
                 )}
 
                 <S.Nav id="main-nav" aria-label="Principal" $open={menuOpen}>
-                    <S.NavLink $active={location.pathname === "/home"} as={Link} to="/home">
-                        Início
-                    </S.NavLink>
+                    <S.NavGroup aria-label="Navegação principal">
+                        {primary.map((item) => {
+                            const active = item.match(location.pathname);
+                            return (
+                                <li key={item.to}>
+                                    <S.NavLink $active={active} aria-current={active ? "page" : undefined} as={Link} to={item.to}>
+                                        {item.label}
+                                    </S.NavLink>
+                                </li>
+                            );
+                        })}
+                    </S.NavGroup>
 
-                    <S.NavLink
-                        $active={location.pathname === SALONS_PATH || location.pathname.startsWith("/s/")}
-                        as={Link}
-                        to={SALONS_PATH}
-                    >
-                        Salões
-                    </S.NavLink>
-
-                    <S.NavLink $active={location.pathname.startsWith(SERVICES_PATH)} as={Link} to={SERVICES_PATH}>
-                        Serviços
-                    </S.NavLink>
-
-                    <S.NavLink
-                        $active={location.pathname === "/reservations"}
-                        as={Link}
-                        to="/reservations"
-                    >
-                        Reservas
-                    </S.NavLink>
-
-                    <S.NavLink
-                        $active={location.pathname === "/promocoes"}
-                        as={Link}
-                        to="/promocoes"
-                    >
-                        Promoções
-                    </S.NavLink>
-
-                    <S.NavLink
-                        $active={location.pathname.startsWith("/negociacoes")}
-                        as={Link}
-                        to="/negociacoes"
-                    >
-                        Negociações
-                    </S.NavLink>
-
-                    {userRole === "USER" && (
-                        <S.NavLink $active={location.pathname === "/orcamentos"} as={Link} to="/orcamentos">
-                            Orçamentos
-                        </S.NavLink>
-                    )}
-
-                    {userRole === "USER" && (
-                        <S.NavLink $active={location.pathname === MY_BUSINESS_PATH} as={Link} to={MY_BUSINESS_PATH}>
-                            Meu negócio
-                        </S.NavLink>
-                    )}
-
-                    <S.NavLink
-                        $active={location.pathname.startsWith("/contate-nos")}
-                        as={Link}
-                        to="/contate-nos"
-                    >
-                        Contate-nos
-                    </S.NavLink>
-
-                    {userRole === "ADMIN" && (
-                        <S.NavLink
-                            $active={location.pathname.startsWith(PLATFORM_PATH)}
-                            aria-current={location.pathname.startsWith(PLATFORM_PATH) ? "page" : undefined}
-                            as={Link}
-                            to={PLATFORM_PATH}
-                        >
-                            Plataforma
-                        </S.NavLink>
-                    )}
-
-                    {isManagerRole(userRole) && (
-                        <S.NavLink
-                            $active={location.pathname === PANEL_PATH}
-                            aria-current={location.pathname === PANEL_PATH ? "page" : undefined}
-                            as={Link}
-                            to={PANEL_PATH}
-                        >
-                            Painel
-                        </S.NavLink>
-                    )}
+                    {/* No celular, a conta vem no mesmo painel, separada por um título; o Sair fica por último. */}
+                    <S.MobileAccount>
+                        <S.MobileAccountTitle>
+                            <S.Avatar aria-hidden="true">{getInitials(userName)}</S.Avatar>
+                            {userName}
+                        </S.MobileAccountTitle>
+                        <S.NavGroup aria-label="Minha conta">
+                            {account.map((item) => {
+                                const active = item.match(location.pathname);
+                                return (
+                                    <li key={item.to}>
+                                        <S.NavLink $active={active} aria-current={active ? "page" : undefined} as={Link} to={item.to}>
+                                            {item.label}
+                                        </S.NavLink>
+                                    </li>
+                                );
+                            })}
+                        </S.NavGroup>
+                        <S.MobileLogout type="button" onClick={handleLogout}>Sair</S.MobileLogout>
+                    </S.MobileAccount>
                 </S.Nav>
 
                 <S.Actions>
@@ -248,15 +205,9 @@ export default function Header() {
                         {theme === "dark" ? <SunIcon /> : <MoonIcon />}
                     </S.ThemeToggle>
 
-                    <S.ProfileLink to="/profile" title={`Editar perfil de ${userName}`}>
-                        <S.Avatar>{getInitials(userName)}</S.Avatar>
-                        <S.UserInfo>
-                            <span>Olá,</span>
-                            <strong>{userName.split(" ")[0]}</strong>
-                        </S.UserInfo>
-                    </S.ProfileLink>
-
-                    <S.LogoutButton onClick={handleLogout}>Sair</S.LogoutButton>
+                    <S.DesktopOnly>
+                        <AccountMenu name={userName} initials={getInitials(userName)} items={account} onLogout={handleLogout} />
+                    </S.DesktopOnly>
 
                     <S.MenuButton
                         type="button"
