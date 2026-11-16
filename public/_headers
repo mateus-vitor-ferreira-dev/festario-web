@@ -1,5 +1,22 @@
-# Cabeçalhos do Cloudflare Pages (no lugar dos "headers" do vercel.json).
-# O popup do login com Google precisa conversar com a janela do app; sem este
-# cabeçalho, o navegador isola os dois e o login não volta.
+# Cabeçalhos de segurança, servidos pelo Cloudflare Workers junto com os arquivos do build.
+#
+# Content-Security-Policy: só o próprio app executa script. As exceções existem por um motivo cada:
+# - accounts.google.com: o botão e o popup do login com Google (script, estilo e iframe);
+# - 'wasm-unsafe-eval': o gerador do PDF do contrato roda o layout em WebAssembly (não libera eval de JS);
+# - style 'unsafe-inline': o styled-components injeta as regras em <style> na hora;
+# - img https:: fotos e logos dos salões e prestadores vêm do armazenamento de imagens e do Google;
+# - connect: a API e o Sentry. Os previews de branch usam a mesma API.
+# frame-ancestors 'none' impede que o app seja carregado dentro de outro site (clickjacking).
+#
+# Cross-Origin-Opener-Policy: o popup do login com Google precisa conversar com a janela do app;
+# com "same-origin" o navegador isolaria os dois e o login não voltaria.
+#
+# Referrer-Policy: links para fora não levam o caminho nem a query (ex.: o token de troca de senha).
 /*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.festario.com.br https://*.ingest.us.sentry.io https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
   Cross-Origin-Opener-Policy: same-origin-allow-popups
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Permissions-Policy: camera=(), microphone=(), payment=(), usb=(), geolocation=(self)

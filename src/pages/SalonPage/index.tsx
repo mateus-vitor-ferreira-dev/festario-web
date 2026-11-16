@@ -17,6 +17,7 @@ import { formatCapacityRange, formatDistance, formatPlace, formatPrice, formatSt
 import type { SalonDetail, SalonVenue } from "../../types";
 import * as SS from "../Salons/styles";
 import * as S from "./styles";
+import { safeHttpUrl } from "../../utils/safeUrl";
 
 /** WhatsApp guardado como "(35) 99999-0000": o link precisa do DDI e só dos números. */
 function whatsappUrl(raw: string): string | null {
@@ -25,9 +26,9 @@ function whatsappUrl(raw: string): string | null {
     return `https://wa.me/${digits.length <= 11 ? `55${digits}` : digits}`;
 }
 
-function instagramUrl(raw: string): string {
-    if (/^https?:\/\//i.test(raw)) return raw;
-    return `https://instagram.com/${raw.replace(/^@/, "").trim()}`;
+function instagramUrl(raw: string): string | null {
+    if (/^https?:\/\//i.test(raw)) return safeHttpUrl(raw);
+    return `https://instagram.com/${encodeURIComponent(raw.replace(/^@/, "").trim())}`;
 }
 
 function priceText(salon: SalonDetail): string | null {
@@ -171,7 +172,7 @@ export default function SalonPage() {
                     {whatsapp && <li><a href={whatsapp} target="_blank" rel="noopener noreferrer">WhatsApp</a></li>}
                     {contact.contactPhone && <li><a href={`tel:${contact.contactPhone.replace(/[^\d+]/g, "")}`}>{contact.contactPhone}</a></li>}
                     {contact.contactEmail && <li><a href={`mailto:${contact.contactEmail}`}>{contact.contactEmail}</a></li>}
-                    {contact.instagram && <li><a href={instagramUrl(contact.instagram)} target="_blank" rel="noopener noreferrer">Instagram</a></li>}
+                    {contact.instagram && instagramUrl(contact.instagram) && <li><a href={instagramUrl(contact.instagram)!} target="_blank" rel="noopener noreferrer">Instagram</a></li>}
                 </S.Contacts>
             )}
 
@@ -227,8 +228,8 @@ export default function SalonPage() {
                                             );
                                         })()}
                                         <S.VenueActions>
-                                            {venue.mapsUrl && (
-                                                <S.SecondaryButton as="a" href={venue.mapsUrl} target="_blank" rel="noopener noreferrer">
+                                            {safeHttpUrl(venue.mapsUrl) && (
+                                                <S.SecondaryButton as="a" href={safeHttpUrl(venue.mapsUrl)!} target="_blank" rel="noopener noreferrer">
                                                     Ver no mapa
                                                 </S.SecondaryButton>
                                             )}
