@@ -9,7 +9,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { resendVerification } from "../../services/auth";
 import { animateFadeInUp } from "../../utils/animations";
 import { getHttpStatus } from "../../utils/errors";
-import { isManagerRole, PANEL_PATH, PLATFORM_PATH, SALONS_PATH } from "../../utils/roles";
+import { isManagerRole, MY_BUSINESS_PATH, PANEL_PATH, PLATFORM_PATH, SALONS_PATH, SERVICES_PATH } from "../../utils/roles";
 import * as S from "./styles";
 
 function getInitials(name: string): string {
@@ -82,8 +82,10 @@ export default function Header() {
     const { theme, toggleTheme } = useTheme();
     const { user, logout: authLogout } = useAuth();
     const { salon } = useSalonBrand();
-    // Na área da plataforma e na vitrine não há um salão em foco: só a marca do Festário.
-    const showSalon = Boolean(salon) && !location.pathname.startsWith(PLATFORM_PATH) && location.pathname !== SALONS_PATH;
+    // Na área da plataforma, nas vitrines e no marketplace não há um salão em foco: só a marca do Festário.
+    const noSalonInFocus = location.pathname.startsWith(PLATFORM_PATH) || location.pathname === SALONS_PATH
+        || location.pathname.startsWith(SERVICES_PATH) || location.pathname === MY_BUSINESS_PATH || location.pathname === "/orcamentos";
+    const showSalon = Boolean(salon) && !noSalonInFocus;
     const containerRef = useRef(null);
     const [resending, setResending] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
@@ -166,6 +168,10 @@ export default function Header() {
                         Salões
                     </S.NavLink>
 
+                    <S.NavLink $active={location.pathname.startsWith(SERVICES_PATH)} as={Link} to={SERVICES_PATH}>
+                        Serviços
+                    </S.NavLink>
+
                     <S.NavLink
                         $active={location.pathname === "/reservations"}
                         as={Link}
@@ -189,6 +195,18 @@ export default function Header() {
                     >
                         Negociações
                     </S.NavLink>
+
+                    {userRole === "USER" && (
+                        <S.NavLink $active={location.pathname === "/orcamentos"} as={Link} to="/orcamentos">
+                            Orçamentos
+                        </S.NavLink>
+                    )}
+
+                    {userRole === "USER" && (
+                        <S.NavLink $active={location.pathname === MY_BUSINESS_PATH} as={Link} to={MY_BUSINESS_PATH}>
+                            Meu negócio
+                        </S.NavLink>
+                    )}
 
                     <S.NavLink
                         $active={location.pathname.startsWith("/contate-nos")}

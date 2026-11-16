@@ -22,7 +22,19 @@ const maskCep = (v: string) => {
  * De onde a vitrine mede a distância. Com uma origem escolhida, mostra de onde mede e um "Trocar";
  * sem origem, já abre as formas de informar. A localização só ordena: nenhum salão some por estar longe.
  */
-export default function OriginBar({ origin }: { origin: SalonOriginApi }) {
+export interface OriginBarCopy {
+    title: string;
+    hint: string;
+    activeHint: string;
+}
+
+const SALON_COPY: OriginBarCopy = {
+    title: "Veja primeiro os salões perto de você",
+    hint: "Use a sua localização ou digite um CEP. A lista continua com todos os salões.",
+    activeHint: "Os mais perto aparecem primeiro. Os outros continuam na lista.",
+};
+
+export default function OriginBar({ origin, copy = SALON_COPY }: { origin: SalonOriginApi; copy?: OriginBarCopy }) {
     const { choice, label, canUseProfile, status, error } = origin;
     const hasOrigin = choice.kind !== "none";
     const [open, setOpen] = useState(false);
@@ -43,12 +55,10 @@ export default function OriginBar({ origin }: { origin: SalonOriginApi }) {
                 <S.OriginIcon $active={hasOrigin}><PinIcon /></S.OriginIcon>
                 <div>
                     <S.OriginTitle id={`${panelId}-title`}>
-                        {hasOrigin ? `Perto ${label}` : "Veja primeiro os salões perto de você"}
+                        {hasOrigin ? `Perto ${label}` : copy.title}
                     </S.OriginTitle>
                     <S.OriginHint>
-                        {hasOrigin
-                            ? "Os mais perto aparecem primeiro. Os outros continuam na lista."
-                            : "Use a sua localização ou digite um CEP. A lista continua com todos os salões."}
+                        {hasOrigin ? copy.activeHint : copy.hint}
                     </S.OriginHint>
                 </div>
                 {hasOrigin && (

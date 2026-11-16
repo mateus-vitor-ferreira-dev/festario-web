@@ -9,6 +9,7 @@ import { CampaignsTab } from "./tabs/CampaignsTab";
 import { DashboardTab } from "./tabs/DashboardTab";
 import { HolidaysTab } from "./tabs/HolidaysTab";
 import { NegotiationsTab } from "./tabs/NegotiationsTab";
+import { PartnersTab } from "./tabs/PartnersTab";
 import { ReservationsTab } from "./tabs/ReservationsTab";
 import { UsersTab } from "./tabs/UsersTab";
 import { VenueTab } from "./tabs/VenueTab";
@@ -30,6 +31,7 @@ const TAB_COMPONENTS = {
     rules:        RulesTab,
     brand:        BrandTab,
     venues:       VenueTab,
+    partners:     PartnersTab,
     subscription: SubscriptionTab,
 };
 

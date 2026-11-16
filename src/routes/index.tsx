@@ -26,6 +26,11 @@ const ReservationIntent = lazy(() => import("../pages/ReservationIntent"));
 const Reservations      = lazy(() => import("../pages/Reservations"));
 const ResetPassword     = lazy(() => import("../pages/ResetPassword"));
 const SalonPage         = lazy(() => import("../pages/SalonPage"));
+const Services          = lazy(() => import("../pages/Services"));
+const ProviderPage      = lazy(() => import("../pages/ProviderPage"));
+const MyBusiness        = lazy(() => import("../pages/MyBusiness"));
+const Quotes            = lazy(() => import("../pages/Quotes"));
+const PartyBuilder      = lazy(() => import("../pages/PartyBuilder"));
 const Salons            = lazy(() => import("../pages/Salons"));
 const SignUp            = lazy(() => import("../pages/SignUp"));
 const Venues            = lazy(() => import("../pages/Venues"));
@@ -54,7 +59,9 @@ function LegacyAdminRedirect() {
 /**
  * Árvore de rotas da aplicação.
  *
- * Vitrine pública: `/saloes` (todos os salões) e `/s/:slug` (página de um salão, que leva à reserva).
+ * Vitrine pública: `/saloes` (todos os salões) e `/s/:slug` (página de um salão, que leva à reserva);
+ * `/servicos` e `/servicos/:slug` (marketplace: prestadores de serviço de festa e o pedido de orçamento).
+ * `/meu-negocio` é o painel do prestador (só conta de cliente) e `/orcamentos`, os pedidos do cliente.
  * Sem login, abrem com o cabeçalho de visitante (`ShowcaseLayout`); `/` leva para lá.
  *
  * Áreas por papel (ver `utils/roles`): `/painel` (OWNER e ADMIN — painel do espaço),
@@ -90,6 +97,8 @@ export function AppRoutes({ introFinished }: AppRoutesProps) {
                     <Route element={<ShowcaseLayout />}>
                         <Route path="/saloes" element={<Salons />} />
                         <Route path="/s/:slug" element={<SalonPage />} />
+                        <Route path="/servicos" element={<Services />} />
+                        <Route path="/servicos/:slug" element={<ProviderPage />} />
                     </Route>
 
                     <Route element={<PrivateRoute />}>
@@ -111,6 +120,12 @@ export function AppRoutes({ introFinished }: AppRoutesProps) {
                             <Route path="/contate-nos" element={<ContactUs />} />
                             <Route path="/negociacoes" element={<Negotiations />} />
                             <Route path="/negociacoes/:id" element={<NegotiationChat />} />
+                            <Route path="/orcamentos" element={<Quotes />} />
+                            <Route path="/monte-a-festa/:reservationId" element={<PartyBuilder />} />
+                            {/* O perfil de prestador é da conta de cliente: a conta do salão não tem. */}
+                            <Route element={<RoleRoute roles={["USER"]} />}>
+                                <Route path="/meu-negocio" element={<MyBusiness />} />
+                            </Route>
                             <Route
                                 path="/checkout/:reservationId"
                                 element={

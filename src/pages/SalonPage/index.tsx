@@ -1,6 +1,7 @@
 import { CSSProperties, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
+import ProviderCardItem from "../../components/Marketplace/ProviderCardItem";
 import SalonMark from "../../components/SalonMark";
 import VenueCover from "../../components/VenueCover";
 import { useAuth } from "../../contexts/AuthContext";
@@ -14,6 +15,7 @@ import { AMENITY_LABELS, sortAmenities } from "../../constants/amenities";
 import { pricingUnit } from "../../utils/packageFormat";
 import { formatCapacityRange, formatDistance, formatPlace, formatPrice, formatStartingPrice } from "../../utils/salonFormat";
 import type { SalonDetail, SalonVenue } from "../../types";
+import * as SS from "../Salons/styles";
 import * as S from "./styles";
 
 /** WhatsApp guardado como "(35) 99999-0000": o link precisa do DDI e só dos números. */
@@ -242,6 +244,23 @@ export default function SalonPage() {
                         })}
                     </S.Venues>
                 </>
+            )}
+
+            {s.partners && s.partners.length > 0 && (
+                <section aria-labelledby="partners-title">
+                    <S.SectionTitle id="partners-title">Fornecedores que o salão indica</S.SectionTitle>
+                    <SS.Grid>
+                        {s.partners.map((p) => (
+                            <SS.CardItem key={p.slug}>
+                                <ProviderCardItem
+                                    provider={{ ...p, serviceMode: "ON_SITE", serviceRadiusKm: 0, startingPrice: null, startingPriceUnit: null, distanceKm: null }}
+                                    note={p.note}
+                                    showPrice={false}
+                                />
+                            </SS.CardItem>
+                        ))}
+                    </SS.Grid>
+                </section>
             )}
         </S.Container>
     );
