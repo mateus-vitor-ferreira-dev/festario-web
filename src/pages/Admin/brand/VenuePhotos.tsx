@@ -6,6 +6,7 @@ import { listVenues } from "../../../services/venue";
 import type { Venue, VenuePhoto } from "../../../types";
 import { isAbortError } from "../../../utils/errors";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
+import { moved } from "../../../utils/arrayMove";
 import { pickVariant, srcSet } from "../../../utils/images";
 import * as A from "../styles";
 import * as S from "./styles";
@@ -13,13 +14,6 @@ import * as S from "./styles";
 const ACCEPT_PHOTO = "image/jpeg,image/png,image/webp";
 const MIN_ALT = 3;
 
-/** Move o item `from` para a posição `to`. */
-function moved<T>(list: T[], from: number, to: number): T[] {
-    const next = [...list];
-    const [item] = next.splice(from, 1);
-    next.splice(to, 0, item);
-    return next;
-}
 
 /**
  * Fotos de cada espaço no painel: uma folha de contato na ordem em que o cliente vê. Arrastar reordena
@@ -132,14 +126,20 @@ export function VenuePhotos() {
                             ))}
                         </S.Sheet>
                     )}
-                    <PhotoUploader venueName={venue?.name ?? "espaço"} onUploaded={setPhotos} venueId={venueId} isFirst={photos.length === 0} />
+                    <PhotoUploader
+                        subject={venue?.name ?? "espaço"}
+                        onUploaded={setPhotos}
+                        upload={(file, alt, onProgress) => uploadVenuePhoto(venueId, file, alt, onProgress)}
+                        firstDoneMessage="Foto enviada. Ela é a capa do espaço."
+                        isFirst={photos.length === 0}
+                    />
                 </>
             )}
         </S.Block>
     );
 }
 
-interface TileProps {
+export interface TileProps {
     photo: VenuePhoto;
     index: number;
     total: number;
@@ -156,7 +156,7 @@ interface TileProps {
     onDelete: () => void;
 }
 
-function PhotoTile({ photo, index, total, busy, dragging, over, onDragStart, onDragEnter, onDragEnd, onDrop, onMove, onCover, onAlt, onDelete }: TileProps) {
+export function PhotoTile({ photo, index, total, busy, dragging, over, onDragStart, onDragEnter, onDragEnd, onDrop, onMove, onCover, onAlt, onDelete }: TileProps) {
     const [alt, setAlt] = useState(photo.alt);
     const small = pickVariant(photo.variants, 480);
     const altChanged = alt.trim() !== photo.alt && alt.trim().length >= MIN_ALT;
@@ -198,7 +198,18 @@ function PhotoTile({ photo, index, total, busy, dragging, over, onDragStart, onD
     );
 }
 
-function PhotoUploader({ venueId, venueName, isFirst, onUploaded }: { venueId: string; venueName: string; isFirst: boolean; onUploaded: (p: VenuePhoto[]) => void }) {
+interface PhotoUploaderProps {
+    /** De quem é a foto, para o rótulo do formulário (o espaço ou o negócio). */
+    subject: string;
+    isFirst: boolean;
+    upload: (file: File, alt: string, onProgress: (fraction: number) => void) => Promise<VenuePhoto[]>;
+    onUploaded: (p: VenuePhoto[]) => void;
+    firstDoneMessage: string;
+    altPlaceholder?: string;
+}
+
+/** Escolher a foto, descrever e enviar. Serve às fotos do espaço e ao portfólio do prestador. */
+export function PhotoUploader({ subject, isFirst, upload, onUploaded, firstDoneMessage, altPlaceholder = "Ex.: Salão com mesas montadas para aniversário" }: PhotoUploaderProps) {
     const [file, setFile] = useState<File | null>(null);
     const [alt, setAlt] = useState("");
     const [progress, setProgress] = useState<number | null>(null);
@@ -222,8 +233,8 @@ function PhotoUploader({ venueId, venueName, isFirst, onUploaded }: { venueId: s
         try {
             setProgress(0);
             setError(null);
-            onUploaded(await uploadVenuePhoto(venueId, file, alt.trim(), setProgress));
-            toast.success(isFirst ? "Foto enviada. Ela é a capa do espaço." : "Foto enviada.");
+            onUploaded(await upload(file, alt.trim(), setProgress));
+            toast.success(isFirst ? firstDoneMessage : "Foto enviada.");
             setFile(null);
             setAlt("");
         } catch (err) {
@@ -235,7 +246,7 @@ function PhotoUploader({ venueId, venueName, isFirst, onUploaded }: { venueId: s
 
     const sending = progress !== null;
     return (
-        <S.Uploader $withPreview={Boolean(preview)} onSubmit={send} noValidate aria-label={`Enviar foto de ${venueName}`}>
+        <S.Uploader $withPreview={Boolean(preview)} onSubmit={send} noValidate aria-label={`Enviar foto de ${subject}`}>
             {preview && (
                 <S.PendingPreview>
                     <img src={preview} alt="" />
@@ -254,7 +265,7 @@ function PhotoUploader({ venueId, venueName, isFirst, onUploaded }: { venueId: s
                     <>
                         <A.FormGroup>
                             <label htmlFor="new-photo-alt">Descrição da foto (obrigatória)</label>
-                            <A.TextInput id="new-photo-alt" ref={altRef} value={alt} onChange={(e) => setAlt(e.target.value)} maxLength={160} placeholder="Ex.: Salão com mesas montadas para aniversário" />
+                            <A.TextInput id="new-photo-alt" ref={altRef} value={alt} onChange={(e) => setAlt(e.target.value)} maxLength={160} placeholder={altPlaceholder} />
                         </A.FormGroup>
                         {sending && <S.Progress value={progress ?? 0} max={1} aria-label="Enviando a foto" />}
                         <S.Row>

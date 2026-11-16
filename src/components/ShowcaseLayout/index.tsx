@@ -11,7 +11,7 @@ import MainLayout from "../MainLayout";
 import * as M from "../MainLayout/styles";
 
 /**
- * Casca da vitrine (`/saloes` e `/s/:slug`), que é pública: logado, é o app de sempre; sem login, um
+ * Casca das vitrines (salões em `/saloes` e `/s/:slug`, serviços em `/servicos`), que são públicas: logado, é o app de sempre; sem login, um
  * cabeçalho só com a marca e os caminhos para entrar ou criar conta, que voltam para esta mesma página.
  *
  * @component
@@ -34,6 +34,10 @@ function PublicLayout() {
                     <H.BrandWrapper to="/saloes" title="Salões do Festário">
                         <H.Logo />
                     </H.BrandWrapper>
+                    <PublicNav aria-label="Vitrines">
+                        <PublicNavLink to="/saloes" aria-current={location.pathname === "/saloes" || location.pathname.startsWith("/s/") ? "page" : undefined}>Salões</PublicNavLink>
+                        <PublicNavLink to="/servicos" aria-current={location.pathname.startsWith("/servicos") ? "page" : undefined}>Serviços</PublicNavLink>
+                    </PublicNav>
                     <Actions>
                         <H.ThemeToggle type="button" onClick={toggleTheme} title={themeLabel} aria-label={themeLabel}>
                             {theme === "dark" ? <SunIcon /> : <MoonIcon />}
@@ -67,6 +71,43 @@ function MoonIcon() {
         </svg>
     );
 }
+
+const PublicNav = styled.nav`
+  display: flex;
+  gap: 4px;
+  margin-right: auto;
+  margin-left: 16px;
+
+  ${media.sm} {
+    margin-left: 4px;
+  }
+`;
+
+const PublicNavLink = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-decoration: none;
+
+  &[aria-current="page"] {
+    color: var(--brand);
+    border-bottom-color: var(--brand);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  ${media.sm} {
+    padding: 0 6px;
+  }
+`;
 
 const Actions = styled.div`
   display: flex;
