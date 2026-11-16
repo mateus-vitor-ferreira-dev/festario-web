@@ -13,6 +13,7 @@ import PackagesTab from "./PackagesTab";
 import PortfolioTab from "./PortfolioTab";
 import ProfileForm from "./ProfileForm";
 import QuotesInbox from "./QuotesInbox";
+import ReviewsTab from "./ReviewsTab";
 import * as S from "./styles";
 
 const TABS = [
@@ -21,6 +22,7 @@ const TABS = [
     { key: "portfolio", label: "Portfólio" },
     { key: "pacotes", label: "Pacotes" },
     { key: "agenda", label: "Agenda" },
+    { key: "avaliacoes", label: "Avaliações" },
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
 
@@ -157,6 +159,7 @@ export default function MyBusiness() {
                 {tab === "portfolio" && <PortfolioTab provider={provider} onChange={setProvider} />}
                 {tab === "pacotes" && <PackagesTab provider={provider} onChange={setProvider} />}
                 {tab === "agenda" && <AgendaTab provider={provider} onChange={setProvider} />}
+                {tab === "avaliacoes" && <ReviewsTab />}
             </div>
         </S.Container>
     );

@@ -3,6 +3,7 @@ import { CATEGORY_LABELS } from "../../constants/providers";
 import type { ProviderCard } from "../../types";
 import { formatProviderPrice } from "../../utils/providerFormat";
 import { formatDistance, formatPlace } from "../../utils/salonFormat";
+import { RatingLine } from "./Stars";
 import * as S from "./styles";
 
 interface ProviderCardItemProps {
@@ -35,6 +36,7 @@ export default function ProviderCardItem({ provider, from, quoteSearch, priority
                 <S.CardCategories>{provider.categories.map((c) => CATEGORY_LABELS[c]).join(", ")}</S.CardCategories>
                 <S.CardName as={headingLevel}>{provider.name}</S.CardName>
                 {place && <S.CardMeta>{place}</S.CardMeta>}
+                {provider.rating && provider.rating.count > 0 && <RatingLine average={provider.rating.average} count={provider.rating.count} compact />}
                 {showPrice && <S.CardPrice>{price ? <>a partir de <strong>{price}</strong></> : "Preço sob orçamento"}</S.CardPrice>}
                 {note && <S.CardNote>{note}</S.CardNote>}
             </S.CardBody>

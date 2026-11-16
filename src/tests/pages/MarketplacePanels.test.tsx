@@ -28,7 +28,7 @@ const READY = { ...MINE, whatsapp: "35999990000", photos: [PHOTO], missingToPubl
 const QUOTE_BASE = {
     eventDate: "2030-02-01", guests: 80, eventType: "Aniversário", city: "Lavras", message: "Doces para 80 pessoas.",
     quotedAmount: null, responseMessage: null, rejectionReason: null, answeredAt: null, closedAmount: null, hiredAt: null,
-    createdAt: "2026-11-01", reservationId: null, package: null, referredBy: null,
+    createdAt: "2026-11-01", reservationId: null, package: null, referredBy: null, review: null, canReview: false,
 };
 
 function renderAt(path: string, el: React.ReactNode, routePath: string) {
@@ -174,6 +174,24 @@ describe("Meu negócio", () => {
         await waitFor(() => expect(hired).toEqual({ closedAmount: 950 }));
     });
 
+    it("avaliações: responde a que está sem resposta", async () => {
+        let reply: unknown = null;
+        const review = { id: "r1", rating: 4, comment: "Atrasou um pouco.", reply: null, repliedAt: null, createdAt: "2026-10-01", author: "Camila F.", eventType: "Casamento", eventMonth: "2026-09" };
+        server.use(
+            http.get(`${BASE}/providers/me`, () => HttpResponse.json({ data: READY })),
+            http.get(`${BASE}/providers/me/reviews`, () => HttpResponse.json({ data: [review], pagination: { page: 1, limit: 50, total: 1, totalPages: 1 }, summary: { average: 4, count: 1, distribution: [] } })),
+            http.post(`${BASE}/providers/me/reviews/r1/reply`, async ({ request }) => {
+                reply = await request.json();
+                return HttpResponse.json({ data: { ...review, reply: "Desculpe o atraso!" } });
+            }),
+        );
+        renderAt("/meu-negocio?aba=avaliacoes", <MyBusiness />, "/meu-negocio");
+        expect(await screen.findByText("Atrasou um pouco.")).toBeInTheDocument();
+        await userEvent.type(screen.getByLabelText(/Sua resposta/), "Desculpe o atraso!");
+        await userEvent.click(screen.getByRole("button", { name: "Publicar resposta" }));
+        expect(await screen.findByRole("button", { name: "Editar resposta" })).toBeInTheDocument();
+        expect(reply).toEqual({ reply: "Desculpe o atraso!" });
+    });
 });
 
 describe("Meus orçamentos", () => {
@@ -192,6 +210,27 @@ describe("Meus orçamentos", () => {
         expect(await screen.findByText("Aceito")).toBeInTheDocument();
     });
 
+    it("avalia a contratação cuja festa passou", async () => {
+        let body: unknown = null;
+        const hired = { ...QUOTE_BASE, id: "q3", status: "HIRED", eventDate: "2026-10-01", quotedAmount: 650, closedAmount: 650, canReview: true, provider: { ...provider, contact: null } };
+        server.use(
+            http.get(`${BASE}/quotes/mine`, () => HttpResponse.json({ data: [hired], pagination: { page: 1, limit: 50, total: 1, totalPages: 1 } })),
+            http.post(`${BASE}/quotes/q3/review`, async ({ request }) => {
+                body = await request.json();
+                return HttpResponse.json({ data: { id: "r9", rating: 5, comment: "Perfeito.", createdAt: "2026-11-16" } }, { status: 201 });
+            }),
+        );
+        renderAt("/orcamentos", <Quotes />, "/orcamentos");
+        await userEvent.click(await screen.findByRole("button", { name: "Avaliar" }));
+        await userEvent.click(screen.getByRole("button", { name: "Publicar avaliação" }));
+        expect(await screen.findByText("Escolha de 1 a 5 estrelas.")).toBeInTheDocument();
+
+        await userEvent.click(screen.getByRole("radio", { name: /5 estrelas/ }));
+        await userEvent.type(screen.getByLabelText(/Comentário/), "Perfeito.");
+        await userEvent.click(screen.getByRole("button", { name: "Publicar avaliação" }));
+        expect(await screen.findByText("Sua avaliação")).toBeInTheDocument();
+        expect(body).toEqual({ rating: 5, comment: "Perfeito." });
+    });
 
     it("sem pedidos, leva à vitrine", async () => {
         server.use(http.get(`${BASE}/quotes/mine`, () => HttpResponse.json({ data: [], pagination: { page: 1, limit: 50, total: 0, totalPages: 0 } })));

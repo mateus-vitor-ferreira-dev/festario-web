@@ -15,15 +15,21 @@ const BASE = "http://localhost:3000";
 const CARD = {
     id: "p1", slug: "doces-da-ana", name: "Doces da Ana", categories: ["CAKE_SWEETS"], city: "Lavras", state: "MG",
     serviceMode: "ON_SITE", serviceRadiusKm: 40, cover: null, startingPrice: 125, startingPriceUnit: "FIXED", distanceKm: null,
+    rating: { average: 4.5, count: 2 },
 };
 
 const DETAIL = {
     ...CARD, description: "Brigadeiros gourmet e bolos.", instagram: "docesdaana", photos: [],
     packages: [{ id: "k1", name: "Cento de brigadeiros", description: "Sabores à escolha", price: 125, priceUnit: "FIXED" }],
     busyDates: ["2030-01-10"], recommendedBy: [{ slug: "recanto-vila-rica", name: "Recanto Vila Rica", logoUrl: null }],
-    preview: false, createdAt: "2026-01-01",
+    preview: false, createdAt: "2026-01-01", rating: { average: 4.5, count: 2 },
 };
 
+const REVIEWS = {
+    data: [{ id: "r1", rating: 5, comment: "Doces lindos.", reply: "Obrigada!", repliedAt: "2026-10-02", createdAt: "2026-10-01", author: "Camila F.", eventType: "Casamento", eventMonth: "2026-09" }],
+    pagination: { page: 1, limit: 5, total: 2, totalPages: 1 },
+    summary: { average: 4.5, count: 2, distribution: [5, 4, 3, 2, 1].map((rating) => ({ rating, count: rating >= 4 ? 1 : 0 })) },
+};
 
 function Probe() {
     const l = useLocation();
@@ -63,6 +69,7 @@ describe("Vitrine de serviços", () => {
         renderAt("/servicos?date=2030-02-01");
 
         expect(await screen.findByRole("heading", { name: "Doces da Ana" })).toBeInTheDocument();
+        expect(screen.getByRole("img", { name: "4,5 de 5" })).toBeInTheDocument();
         // A data escolhida vai junto para o pedido de orçamento.
         expect(screen.getByRole("link", { name: /Doces da Ana/ })).toHaveAttribute("href", "/servicos/doces-da-ana?data=2030-02-01");
 
@@ -83,14 +90,18 @@ describe("Página do prestador", () => {
     beforeEach(() => {
         server.use(
             http.get(`${BASE}/providers/doces-da-ana`, () => HttpResponse.json({ data: DETAIL })),
+            http.get(`${BASE}/providers/doces-da-ana/reviews`, () => HttpResponse.json(REVIEWS)),
         );
     });
 
-    it("mostra pacotes e indicação, e não mostra o WhatsApp", async () => {
+    it("mostra pacotes, indicação, avaliações e não mostra o WhatsApp", async () => {
         renderAt("/servicos/doces-da-ana");
         expect(await screen.findByRole("heading", { level: 1, name: "Doces da Ana" })).toBeInTheDocument();
         expect(screen.getByRole("heading", { name: "Cento de brigadeiros" })).toBeInTheDocument();
         expect(screen.getByRole("link", { name: "Recanto Vila Rica" })).toHaveAttribute("href", "/s/recanto-vila-rica");
+        expect(await screen.findByText("Doces lindos.")).toBeInTheDocument();
+        expect(screen.getByText("Obrigada!")).toBeInTheDocument();
+        expect(screen.getByText("Camila F.")).toBeInTheDocument();
         expect(screen.queryByText(/wa\.me/)).not.toBeInTheDocument();
     });
 

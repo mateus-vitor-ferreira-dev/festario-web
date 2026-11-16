@@ -67,3 +67,50 @@ export const ProviderName = styled.h2`
     text-decoration: underline;
   }
 `;
+
+export const ReviewPrompt = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--gold-subtle);
+
+  p {
+    color: var(--text-secondary);
+  }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+`;
+
+export const ReviewForm = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-muted);
+`;
+
+export const MyReview = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--gold);
+  background: var(--bg-muted);
+
+  strong {
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+  }
+
+  p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+`;
