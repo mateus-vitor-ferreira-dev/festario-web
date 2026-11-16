@@ -31,7 +31,3 @@ export function formatPhoneDigits(raw: string | null | undefined): string {
     if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
     return raw ?? "";
 }
-
-export function instagramUrl(handle: string): string {
-    return `https://instagram.com/${handle.replace(/^@/, "").trim()}`;
-}

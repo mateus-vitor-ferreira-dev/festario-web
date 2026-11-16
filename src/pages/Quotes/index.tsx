@@ -12,6 +12,7 @@ import { isAbortError } from "../../utils/errors";
 import { getErrorMessage, getLoadErrorMessage } from "../../utils/getErrorMessage";
 import { formatEventDate, whatsappLink } from "../../utils/providerFormat";
 import { formatPrice } from "../../utils/salonFormat";
+import { mailtoHref } from "../../utils/safeUrl";
 import * as A from "../Admin/styles";
 import * as M from "../MyBusiness/styles";
 import * as S from "./styles";
@@ -128,7 +129,7 @@ function CustomerQuoteItem({ quote: q, onChange, itemRef }: { quote: CustomerQuo
             {contact && (wa || contact.email) && (
                 <M.ContactRow aria-label={`Contato de ${q.provider.name}`}>
                     {wa && <li><a href={wa} target="_blank" rel="noopener noreferrer">Combinar pelo WhatsApp</a></li>}
-                    {contact.email && <li><a href={`mailto:${contact.email}`}>{contact.email}</a></li>}
+                    {contact.email && <li>{mailtoHref(contact.email) ? <a href={mailtoHref(contact.email)!}>{contact.email}</a> : contact.email}</li>}
                 </M.ContactRow>
             )}
 

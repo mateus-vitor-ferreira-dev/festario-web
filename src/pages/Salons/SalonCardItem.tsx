@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import SalonMark from "../../components/SalonMark";
 import VenueCover from "../../components/VenueCover";
 import { AMENITY_LABELS, sortAmenities } from "../../constants/amenities";
+import { safeHexColor } from "../../utils/color";
 import { formatCapacityRange, formatDistance, formatPlace, formatStartingPrice } from "../../utils/salonFormat";
 import type { SalonCard } from "../../types";
 import * as S from "./styles";
@@ -31,9 +32,10 @@ export default function SalonCardItem({ salon, from, priority }: SalonCardItemPr
     ];
 
     // A cor de cada card é a do próprio salão, não a do salão aberto no navegador.
+    const color = safeHexColor(salon.primaryColor);
     const accent = {
-        "--card-salon": salon.primaryColor ?? undefined,
-        "--card-salon-dark": salon.primaryColorDark ?? salon.primaryColor ?? undefined,
+        "--card-salon": color ?? undefined,
+        "--card-salon-dark": safeHexColor(salon.primaryColorDark) ?? color ?? undefined,
     } as CSSProperties;
 
     return (

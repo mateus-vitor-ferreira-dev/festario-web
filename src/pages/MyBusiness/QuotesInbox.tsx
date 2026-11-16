@@ -8,6 +8,7 @@ import { isAbortError } from "../../utils/errors";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { formatEventDate, formatPhoneDigits, whatsappLink } from "../../utils/providerFormat";
 import { formatPrice } from "../../utils/salonFormat";
+import { mailtoHref } from "../../utils/safeUrl";
 import * as A from "../Admin/styles";
 import * as S from "./styles";
 
@@ -131,7 +132,7 @@ function ReceivedQuote({ quote: q, onChanged }: { quote: ProviderQuote; onChange
 
             <S.ContactRow aria-label={`Contato de ${q.customer.name}`}>
                 {wa && <li><a href={wa} target="_blank" rel="noopener noreferrer">WhatsApp {formatPhoneDigits(q.customer.phone)}</a></li>}
-                <li><a href={`mailto:${q.customer.email}`}>{q.customer.email}</a></li>
+                <li>{mailtoHref(q.customer.email) ? <a href={mailtoHref(q.customer.email)!}>{q.customer.email}</a> : q.customer.email}</li>
             </S.ContactRow>
 
             {q.quotedAmount != null && (

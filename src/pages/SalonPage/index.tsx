@@ -17,18 +17,14 @@ import { formatCapacityRange, formatDistance, formatPlace, formatPrice, formatSt
 import type { SalonDetail, SalonVenue } from "../../types";
 import * as SS from "../Salons/styles";
 import * as S from "./styles";
-import { safeHttpUrl } from "../../utils/safeUrl";
+import { safeHexColor } from "../../utils/color";
+import { instagramHref, mailtoHref, safeHttpUrl } from "../../utils/safeUrl";
 
 /** WhatsApp guardado como "(35) 99999-0000": o link precisa do DDI e só dos números. */
 function whatsappUrl(raw: string): string | null {
     const digits = raw.replace(/\D/g, "");
     if (digits.length < 10) return null;
     return `https://wa.me/${digits.length <= 11 ? `55${digits}` : digits}`;
-}
-
-function instagramUrl(raw: string): string | null {
-    if (/^https?:\/\//i.test(raw)) return safeHttpUrl(raw);
-    return `https://instagram.com/${encodeURIComponent(raw.replace(/^@/, "").trim())}`;
 }
 
 function priceText(salon: SalonDetail): string | null {
@@ -140,9 +136,12 @@ export default function SalonPage() {
     const price = priceText(s);
     const contact = s.contact;
     const whatsapp = contact?.contactWhatsapp ? whatsappUrl(contact.contactWhatsapp) : null;
+    const email = mailtoHref(contact?.contactEmail);
+    const instagram = instagramHref(contact?.instagram);
+    const color = safeHexColor(s.primaryColor);
     const accent = {
-        "--card-salon": s.primaryColor ?? undefined,
-        "--card-salon-dark": s.primaryColorDark ?? s.primaryColor ?? undefined,
+        "--card-salon": color ?? undefined,
+        "--card-salon-dark": safeHexColor(s.primaryColorDark) ?? color ?? undefined,
     } as CSSProperties;
 
     return (
@@ -167,12 +166,12 @@ export default function SalonPage() {
                 </S.HeroText>
             </S.Hero>
 
-            {contact && (whatsapp || contact.contactPhone || contact.contactEmail || contact.instagram) && (
+            {contact && (whatsapp || contact.contactPhone || contact.contactEmail || instagram) && (
                 <S.Contacts aria-label="Contatos do salão">
                     {whatsapp && <li><a href={whatsapp} target="_blank" rel="noopener noreferrer">WhatsApp</a></li>}
                     {contact.contactPhone && <li><a href={`tel:${contact.contactPhone.replace(/[^\d+]/g, "")}`}>{contact.contactPhone}</a></li>}
-                    {contact.contactEmail && <li><a href={`mailto:${contact.contactEmail}`}>{contact.contactEmail}</a></li>}
-                    {contact.instagram && instagramUrl(contact.instagram) && <li><a href={instagramUrl(contact.instagram)!} target="_blank" rel="noopener noreferrer">Instagram</a></li>}
+                    {contact.contactEmail && <li>{email ? <a href={email}>{contact.contactEmail}</a> : contact.contactEmail}</li>}
+                    {instagram && <li><a href={instagram} target="_blank" rel="noopener noreferrer">Instagram</a></li>}
                 </S.Contacts>
             )}
 

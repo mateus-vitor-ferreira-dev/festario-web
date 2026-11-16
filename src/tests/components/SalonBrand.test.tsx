@@ -119,6 +119,20 @@ describe("Header com o salão", () => {
         expect(document.documentElement.style.getPropertyValue("--salon-color-dark")).toBe("#7fd1ae");
     });
 
+    it("cor fora do formato não chega ao CSS; a escura inválida cai na principal", async () => {
+        server.use(http.get(`${BASE}/tenant`, () => HttpResponse.json({ data: { slug: "jardim", name: "Salão das Flores", primaryColor: "red;background:url(https://x.example)", primaryColorDark: "#7fd1ae", logoVariants: null } })));
+        const { unmount } = renderHeader();
+        await screen.findByRole("link", { name: /salão das flores/i });
+        expect(document.documentElement.style.getPropertyValue("--salon-color")).toBe("");
+        expect(document.documentElement.style.getPropertyValue("--salon-color-dark")).toBe("");
+        unmount();
+
+        server.use(http.get(`${BASE}/tenant`, () => HttpResponse.json({ data: { slug: "jardim", name: "Salão das Flores", primaryColor: "#1f6b4f", primaryColorDark: "url(x)", logoVariants: null } })));
+        renderHeader();
+        await waitFor(() => expect(document.documentElement.style.getPropertyValue("--salon-color")).toBe("#1f6b4f"));
+        expect(document.documentElement.style.getPropertyValue("--salon-color-dark")).toBe("#1f6b4f");
+    });
+
     it("na área da plataforma não mostra salão", async () => {
         renderHeader("/plataforma");
         await screen.findByRole("navigation", { name: "Principal" });

@@ -66,6 +66,21 @@ describe("Página do salão", () => {
         expect(JSON.parse(localStorage.getItem("festario:tenant")!)).toEqual({ slug: "salao-jardim-das-flores", name: "Salão Jardim das Flores" });
     });
 
+    it("contatos e cor fora do formato não viram link nem CSS", async () => {
+        server.use(http.get(`${BASE}/salons/salao-jardim-das-flores`, () => HttpResponse.json({ data: {
+            ...SALON,
+            primaryColor: "red;background:url(https://x.example/a)", primaryColorDark: "#7fd1ae",
+            contact: { ...SALON.contact, contactEmail: "oi@jardim.com?bcc=x@y.com", instagram: "https://evil.example/jardim" },
+        } })));
+        const { container } = renderPage();
+        expect(await screen.findByRole("heading", { level: 1, name: "Salão Jardim das Flores" })).toBeInTheDocument();
+        expect(screen.getByText("oi@jardim.com?bcc=x@y.com").closest("a")).toBeNull();
+        expect(screen.queryByRole("link", { name: "Instagram" })).not.toBeInTheDocument();
+        const style = (container.querySelector("[style]") as HTMLElement).getAttribute("style") ?? "";
+        expect(style).not.toContain("url(");
+        expect(style).toContain("--card-salon-dark: #7fd1ae");
+    });
+
     it("lista o que cada espaço oferece, com piscina e área kids cobradas incluídas", async () => {
         server.use(http.get(`${BASE}/salons/salao-jardim-das-flores`, () => HttpResponse.json({ data: { ...SALON, venues: [{ ...VENUE, amenities: ["POOL", "KIDS_AREA", "BUFFET", "LIVE_MUSIC"] }] } })));
         renderPage();

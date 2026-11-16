@@ -51,6 +51,17 @@ describe("ContactUs page", () => {
         expect(link).toHaveAttribute("target", "_blank");
     });
 
+    it("e-mail fora do padrão fica só como texto e Instagram de outro site não aparece", async () => {
+        server.use(http.get(`${BASE_URL}/contact`, () => HttpResponse.json({ success: true, data: {
+            name: "Salão Lagoa", whatsapp: null, phone: null, address: null,
+            email: "contato@salaolagoa.com.br?bcc=outro@x.com",
+            instagram: { url: "https://evil.example/salaolagoa", display: "@salaolagoa" },
+        } })));
+        renderPage();
+        expect((await screen.findByText("contato@salaolagoa.com.br?bcc=outro@x.com")).closest("a")).toBeNull();
+        expect(screen.queryByText("@salaolagoa")).not.toBeInTheDocument();
+    });
+
     it("renders the section titles", async () => {
         renderPage();
         expect(screen.getByText("Canais do salão")).toBeInTheDocument();
