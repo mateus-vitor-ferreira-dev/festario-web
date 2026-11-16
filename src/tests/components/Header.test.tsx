@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -48,12 +48,46 @@ const VERIFIED_USER = {
 describe("Header component", () => {
     afterEach(() => localStorage.clear());
 
-    it("renders nav links", () => {
+    const accountButton = () => screen.getByRole("button", { name: /menu da conta/i });
+
+    it("a barra traz só a navegação principal do cliente; o logo leva ao início", () => {
         renderHeader({ user: { name: "Mateus", role: "USER" } });
-        expect(screen.getByRole("link", { name: /início/i })).toBeInTheDocument();
+        const nav = screen.getByRole("list", { name: "Navegação principal" });
+        expect(within(nav).getAllByRole("link").map((a) => a.textContent)).toEqual(["Salões", "Serviços", "Reservas", "Orçamentos"]);
         expect(screen.getByRole("link", { name: /salões/i })).toHaveAttribute("href", "/saloes");
-        expect(screen.getByRole("link", { name: /reservas/i })).toBeInTheDocument();
-        expect(screen.getByRole("link", { name: /promoções/i })).toBeInTheDocument();
+        expect(screen.getByTitle("Ir para o início")).toHaveAttribute("href", "/home");
+    });
+
+    it("marca o item da página atual", () => {
+        renderHeader({ user: { name: "Mateus", role: "USER" } }, "/s/recanto-vila-rica");
+        expect(screen.getByRole("link", { name: "Salões" })).toHaveAttribute("aria-current", "page");
+        expect(screen.getByRole("link", { name: "Serviços" })).not.toHaveAttribute("aria-current");
+    });
+
+    it("o menu da conta abre no avatar, com o Sair separado, e fecha com Esc devolvendo o foco", async () => {
+        renderHeader({ token: "t", user: { name: "Mateus Ferreira", role: "USER" } });
+        const user = userEvent.setup();
+        expect(accountButton()).toHaveAttribute("aria-expanded", "false");
+        expect(within(accountButton()).getByText("MF")).toBeInTheDocument();
+
+        await user.click(accountButton());
+        expect(accountButton()).toHaveAttribute("aria-expanded", "true");
+        for (const label of ["Meu perfil", "Meu negócio", "Promoções", "Negociações", "Contate-nos"]) {
+            expect(screen.getAllByRole("link", { name: label }).length).toBeGreaterThan(0);
+        }
+        expect(screen.getByRole("button", { name: "Sair" })).toBeInTheDocument();
+
+        await user.keyboard("{Escape}");
+        expect(accountButton()).toHaveAttribute("aria-expanded", "false");
+        expect(accountButton()).toHaveFocus();
+    });
+
+    it("clicar fora fecha o menu da conta", async () => {
+        renderHeader({ user: { name: "Mateus", role: "USER" } });
+        const user = userEvent.setup();
+        await user.click(accountButton());
+        await user.click(document.body);
+        expect(accountButton()).toHaveAttribute("aria-expanded", "false");
     });
 
     it("shows Plataforma and Painel links for ADMIN role", () => {
@@ -62,10 +96,13 @@ describe("Header component", () => {
         expect(screen.getByRole("link", { name: /^painel$/i })).toHaveAttribute("href", "/painel");
     });
 
-    it("shows only the Painel link for OWNER role", () => {
+    it("dono vê o Painel e não vê as listas de cliente nem o Meu negócio", async () => {
         renderHeader({ token: "t", user: { name: "Dona", role: "OWNER" } });
         expect(screen.getByRole("link", { name: /^painel$/i })).toHaveAttribute("href", "/painel");
         expect(screen.queryByRole("link", { name: /^plataforma$/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole("link", { name: "Reservas" })).not.toBeInTheDocument();
+        await userEvent.setup().click(accountButton());
+        expect(screen.queryByRole("link", { name: "Meu negócio" })).not.toBeInTheDocument();
     });
 
     it("does not show panel links for USER role", () => {
@@ -74,35 +111,31 @@ describe("Header component", () => {
         expect(screen.queryByRole("link", { name: /^plataforma$/i })).not.toBeInTheDocument();
     });
 
-    it("shows user initials in avatar", () => {
-        renderHeader({ token: "t", user: { name: "Mateus Ferreira", role: "USER" } });
-        expect(screen.getByText("MF")).toBeInTheDocument();
+    it("shows single initial when name has only one word", () => {
+        renderHeader({ token: "t", user: { name: "Mateus", role: "USER" } });
+        expect(within(accountButton()).getByText("M")).toBeInTheDocument();
     });
 
     it("falls back to Usuário when name is empty", () => {
         renderHeader({ token: "t", user: { name: "", role: "USER" } });
-        expect(screen.getByText("Usuário")).toBeInTheDocument();
-    });
-
-    it("shows single initial when name has only one word", () => {
-        renderHeader({ token: "t", user: { name: "Mateus", role: "USER" } });
-        expect(screen.getByText("M")).toBeInTheDocument();
+        expect(within(accountButton()).getByText("Usuário")).toBeInTheDocument();
     });
 
     it("shows name from migrated legacy session", () => {
         renderHeader({ id: "u1", name: "Mateus", email: "m@m.com", role: "USER", token: "t" });
-        expect(screen.getByText(/mateus/i)).toBeInTheDocument();
+        expect(within(accountButton()).getByText("Mateus")).toBeInTheDocument();
     });
 
     it("shows Usuário when no userData is in localStorage", () => {
         renderHeader(null);
-        expect(screen.getByText("Usuário")).toBeInTheDocument();
+        expect(within(accountButton()).getByText("Usuário")).toBeInTheDocument();
     });
 
     it("removes userData and redirects on logout", async () => {
         renderHeader({ user: { name: "Mateus", role: "USER" }, token: "tk" });
         const user = userEvent.setup();
-        await user.click(screen.getByRole("button", { name: /sair/i }));
+        await user.click(accountButton());
+        await user.click(screen.getByRole("button", { name: "Sair" }));
         expect(localStorage.getItem("festario:userData")).toBeNull();
     });
 
