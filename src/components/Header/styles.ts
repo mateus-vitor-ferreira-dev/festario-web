@@ -124,7 +124,7 @@ export const Nav = styled.nav<{ $open?: boolean }>`
     right: 0;
     flex-direction: column;
     align-items: stretch;
-    gap: 2px;
+    gap: 0;
     padding: 8px 16px 16px;
     background: var(--bg-page);
     border-bottom: 1px solid var(--border-default);
@@ -134,28 +134,239 @@ export const Nav = styled.nav<{ $open?: boolean }>`
   }
 `;
 
+/** Lista de links de um grupo da navegação (principal ou conta). */
+export const NavGroup = styled.ul`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  ${media.lg} {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+  }
+`;
+
 export const NavLink = styled(Link)<{ $active?: boolean }>`
-  padding: 8px 12px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
   white-space: nowrap;
   border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   font-weight: ${({ $active }) => ($active ? 700 : 500)};
-  color: ${({ $active }) => ($active ? "var(--brand)" : "var(--text-muted)")};
-  background: ${({ $active }) => ($active ? "var(--brand-subtle)" : "transparent")};
+  color: ${({ $active }) => ($active ? "var(--brand)" : "var(--text-secondary)")};
   transition: background 0.15s ease, color 0.15s ease;
+
+  /* o item atual ganha um traço embaixo, além da cor */
+  &::after {
+    content: "";
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 6px;
+    height: 2px;
+    border-radius: 2px;
+    background: ${({ $active }) => ($active ? "var(--brand)" : "transparent")};
+  }
 
   &:hover {
     background: var(--bg-muted);
     color: var(--text-primary);
   }
 
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+
   ${media.lg} {
     display: flex;
-    align-items: center;
     min-height: 48px;
     padding: 0 12px;
-    font-size: var(--text-base);
+    background: ${({ $active }) => ($active ? "var(--brand-subtle)" : "transparent")};
+
+    &::after {
+      display: none;
+    }
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+`;
+
+/* ─── Conta no celular (dentro do painel do menu) ─── */
+
+export const MobileAccount = styled.div`
+  display: none;
+
+  ${media.lg} {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-default);
+  }
+`;
+
+export const MobileAccountTitle = styled.p`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 12px 8px;
+  font-weight: 700;
+  color: var(--text-primary);
+`;
+
+export const MobileLogout = styled.button`
+  min-height: 48px;
+  margin-top: 8px;
+  padding: 0 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--status-error-text);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+`;
+
+export const DesktopOnly = styled.div`
+  display: contents;
+
+  ${media.lg} {
+    display: none;
+  }
+`;
+
+/* ─── Menu da conta (telas largas) ─── */
+
+export const AccountWrap = styled.div`
+  position: relative;
+`;
+
+export const AccountButton = styled.button<{ $current?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 4px 8px 4px 4px;
+  border: 1px solid ${({ $current }) => ($current ? "var(--brand-border)" : "transparent")};
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover,
+  &[aria-expanded="true"] {
+    background: var(--bg-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+`;
+
+export const AccountPanel = styled.div`
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  min-width: 240px;
+  padding: 8px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-lg);
+
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+`;
+
+export const AccountName = styled.p`
+  padding: 8px 12px 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border-default);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+`;
+
+export const AccountLink = styled(Link)<{ $active?: boolean }>`
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  color: ${({ $active }) => ($active ? "var(--brand)" : "var(--text-secondary)")};
+  background: ${({ $active }) => ($active ? "var(--brand-subtle)" : "transparent")};
+  font-weight: ${({ $active }) => ($active ? 700 : 500)};
+  text-decoration: none;
+
+  &:hover {
+    background: var(--bg-muted);
+    color: var(--text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+  }
+`;
+
+export const AccountDivider = styled.hr`
+  margin: 6px 4px;
+  border: 0;
+  border-top: 1px solid var(--border-default);
+`;
+
+export const AccountLogout = styled.button`
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--status-error-text);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--status-error-bg);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+  }
+`;
+
+export const VisuallyHidden = styled.span`
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 `;
 
 export const Actions = styled.div`
