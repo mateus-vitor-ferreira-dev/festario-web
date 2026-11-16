@@ -87,6 +87,27 @@ describe("Profile page", () => {
         );
     });
 
+    it("sem trocar o e-mail, não manda o campo (nem pede senha)", async () => {
+        let body: Record<string, unknown> | undefined;
+        server.use(
+            http.patch(`${BASE}/users/user-1`, async ({ request }) => {
+                body = (await request.json()) as Record<string, unknown>;
+                return HttpResponse.json({ success: true, data: { id: "user-1", name: "Mateus Novo", email: "mateus@email.com", role: "USER" } });
+            })
+        );
+        const user = userEvent.setup();
+        renderPage();
+        await waitFor(() => expect(screen.getByDisplayValue("Mateus")).toBeInTheDocument());
+        const nameInput = screen.getByDisplayValue("Mateus");
+        await user.clear(nameInput);
+        await user.type(nameInput, "Mateus Novo");
+        await user.click(screen.getByRole("button", { name: /salvar alterações/i }));
+        await waitFor(() => expect(body).toBeDefined());
+        expect(body).toMatchObject({ name: "Mateus Novo" });
+        expect(body).not.toHaveProperty("email");
+        expect(body).not.toHaveProperty("currentPassword");
+    });
+
     it("shows error toast when save fails", async () => {
         server.use(
             http.patch(`${BASE}/users/user-1`, () =>

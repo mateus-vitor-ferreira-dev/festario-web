@@ -160,9 +160,11 @@ export default function Profile() {
         try {
             setIsSaving(true);
 
+            // O e-mail só vai quando muda: a API valida o formato e pede a senha só na troca, e um
+            // cadastro antigo com endereço fora do padrão continua salvando nome e telefone.
             const payload = {
                 name: form.name.trim(),
-                email: form.email.trim(),
+                ...(emailChanged && { email: form.email.trim() }),
                 phone: form.phone.replace(/\D/g, "") || undefined,
                 birthDate: form.birthDate || undefined,
                 ...(emailChanged && { currentPassword: emailPassword }),
