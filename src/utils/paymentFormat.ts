@@ -21,10 +21,6 @@ export function whatsappLink(phone: string, text: string): string | null {
     return `https://wa.me/${full}?text=${encodeURIComponent(text)}`;
 }
 
-export function instagramLink(handle: string): string {
-    return `https://instagram.com/${handle.replace(/^@/, "")}`;
-}
-
 /** "sex., 20 de nov., 18:30" — prazo para o salão registrar o pagamento. */
 export function formatDeadline(iso: string): string {
     return new Date(iso).toLocaleString("pt-BR", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });

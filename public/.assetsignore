@@ -1,0 +1,3 @@
+# Arquivos do dist que o Cloudflare Workers não publica.
+# Os source maps só servem ao Sentry; servidos, entregariam o código-fonte do app.
+*.map

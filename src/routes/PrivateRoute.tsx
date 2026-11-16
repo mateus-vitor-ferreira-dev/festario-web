@@ -4,6 +4,7 @@
  * Redireciona para `/login` se o usuário não estiver autenticado, com `?voltar=` para retomar a página.
  */
 import { Navigate, Outlet, useLocation } from "react-router-dom";
+import PageLoader from "../components/PageLoader";
 import { useAuth } from "../contexts/AuthContext";
 import { withReturn } from "../utils/returnPath";
 
@@ -14,8 +15,11 @@ import { withReturn } from "../utils/returnPath";
  * @component
  */
 export function PrivateRoute() {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, isRestoring } = useAuth();
     const location = useLocation();
+
+    // Recarregar a página não pode mandar para o login quem ainda está com a sessão sendo restaurada.
+    if (isRestoring) return <PageLoader />;
 
     if (!isAuthenticated) {
         return <Navigate to={withReturn("/login", location.pathname + location.search)} replace />;

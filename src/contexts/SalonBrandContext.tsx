@@ -1,6 +1,7 @@
 import { ReactNode, createContext, useCallback, useContext, useEffect, useState } from "react";
 
 import { getPublicTenant } from "../services/venue";
+import { safeHexColor } from "../utils/color";
 import type { PublicTenant } from "../types";
 import { useAuth } from "./AuthContext";
 
@@ -34,9 +35,10 @@ export function SalonBrandProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const root = document.documentElement.style;
-        if (salon?.primaryColor) {
-            root.setProperty("--salon-color", salon.primaryColor);
-            root.setProperty("--salon-color-dark", salon.primaryColorDark ?? salon.primaryColor);
+        const color = safeHexColor(salon?.primaryColor);
+        if (color) {
+            root.setProperty("--salon-color", color);
+            root.setProperty("--salon-color-dark", safeHexColor(salon?.primaryColorDark) ?? color);
         } else {
             root.removeProperty("--salon-color");
             root.removeProperty("--salon-color-dark");

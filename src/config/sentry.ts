@@ -4,6 +4,26 @@ import { getHttpStatus } from "../utils/errors";
 import type { User } from "../types";
 
 const dsn = env.sentryDsn;
+
+/** Parâmetros de URL que carregam segredo: o token da troca de senha, da verificação de e-mail e do convite. */
+const SECRET_PARAMS = /([?&](?:token|code|hmac|refreshToken|access_token)=)[^&#]*/gi;
+
+/** Caminhos com segredo: o link do convite do dono no app e as chamadas dele à API. */
+const SECRET_PATHS = /(\/(?:convite|owner-invites)\/)[^/?#]+/gi;
+
+/**
+ * Qualquer trecho de caminho com cara de token (32+ caracteres hex ou base64url) também sai: um
+ * endpoint novo com segredo no caminho não pode depender de alguém lembrar de pôr na lista acima.
+ */
+const TOKEN_LIKE_SEGMENT = /\/[A-Za-z0-9_-]{32,}(?=[/?#]|$)/g;
+
+/** A URL sem o valor dos segredos (o nome do parâmetro fica, para o erro continuar legível). */
+export function scrubUrl(url: string): string {
+    return url
+        .replace(SECRET_PARAMS, "$1[removido]")
+        .replace(SECRET_PATHS, "$1[removido]")
+        .replace(TOKEN_LIKE_SEGMENT, "/[removido]");
+}
 const mode = env.mode;
 
 export function initSentry() {
@@ -12,6 +32,8 @@ export function initSentry() {
   Sentry.init({
     dsn,
     environment: mode,
+    // Sem IP, cookies nem dados do usuário além do ID definido em setUserContext
+    sendDefaultPii: false,
     // Rastrear 10% das sessões em produção para performance
     tracesSampleRate: mode === "production" ? 0.1 : 0,
     // Não capturar erros de rede esperados (4xx)
@@ -28,9 +50,24 @@ export function initSentry() {
       }
       if (event.request) {
         delete event.request.data; // body pode conter senhas/tokens
+        delete event.request.cookies;
+        if (event.request.url) event.request.url = scrubUrl(event.request.url);
+        if (typeof event.request.query_string === "string") event.request.query_string = scrubUrl(`?${event.request.query_string}`).slice(1);
+        else delete event.request.query_string;
       }
 
       return event;
+    },
+    // A navegação e as chamadas à API ficam no rastro do erro: tira o token das URLs ali também.
+    beforeBreadcrumb(breadcrumb) {
+      const data = breadcrumb.data;
+      if (data) {
+        for (const key of ["url", "from", "to"] as const) {
+          if (typeof data[key] === "string") data[key] = scrubUrl(data[key]);
+        }
+      }
+      if (typeof breadcrumb.message === "string") breadcrumb.message = scrubUrl(breadcrumb.message);
+      return breadcrumb;
     },
   });
 }

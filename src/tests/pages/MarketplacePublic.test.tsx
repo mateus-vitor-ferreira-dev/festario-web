@@ -9,6 +9,7 @@ import PartyBuilder from "../../pages/PartyBuilder";
 import ProviderPage from "../../pages/ProviderPage";
 import Services from "../../pages/Services";
 import { server } from "../mocks/server";
+import { seedSession } from "../helpers/session";
 
 const BASE = "http://localhost:3000";
 
@@ -37,7 +38,7 @@ function Probe() {
 }
 
 function renderAt(path: string, role: string | null = "USER") {
-    if (role) localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "u1", name: "Bruno Cliente", role } }));
+    if (role) seedSession({ token: "t", user: { id: "u1", name: "Bruno Cliente", role } });
     return render(
         <AuthProvider>
             <MemoryRouter initialEntries={[path]}>

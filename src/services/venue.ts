@@ -58,10 +58,12 @@ export async function getVenuePackages(venueId: string, date?: string, signal?: 
 /**
  * Regras do salão que o cliente precisa para reservar: antecedência, horizonte e política vigente.
  *
+ * `headers` permite ler um salão específico (`tenantHeaderFor(slug)`) sem trocar o espaço guardado.
+ *
  * @see GET /tenant
  */
-export async function getPublicTenant(signal?: AbortSignal): Promise<PublicTenant> {
-    const { data } = await api.get("/tenant", { signal });
+export async function getPublicTenant(signal?: AbortSignal, headers?: Record<string, string>): Promise<PublicTenant> {
+    const { data } = await api.get("/tenant", { signal, headers });
     return data.data;
 }
 

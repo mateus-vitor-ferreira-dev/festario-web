@@ -282,6 +282,8 @@ export interface AuthContextValue {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  /** Restaurando a sessão pelo `/auth/refresh` ao abrir a página: as rotas protegidas esperam. */
+  isRestoring: boolean;
   /** Espaço guardado (vindo do convite, de `/login?espaco=` ou escolhido pelo ADMIN); `null` = espaço padrão. */
   tenant: TenantRef | null;
   /** Guarda a sessão; com `tenant`, passa a enviar `X-Tenant-Slug` nas próximas requisições. */

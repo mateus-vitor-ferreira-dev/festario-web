@@ -10,6 +10,7 @@ import Admin from "../../pages/Admin";
 import { subscriptionSummary } from "../../utils/subscription";
 import { mockSubscription } from "../mocks/handlers";
 import { server } from "../mocks/server";
+import { seedSession } from "../helpers/session";
 
 const BASE = "http://localhost:3000";
 
@@ -19,7 +20,7 @@ function LocationProbe() {
 }
 
 function renderPanel(path = "/painel?tab=subscription") {
-    localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "o1", name: "Dona", email: "d@x.com", role: "OWNER" } }));
+    seedSession({ token: "t", user: { id: "o1", name: "Dona", email: "d@x.com", role: "OWNER" } });
     return render(
         <AuthProvider>
             <MemoryRouter initialEntries={[path]}>

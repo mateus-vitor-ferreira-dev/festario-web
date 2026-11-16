@@ -3,10 +3,11 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, describe, expect, it } from "vitest";
 import { AuthProvider } from "../../contexts/AuthContext";
 import { PrivateRoute } from "../../routes/PrivateRoute";
+import { seedSession } from "../helpers/session";
 
 function renderWithRoute(userData) {
     if (userData) {
-        localStorage.setItem("festario:userData", JSON.stringify(userData));
+        seedSession(userData);
     } else {
         localStorage.removeItem("festario:userData");
     }

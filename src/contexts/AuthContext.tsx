@@ -2,12 +2,13 @@
  * @module contexts/AuthContext
  * @description Contexto de autenticação global. Provê dados do usuário, token
  * e helpers para login, logout e atualização de perfil sem acesso direto ao
- * localStorage nas páginas consumidoras.
+ * armazenamento da sessão nas páginas consumidoras.
  */
 import { ReactNode, createContext, useContext, useEffect, useState } from "react";
-import { env } from "../config/env";
-import { readSession, writeSession, clearSession } from "../config/authStorage";
-import { clearTenant, readTenant, tenantHeaders, writeTenant } from "../config/tenantStorage";
+import { readSession, writeSession, clearSession, subscribeSession, SESSION_HINT_KEY, hasSessionHint } from "../config/authStorage";
+import { clearTenant, readTenant, writeTenant } from "../config/tenantStorage";
+import { revokeStoredRefreshToken } from "../services/revokeSession";
+import { canRestoreSession, refreshSession } from "../services/session";
 import { setUserContext } from "../config/sentry";
 import type { AuthContextValue, AuthSession, TenantRef, User, UserRole } from "../types";
 
@@ -16,12 +17,10 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 function normalizeSession(data: unknown): AuthSession {
     if (!data || typeof data !== "object") throw new Error("Invalid session data");
     const d = data as Record<string, unknown>;
+    // Fora das prévias a resposta não traz o refresh token: ele veio no cookie HttpOnly.
+    const refreshToken = typeof d.refreshToken === "string" ? d.refreshToken : null;
     if (typeof d.user === "object" && d.user !== null) {
-        return {
-            user: d.user as User,
-            token: d.token as string,
-            refreshToken: (d.refreshToken ?? null) as string | null,
-        };
+        return { user: d.user as User, token: d.token as string, refreshToken };
     }
     // Resposta da API em formato plano (legado)
     return {
@@ -33,7 +32,7 @@ function normalizeSession(data: unknown): AuthSession {
             emailVerified: (d.emailVerified as boolean | undefined) ?? true,
         },
         token: d.token as string,
-        refreshToken: (d.refreshToken ?? null) as string | null,
+        refreshToken,
     };
 }
 
@@ -43,17 +42,47 @@ interface AuthProviderProps {
 
 /**
  * Provedor de autenticação — deve envolver toda a aplicação (abaixo de `ThemeProvider`).
- * Inicializa o estado a partir do `localStorage` na montagem.
+ * A sessão não fica guardada no navegador: na montagem, se houve login antes, pede um access token
+ * novo ao `/auth/refresh` (o cookie HttpOnly leva o refresh token) e, enquanto isso,
+ * `isRestoring` segura as rotas protegidas.
  *
  * @component
  */
 export function AuthProvider({ children }: AuthProviderProps) {
     const [session, setSession] = useState<AuthSession | null>(readSession);
+    const [isRestoring, setIsRestoring] = useState<boolean>(canRestoreSession);
     const [tenant, setTenantState] = useState<TenantRef | null>(readTenant);
 
     const user = session?.user ?? null;
     const token = session?.token ?? null;
     const isAuthenticated = !!session;
+
+    // O interceptor do axios renova o token fora do React: o contexto acompanha o módulo da sessão.
+    useEffect(() => subscribeSession(setSession), []);
+
+    // Sair numa aba apaga o marcador de login (e o cookie, na API): as outras abas saem junto em vez de
+    // seguir com um access token em memória até ele vencer.
+    useEffect(() => {
+        function onStorage(event: StorageEvent) {
+            const hintGone = event.key === SESSION_HINT_KEY ? event.newValue === null : event.key === null && !hasSessionHint();
+            if (hintGone && readSession()) clearSession();
+        }
+        window.addEventListener("storage", onStorage);
+        return () => window.removeEventListener("storage", onStorage);
+    }, []);
+
+    useEffect(() => {
+        if (!isRestoring) return;
+        let active = true;
+        refreshSession().finally(() => {
+            if (active) setIsRestoring(false);
+        });
+        return () => {
+            active = false;
+        };
+    // intencional: só na montagem; o refreshSession divide a chamada se o StrictMode montar duas vezes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
         setUserContext(user);
@@ -71,35 +100,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const normalized = normalizeSession(data);
         if (nextTenant !== undefined) setTenant(nextTenant);
         writeSession(normalized);
-        setSession(normalized);
     }
 
     function logout() {
         const stored = readSession();
-        if (stored?.refreshToken) {
-            // Fire-and-forget: revoke on backend; local logout happens regardless
-            fetch(`${env.apiUrl}/auth/logout`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", ...tenantHeaders() },
-                body: JSON.stringify({ refreshToken: stored.refreshToken }),
-            }).catch(() => {});
-        }
-        // O espaço escolhido pelo ADMIN vale só para a sessão dele; o do dono/cliente
-        // (convite, /login?espaco=) fica para o próximo login no mesmo navegador.
-        if (stored?.user?.role === "ADMIN") setTenant(null);
+        // Revoga antes de trocar o espaço: o logout precisa ir com o X-Tenant-Slug da sessão.
+        revokeStoredRefreshToken();
+        // Só o dono precisa do espaço guardado depois de sair: o login dele num salão que não é o
+        // padrão depende do X-Tenant-Slug (veio do convite ou de /login?espaco=). Para o cliente e
+        // para o ADMIN o espaço era só o que estavam vendo; deixá-lo para trás faria o próximo
+        // login no mesmo navegador cair num salão escolhido por outra pessoa ou por um link.
+        if (stored?.user?.role !== "OWNER") setTenant(null);
         clearSession();
-        setSession(null);
     }
 
     function updateUser(updated: Partial<User>) {
         const stored = readSession();
         if (!stored) return;
-        const updated_ = { ...stored, user: { ...stored.user, ...updated } };
-        writeSession(updated_);
-        setSession(updated_);
+        writeSession({ ...stored, user: { ...stored.user, ...updated } });
     }
 
-    const value: AuthContextValue = { user, token, isAuthenticated, tenant, login, setTenant, logout, updateUser };
+    const value: AuthContextValue = { user, token, isAuthenticated, isRestoring, tenant, login, setTenant, logout, updateUser };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

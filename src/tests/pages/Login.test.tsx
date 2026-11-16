@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { AuthProvider } from "../../contexts/AuthContext";
 import Login from "../../pages/Login";
 import { server } from "../mocks/server";
+import { readSession } from "../../config/authStorage";
 
 function renderPage(path = "/login") {
     return render(
@@ -52,7 +53,10 @@ describe("Login page", () => {
         await waitFor(() =>
             expect(screen.getByText("Salons Page")).toBeInTheDocument()
         );
-        expect(localStorage.getItem("festario:userData")).not.toBeNull();
+        // O token fica só em memória; no localStorage, apenas o marcador de que houve login.
+        expect(readSession()?.token).toBe("fake-token");
+        expect(localStorage.getItem("festario:userData")).toBeNull();
+        expect(localStorage.getItem("festario:sessao")).toBe("1");
     });
 
     it("shows fallback success toast when response has no message", async () => {

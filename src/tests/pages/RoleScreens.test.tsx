@@ -9,11 +9,12 @@ import Admin from "../../pages/Admin";
 import Home from "../../pages/Home";
 import Login from "../../pages/Login";
 import { server } from "../mocks/server";
+import { seedSession } from "../helpers/session";
 
 const BASE = "http://localhost:3000";
 
 function setSession(role: string) {
-    localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "u1", name: "Pessoa Teste", email: "p@p.com", role } }));
+    seedSession({ token: "t", user: { id: "u1", name: "Pessoa Teste", email: "p@p.com", role } });
 }
 
 function LocationProbe() {
@@ -158,8 +159,23 @@ describe("Painel - cadastro de espaço (venue)", () => {
     });
 });
 
+/** GET /tenant responde pelo salão do X-Tenant-Slug; slug desconhecido dá 404. */
+function useTenantLookup(known: Record<string, string> = { "salao-jardim-das-flores": "Salão Jardim das Flores" }) {
+    const seen: (string | null)[] = [];
+    server.use(http.get(`${BASE}/tenant`, ({ request }) => {
+        const slug = request.headers.get("x-tenant-slug");
+        seen.push(slug);
+        if (!slug || !known[slug]) return HttpResponse.json({ success: false, code: "TENANT_NOT_FOUND" }, { status: 404 });
+        return HttpResponse.json({ data: { slug, name: known[slug], timezone: "America/Sao_Paulo", minLeadHours: null, maxAdvanceDays: null } });
+    }));
+    return seen;
+}
+
 describe("Login com espaço", () => {
+    beforeEach(() => localStorage.clear());
+
     it("stores ?espaco=<slug>, shows it and sends X-Tenant-Slug on login", async () => {
+        const lookups = useTenantLookup();
         let header: string | null = null;
         server.use(http.post(`${BASE}/auth/login`, ({ request }) => {
             header = request.headers.get("x-tenant-slug");
@@ -167,8 +183,10 @@ describe("Login com espaço", () => {
         }));
         const user = userEvent.setup();
         renderAt("/login?espaco=salao-jardim-das-flores");
-        expect(await screen.findByText(/entrando no espaço/i)).toHaveTextContent("salao-jardim-das-flores");
-        expect(JSON.parse(localStorage.getItem("festario:tenant")!).slug).toBe("salao-jardim-das-flores");
+        // o aviso mostra o nome real do salão, conferido na API antes de guardar
+        expect(await screen.findByText(/entrando no espaço/i)).toHaveTextContent("Salão Jardim das Flores");
+        expect(JSON.parse(localStorage.getItem("festario:tenant")!)).toEqual({ slug: "salao-jardim-das-flores", name: "Salão Jardim das Flores" });
+        expect(lookups).toEqual(["salao-jardim-das-flores"]);
 
         await user.type(screen.getByPlaceholderText(/digite seu e-mail/i), "d@j.com");
         await user.type(screen.getByPlaceholderText(/digite sua senha/i), "dono123");
@@ -178,12 +196,48 @@ describe("Login com espaço", () => {
     });
 
     it("can switch back to the default tenant", async () => {
+        useTenantLookup();
         const user = userEvent.setup();
         renderAt("/login?espaco=salao-jardim-das-flores");
         await user.click(await screen.findByRole("button", { name: /entrar no espaço padrão/i }));
         await waitFor(() => expect(location()).toBe("/login"));
         expect(localStorage.getItem("festario:tenant")).toBeNull();
         expect(screen.queryByText(/entrando no espaço/i)).not.toBeInTheDocument();
+    });
+
+    it("does not store a slug the API does not know", async () => {
+        useTenantLookup();
+        renderAt("/login?espaco=salao-que-nao-existe");
+        expect(await screen.findByText(/não encontramos o espaço deste link/i)).toBeInTheDocument();
+        expect(localStorage.getItem("festario:tenant")).toBeNull();
+        expect(screen.queryByText(/entrando no espaço/i)).not.toBeInTheDocument();
+    });
+
+    it("does not store the slug when the API answers for another salon", async () => {
+        server.use(http.get(`${BASE}/tenant`, () =>
+            HttpResponse.json({ data: { slug: "recanto", name: "Recanto", timezone: "America/Sao_Paulo", minLeadHours: null, maxAdvanceDays: null } })));
+        renderAt("/login?espaco=salao-jardim-das-flores");
+        expect(await screen.findByText(/não encontramos o espaço deste link/i)).toBeInTheDocument();
+        expect(localStorage.getItem("festario:tenant")).toBeNull();
+    });
+
+    it("an inactive salon is not stored and only the interceptor warns", async () => {
+        server.use(http.get(`${BASE}/tenant`, () =>
+            HttpResponse.json({ success: false, error: { code: "TENANT_INACTIVE", message: "x" } }, { status: 403 })));
+        renderAt("/login?espaco=salao-jardim-das-flores");
+        await waitFor(() => expect(screen.getByText(/desativad|inativ|suspens|indispon/i)).toBeInTheDocument());
+        expect(screen.queryByText(/não encontramos o espaço deste link/i)).not.toBeInTheDocument();
+        expect(localStorage.getItem("festario:tenant")).toBeNull();
+    });
+
+    it.each(["USER", "OWNER", "ADMIN"])("ignores ?espaco when %s is already signed in", async (role) => {
+        const lookups = useTenantLookup();
+        setSession(role);
+        localStorage.setItem("festario:tenant", JSON.stringify({ slug: "meu-salao", name: "Meu Salão" }));
+        renderAt("/login?espaco=salao-jardim-das-flores");
+        expect(await screen.findByText(/entrando no espaço/i)).toHaveTextContent("Meu Salão");
+        expect(JSON.parse(localStorage.getItem("festario:tenant")!).slug).toBe("meu-salao");
+        expect(lookups).toEqual([]);
     });
 
     it("rejects an invalid ?espaco", async () => {
