@@ -8,12 +8,21 @@ const dsn = env.sentryDsn;
 /** Parâmetros de URL que carregam segredo: o token da troca de senha, da verificação de e-mail e do convite. */
 const SECRET_PARAMS = /([?&](?:token|code|hmac|refreshToken|access_token)=)[^&#]*/gi;
 
-/** Rotas com segredo no próprio caminho: o link do convite do dono. */
-const SECRET_PATHS = /(\/convite\/)[^/?#]+/gi;
+/** Caminhos com segredo: o link do convite do dono no app e as chamadas dele à API. */
+const SECRET_PATHS = /(\/(?:convite|owner-invites)\/)[^/?#]+/gi;
+
+/**
+ * Qualquer trecho de caminho com cara de token (32+ caracteres hex ou base64url) também sai: um
+ * endpoint novo com segredo no caminho não pode depender de alguém lembrar de pôr na lista acima.
+ */
+const TOKEN_LIKE_SEGMENT = /\/[A-Za-z0-9_-]{32,}(?=[/?#]|$)/g;
 
 /** A URL sem o valor dos segredos (o nome do parâmetro fica, para o erro continuar legível). */
 export function scrubUrl(url: string): string {
-    return url.replace(SECRET_PARAMS, "$1[removido]").replace(SECRET_PATHS, "$1[removido]");
+    return url
+        .replace(SECRET_PARAMS, "$1[removido]")
+        .replace(SECRET_PATHS, "$1[removido]")
+        .replace(TOKEN_LIKE_SEGMENT, "/[removido]");
 }
 const mode = env.mode;
 

@@ -21,5 +21,10 @@ describe("scrubUrl", () => {
         expect(scrubUrl("/verificar?a=1&code=xyz")).toBe("/verificar?a=1&code=[removido]");
         expect(scrubUrl("https://app.festario.com.br/convite/9f8e7d?x=1")).toBe("https://app.festario.com.br/convite/[removido]?x=1");
         expect(scrubUrl("/saloes?cidade=Lavras")).toBe("/saloes?cidade=Lavras");
+        const token = "a".repeat(64);
+        expect(scrubUrl(`https://api.festario.com.br/owner-invites/${token}/accept`)).toBe("https://api.festario.com.br/owner-invites/[removido]/accept");
+        // segmento com cara de token em qualquer outra rota também sai; UUID (36 com hífens) idem
+        expect(scrubUrl(`https://api.festario.com.br/x/${"b1".repeat(20)}`)).toBe("https://api.festario.com.br/x/[removido]");
+        expect(scrubUrl("/s/recanto-vila-rica")).toBe("/s/recanto-vila-rica");
     });
 });
