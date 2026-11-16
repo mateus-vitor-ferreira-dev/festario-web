@@ -8,6 +8,7 @@ import { media } from "../../styles/breakpoints";
 import { withReturn } from "../../utils/returnPath";
 import * as H from "../Header/styles";
 import MainLayout from "../MainLayout";
+import PageLoader from "../PageLoader";
 import * as M from "../MainLayout/styles";
 
 /**
@@ -17,7 +18,9 @@ import * as M from "../MainLayout/styles";
  * @component
  */
 export default function ShowcaseLayout() {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, isRestoring } = useAuth();
+    // Trocar de layout no meio remontaria a página e repetiria as buscas dela.
+    if (isRestoring) return <PageLoader />;
     return isAuthenticated ? <MainLayout /> : <PublicLayout />;
 }
 

@@ -12,6 +12,7 @@ import { SalonBrandProvider } from "../../contexts/SalonBrandContext";
 import { ThemeProvider } from "../../contexts/ThemeContext";
 import type { VenuePhoto } from "../../types";
 import { server } from "../mocks/server";
+import { seedSession } from "../helpers/session";
 
 const BASE = "http://localhost:3000";
 
@@ -96,7 +97,7 @@ describe("VenueGallery", () => {
 
 describe("Header com o salão", () => {
     function renderHeader(path = "/home") {
-        localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "u", name: "Ana Souza", role: "USER" } }));
+        seedSession({ token: "t", user: { id: "u", name: "Ana Souza", role: "USER" } });
         return render(
             <ThemeProvider>
                 <AuthProvider>

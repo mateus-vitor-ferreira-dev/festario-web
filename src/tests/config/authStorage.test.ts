@@ -1,142 +1,119 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("../../config/refreshMode", () => ({ isBodyRefreshMode: vi.fn(() => false) }));
+
 import {
-    readSession,
-    writeSession,
     clearSession,
-    updateSessionTokens,
+    hasSessionHint,
+    PREVIEW_REFRESH_KEY,
+    readPreviewRefreshToken,
+    readSession,
+    SESSION_HINT_KEY,
     STORAGE_KEY,
+    subscribeSession,
+    takeLegacyRefreshToken,
+    updateSessionTokens,
+    writeSession,
 } from "../../config/authStorage";
-import type { AuthSession } from "../../types";
+import { isBodyRefreshMode } from "../../config/refreshMode";
 
-const validSession: AuthSession = {
-    user: { id: "u1", name: "Mateus", email: "m@test.com", role: "USER" },
-    token: "tok-123",
-    refreshToken: "ref-456",
-};
+const user = { id: "u1", name: "Mateus", email: "m@m.com", role: "USER" as const, emailVerified: true };
 
-afterEach(() => localStorage.clear());
+describe("authStorage", () => {
+    beforeEach(() => {
+        localStorage.clear();
+        vi.mocked(isBodyRefreshMode).mockReturnValue(false);
+    });
 
-// ─── readSession ──────────────────────────────────────────────────────────────
+    afterEach(() => vi.mocked(isBodyRefreshMode).mockReturnValue(false));
 
-describe("readSession", () => {
-    it("returns null when localStorage is empty", () => {
+    it("keeps the session in memory only, with just a secret-free marker in localStorage", () => {
+        writeSession({ user, token: "access", refreshToken: "refresh" });
+
+        expect(readSession()).toEqual({ user, token: "access" });
+        expect(localStorage.getItem(SESSION_HINT_KEY)).toBe("1");
+        expect(hasSessionHint()).toBe(true);
+        expect(JSON.stringify({ ...localStorage })).not.toMatch(/access|refresh"/);
+        // Fora das prévias o refresh token é do cookie HttpOnly: o front não o guarda em lugar nenhum.
+        expect(sessionStorage.getItem(PREVIEW_REFRESH_KEY)).toBeNull();
+        expect(readPreviewRefreshToken()).toBeNull();
+    });
+
+    it("keeps the refresh token in sessionStorage on previews", () => {
+        vi.mocked(isBodyRefreshMode).mockReturnValue(true);
+
+        writeSession({ user, token: "access", refreshToken: "rt-preview" });
+
+        expect(sessionStorage.getItem(PREVIEW_REFRESH_KEY)).toBe("rt-preview");
+        expect(readPreviewRefreshToken()).toBe("rt-preview");
+        expect(localStorage.getItem(PREVIEW_REFRESH_KEY)).toBeNull();
+    });
+
+    it("updateSessionTokens swaps the access token and, on previews, the refresh token", () => {
+        updateSessionTokens("ignored");
         expect(readSession()).toBeNull();
+
+        writeSession({ user, token: "old" });
+        updateSessionTokens("new", "rt-ignorado");
+        expect(readSession()).toEqual({ user, token: "new" });
+        expect(sessionStorage.getItem(PREVIEW_REFRESH_KEY)).toBeNull();
+
+        vi.mocked(isBodyRefreshMode).mockReturnValue(true);
+        updateSessionTokens("newer", "rt-novo");
+        expect(readSession()?.token).toBe("newer");
+        expect(sessionStorage.getItem(PREVIEW_REFRESH_KEY)).toBe("rt-novo");
     });
 
-    it("returns null for malformed JSON", () => {
-        localStorage.setItem(STORAGE_KEY, "not-json");
-        expect(readSession()).toBeNull();
-    });
+    it("clearSession wipes memory, marker, preview token and any legacy session", () => {
+        writeSession({ user, token: "t" });
+        sessionStorage.setItem(PREVIEW_REFRESH_KEY, "rt");
+        localStorage.setItem(STORAGE_KEY, "{}");
 
-    it("returns null for unrecognized object shape", () => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ foo: "bar" }));
-        expect(readSession()).toBeNull();
-    });
-
-    it("returns a valid AuthSession as-is", () => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(validSession));
-        expect(readSession()).toEqual(validSession);
-    });
-
-    it("migrates a legacy flat session to AuthSession format", () => {
-        const legacy = {
-            id: "u1",
-            name: "Mateus",
-            email: "m@test.com",
-            role: "USER",
-            emailVerified: true,
-            token: "tok-legacy",
-            refreshToken: "ref-legacy",
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(legacy));
-
-        const result = readSession();
-
-        expect(result).toEqual({
-            user: {
-                id: "u1",
-                name: "Mateus",
-                email: "m@test.com",
-                role: "USER",
-                emailVerified: true,
-            },
-            token: "tok-legacy",
-            refreshToken: "ref-legacy",
-        });
-    });
-
-    it("persists the migrated session to localStorage", () => {
-        const legacy = { id: "u1", name: "X", email: "x@x.com", role: "ADMIN", token: "t", refreshToken: null };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(legacy));
-
-        readSession();
-
-        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
-        expect(stored.user).toBeDefined();
-        expect(stored.token).toBe("t");
-    });
-
-    it("defaults emailVerified to true when absent in legacy session", () => {
-        const legacy = { id: "u1", name: "X", email: "x@x.com", role: "USER", token: "t" };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(legacy));
-
-        const result = readSession();
-        expect(result?.user.emailVerified).toBe(true);
-    });
-});
-
-// ─── writeSession ─────────────────────────────────────────────────────────────
-
-describe("writeSession", () => {
-    it("persists the session to localStorage", () => {
-        writeSession(validSession);
-        expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual(validSession);
-    });
-
-    it("overwrites an existing session", () => {
-        writeSession(validSession);
-        const updated = { ...validSession, token: "new-tok" };
-        writeSession(updated);
-        expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).token).toBe("new-tok");
-    });
-});
-
-// ─── clearSession ─────────────────────────────────────────────────────────────
-
-describe("clearSession", () => {
-    it("removes the session from localStorage", () => {
-        writeSession(validSession);
         clearSession();
+
+        expect(readSession()).toBeNull();
+        expect(hasSessionHint()).toBe(false);
+        expect(sessionStorage.getItem(PREVIEW_REFRESH_KEY)).toBeNull();
         expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
     });
 
-    it("is a no-op when storage is already empty", () => {
-        expect(() => clearSession()).not.toThrow();
-    });
-});
+    it("notifies subscribers until they unsubscribe", () => {
+        const listener = vi.fn();
+        const unsubscribe = subscribeSession(listener);
 
-// ─── updateSessionTokens ──────────────────────────────────────────────────────
+        writeSession({ user, token: "t" });
+        expect(listener).toHaveBeenLastCalledWith({ user, token: "t" });
+        clearSession();
+        expect(listener).toHaveBeenLastCalledWith(null);
 
-describe("updateSessionTokens", () => {
-    it("updates token and refreshToken preserving user data", () => {
-        writeSession(validSession);
-        updateSessionTokens("new-access", "new-refresh");
-
-        const result = readSession();
-        expect(result?.token).toBe("new-access");
-        expect(result?.refreshToken).toBe("new-refresh");
-        expect(result?.user).toEqual(validSession.user);
+        unsubscribe();
+        writeSession({ user, token: "t2" });
+        expect(listener).toHaveBeenCalledTimes(2);
     });
 
-    it("accepts null as refreshToken", () => {
-        writeSession(validSession);
-        updateSessionTokens("new-access", null);
+    describe("takeLegacyRefreshToken", () => {
+        it("returns the refresh token of the nested format once and deletes the old session", () => {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ user, token: "a", refreshToken: "legado" }));
 
-        expect(readSession()?.refreshToken).toBeNull();
-    });
+            expect(takeLegacyRefreshToken()).toBe("legado");
+            expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+            expect(takeLegacyRefreshToken()).toBeNull();
+        });
 
-    it("is a no-op when no session exists", () => {
-        expect(() => updateSessionTokens("tok", null)).not.toThrow();
-        expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+        it("reads the flat format too", () => {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...user, token: "a", refreshToken: "plano" }));
+            expect(takeLegacyRefreshToken()).toBe("plano");
+        });
+
+        it.each([
+            ["invalid JSON", "{oops"],
+            ["not an object", "42"],
+            ["no refresh token", JSON.stringify({ user, token: "a", refreshToken: null })],
+            ["empty refresh token", JSON.stringify({ user, token: "a", refreshToken: "" })],
+        ])("deletes the old session and returns null on %s", (_case, raw) => {
+            localStorage.setItem(STORAGE_KEY, raw);
+            expect(takeLegacyRefreshToken()).toBeNull();
+            expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+        });
     });
 });

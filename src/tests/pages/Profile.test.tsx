@@ -7,6 +7,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import { AuthProvider } from "../../contexts/AuthContext";
 import Profile from "../../pages/Profile";
 import { server } from "../mocks/server";
+import { seedSession } from "../helpers/session";
+import { readSession } from "../../config/authStorage";
 
 const BASE = "http://localhost:3000";
 
@@ -66,10 +68,7 @@ describe("Profile page", () => {
     });
 
     it("saves profile changes successfully", async () => {
-        localStorage.setItem(
-            "festario:userData",
-            JSON.stringify({ token: "tk", user: { id: "user-1", name: "Mateus", email: "mateus@email.com", role: "USER" } })
-        );
+        seedSession({ token: "tk", user: { id: "user-1", name: "Mateus", email: "mateus@email.com", role: "USER" } });
         const user = userEvent.setup();
         renderPage();
 
@@ -163,11 +162,8 @@ describe("Profile page", () => {
         );
     });
 
-    it("updates localStorage via migrated legacy session", async () => {
-        localStorage.setItem(
-            "festario:userData",
-            JSON.stringify({ id: "u1", name: "Mateus", email: "mateus@email.com", role: "USER", token: "tk" })
-        );
+    it("updates the session user after saving", async () => {
+        seedSession({ token: "tk", user: { id: "u1", name: "Mateus", email: "mateus@email.com", role: "USER" } });
         const user = userEvent.setup();
         renderPage();
         await waitFor(() =>
@@ -177,8 +173,7 @@ describe("Profile page", () => {
         await waitFor(() =>
             expect(screen.getByText(/perfil atualizado com sucesso/i)).toBeInTheDocument()
         );
-        const stored = JSON.parse(localStorage.getItem("festario:userData"));
-        expect(stored.user.name).toBe("Mateus Atualizado");
+        expect(readSession()?.user.name).toBe("Mateus Atualizado");
     });
 
     it("shows '?' in avatar and handles null name/email in form", async () => {
@@ -435,14 +430,14 @@ describe("Profile page", () => {
         });
 
         it("envia a senha atual e guarda a sessão nova devolvida pela API", async () => {
-            localStorage.setItem("festario:userData", JSON.stringify(session));
+            seedSession(session);
             let body: Record<string, unknown> = {};
             server.use(
                 http.patch(`${BASE}/users/user-1`, async ({ request }) => {
                     body = (await request.json()) as Record<string, unknown>;
                     return HttpResponse.json({
                         success: true,
-                        data: { id: "user-1", name: "Mateus", email: "novo@email.com", role: "USER", emailVerifiedAt: null, auth: { token: "tk-novo", refreshToken: "rt-novo" } },
+                        data: { id: "user-1", name: "Mateus", email: "novo@email.com", role: "USER", emailVerifiedAt: null, auth: { token: "tk-novo" } },
                     });
                 })
             );
@@ -454,9 +449,11 @@ describe("Profile page", () => {
 
             await waitFor(() => expect(screen.getByText(/enviamos um link de confirmação para o novo e-mail/i)).toBeInTheDocument());
             expect(body).toMatchObject({ email: "novo@email.com", currentPassword: "Certa@123" });
-            const stored = JSON.parse(localStorage.getItem("festario:userData")!);
-            expect(stored).toMatchObject({ token: "tk-novo", refreshToken: "rt-novo", user: { email: "novo@email.com", emailVerified: false } });
-            expect(stored.user.auth).toBeUndefined();
+            // Só o access token chega ao front; o refresh token novo veio no cookie HttpOnly.
+            const stored = readSession()!;
+            expect(stored).toMatchObject({ token: "tk-novo", user: { email: "novo@email.com", emailVerified: false } });
+            expect((stored.user as unknown as Record<string, unknown>).auth).toBeUndefined();
+            expect(JSON.stringify(localStorage)).not.toContain("tk-novo");
         });
 
         it.each([
@@ -475,10 +472,10 @@ describe("Profile page", () => {
     });
 
     it("guarda a sessão nova depois de trocar a senha", async () => {
-        localStorage.setItem("festario:userData", JSON.stringify({ token: "tk-antigo", refreshToken: "rt-antigo", user: { id: "user-1", name: "Mateus", email: "mateus@email.com", role: "USER" } }));
+        seedSession({ token: "tk-antigo", refreshToken: "rt-antigo", user: { id: "user-1", name: "Mateus", email: "mateus@email.com", role: "USER" } });
         server.use(
             http.patch(`${BASE}/users/user-1`, () =>
-                HttpResponse.json({ success: true, data: { id: "user-1", name: "Mateus", email: "mateus@email.com", role: "USER", auth: { token: "tk-novo", refreshToken: "rt-novo" } } })
+                HttpResponse.json({ success: true, data: { id: "user-1", name: "Mateus", email: "mateus@email.com", role: "USER", auth: { token: "tk-novo" } } })
             )
         );
         const user = userEvent.setup();
@@ -492,6 +489,6 @@ describe("Profile page", () => {
         await user.click(screen.getByRole("button", { name: /alterar senha/i }));
 
         await waitFor(() => expect(screen.getByText(/senha alterada com sucesso/i)).toBeInTheDocument());
-        expect(JSON.parse(localStorage.getItem("festario:userData")!)).toMatchObject({ token: "tk-novo", refreshToken: "rt-novo" });
+        expect(readSession()).toMatchObject({ token: "tk-novo" });
     });
 });

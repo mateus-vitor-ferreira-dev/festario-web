@@ -3,8 +3,10 @@
  * @description Instância Axios configurada para o backend da plataforma.
  *
  * Comportamentos automáticos:
- * - **Auth**: injeta o Bearer token de `localStorage["festario:userData"]` em toda requisição.
- * - **Token refresh (401)**: tenta renovar o access token com o refresh token antes de deslogar.
+ * - **Auth**: injeta o Bearer token da sessão em memória (`config/authStorage`) em toda requisição.
+ *   O refresh token vai no cookie HttpOnly (`withCredentials`); toda chamada leva
+ *   `X-Requested-With: festario`, que a API exige onde lê o cookie.
+ * - **Token refresh (401)**: tenta renovar o access token (`services/session`) antes de deslogar.
  *   Requests concorrentes ficam na fila e são retentados com o novo token.
  *   Não se aplica a endpoints `/auth/*` (que retornam 401 por credenciais inválidas).
  * - **Retry**: requisições GET que falham com 5xx são reenviadas até 3×
@@ -21,18 +23,25 @@
 import axios from "axios";
 import { toast } from "react-toastify";
 import { env } from "../config/env";
-import { readSession, clearSession, updateSessionTokens } from "../config/authStorage";
-import { readTenant, tenantHeaders } from "../config/tenantStorage";
+import { readSession, clearSession } from "../config/authStorage";
+import { readTenant } from "../config/tenantStorage";
 import { getApiErrorCode, isAbortError } from "../utils/errors";
 import { API_ERROR_CODE_MESSAGES } from "../utils/getErrorMessage";
 import { revokeStoredRefreshToken } from "./revokeSession";
+import { hasRefreshCredential, refreshSession, sessionHeaders } from "./session";
 
 const BASE_URL = env.apiUrl;
 
-const api = axios.create({ baseURL: BASE_URL });
+// Com credenciais o navegador grava e manda o cookie da sessão; a API só libera isso para as
+// origens da lista dela.
+const api = axios.create({ baseURL: BASE_URL, withCredentials: true });
 
 api.interceptors.request.use((config) => {
     const token = readSession()?.token;
+
+    for (const [name, value] of Object.entries(sessionHeaders())) {
+        config.headers[name] = value;
+    }
 
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -118,9 +127,7 @@ api.interceptors.response.use(
                 });
             }
 
-            const refreshToken = readSession()?.refreshToken;
-
-            if (!refreshToken) {
+            if (!hasRefreshCredential()) {
                 invalidateSession();
                 return Promise.reject(error);
             }
@@ -128,22 +135,13 @@ api.interceptors.response.use(
             isRefreshing = true;
 
             try {
-                const res = await fetch(`${BASE_URL}/auth/refresh`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", ...tenantHeaders() },
-                    body: JSON.stringify({ refreshToken }),
-                });
+                const session = await refreshSession();
+                if (!session) throw new Error("Refresh failed");
 
-                if (!res.ok) throw new Error("Refresh failed");
-
-                const { data } = await res.json();
-
-                updateSessionTokens(data.accessToken, data.refreshToken ?? null);
-
-                drainQueue(data.accessToken);
+                drainQueue(session.token);
 
                 config._isRefreshRetry = true;
-                config.headers.Authorization = `Bearer ${data.accessToken}`;
+                config.headers.Authorization = `Bearer ${session.token}`;
                 return api(config);
             } catch {
                 drainQueue(null);

@@ -69,7 +69,7 @@ flowchart TB
 
 **Guards separados por responsabilidade.** `PrivateRoute` só pergunta se há sessão; `AdminRoute` só pergunta se `role === "ADMIN"` — e é aninhado dentro do primeiro, então autenticação e autorização compõem em vez de duplicar. Ambos leem o `AuthContext`, nunca o `localStorage` direto, o que mantém uma única fonte de verdade e torna os dois testáveis sem mexer em storage.
 
-**Sessão com migração de formato embutida.** O app já gravou a sessão em formato plano (`{ id, name, token }`) antes de normalizar para `{ user, token, refreshToken }`. `readSession()` detecta o formato legado, converte e regrava — usuários com o storage antigo não são deslogados por uma refatoração.
+**Nenhum token no `localStorage`.** O access token vive só em memória e o refresh token fica num cookie HttpOnly (`festario_rt`, `Path=/auth`) que só a API lê; ao abrir a página, o `AuthContext` chama `/auth/refresh` para restaurar a sessão, e as rotas protegidas esperam com um loader. No `localStorage` fica só um marcador sem segredo dizendo que houve login, para visitantes anônimos não dispararem um refresh inútil. As prévias em `*.workers.dev` são outro site em relação à API e não recebem o cookie: lá o token volta no corpo (`X-Refresh-Mode: body`) e fica no `sessionStorage` da aba. Quem ainda tinha a sessão antiga no `localStorage` tem o refresh token dela trocado uma única vez pelo cookie, e a sessão antiga é apagada.
 
 ---
 
@@ -249,7 +249,7 @@ SENTRY_AUTH_TOKEN=
 | Não aparece o botão "Entrar com Google" | `VITE_GOOGLE_CLIENT_ID` vazia no `.env.local` (ou o `npm run dev` não foi reiniciado depois de preencher). |
 | `VITE_GOOGLE_CLIENT_ID` definida mas o Google recusa | `http://localhost:5173` não está nas origens autorizadas do OAuth client. |
 | O Google abre, mas a API responde 401 | `GOOGLE_CLIENT_ID` da API diferente do `VITE_GOOGLE_CLIENT_ID` do web. |
-| Toda requisição volta 401 e o app desloga | Sessão expirada com refresh token inválido: o interceptor limpa o storage e manda para `/login`. Faça login de novo. |
+| Toda requisição volta 401 e o app desloga | Sessão expirada com refresh token inválido: o interceptor limpa a sessão e manda para `/login`. Faça login de novo. |
 
 ### Scripts
 

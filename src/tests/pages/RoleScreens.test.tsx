@@ -9,11 +9,12 @@ import Admin from "../../pages/Admin";
 import Home from "../../pages/Home";
 import Login from "../../pages/Login";
 import { server } from "../mocks/server";
+import { seedSession } from "../helpers/session";
 
 const BASE = "http://localhost:3000";
 
 function setSession(role: string) {
-    localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "u1", name: "Pessoa Teste", email: "p@p.com", role } }));
+    seedSession({ token: "t", user: { id: "u1", name: "Pessoa Teste", email: "p@p.com", role } });
 }
 
 function LocationProbe() {

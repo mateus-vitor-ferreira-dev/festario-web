@@ -8,11 +8,12 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { AuthProvider } from "../../contexts/AuthContext";
 import Admin from "../../pages/Admin";
 import { server } from "../mocks/server";
+import { seedSession } from "../helpers/session";
 
 const BASE = "http://localhost:3000";
 
 function renderRules() {
-    localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "o1", name: "Dona", email: "d@x.com", role: "OWNER" } }));
+    seedSession({ token: "t", user: { id: "o1", name: "Dona", email: "d@x.com", role: "OWNER" } });
     return render(
         <AuthProvider>
             <MemoryRouter initialEntries={["/painel?tab=rules"]}>
