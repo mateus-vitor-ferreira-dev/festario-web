@@ -12,6 +12,10 @@ export const PANEL_PATH = "/painel";
 export const PLATFORM_PATH = "/plataforma";
 /** Vitrine de salões: a porta de entrada do cliente. */
 export const SALONS_PATH = "/saloes";
+/** Vitrine de serviços de festa (marketplace). */
+export const SERVICES_PATH = "/servicos";
+/** Painel de quem presta serviço de festa. */
+export const MY_BUSINESS_PATH = "/meu-negocio";
 
 /** Quem administra um espaço (painel, negociações como equipe, feriados em leitura). */
 export const MANAGER_ROLES: readonly UserRole[] = ["OWNER", "ADMIN"];

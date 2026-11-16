@@ -326,6 +326,15 @@ export default function Reservations() {
                                     </S.ContractButton>
                                 )}
 
+                                {canCancel && new Date(reservation.startDate) > new Date() && (
+                                    <S.ContractButton
+                                        type="button"
+                                        onClick={() => navigate(`/monte-a-festa/${reservation.id}${reservation.tenant?.slug ? `?salao=${encodeURIComponent(reservation.tenant.slug)}` : ""}`)}
+                                    >
+                                        Monte a sua festa
+                                    </S.ContractButton>
+                                )}
+
                                 {canCancel && (
                                     <S.CancelButton
                                         onClick={() => setConfirmCancelReservation(reservation)}

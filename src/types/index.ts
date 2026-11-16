@@ -847,6 +847,8 @@ export interface SalonDetail extends SalonCard {
   } | null;
   venues: SalonVenue[];
   origin: SalonOrigin | null;
+  /** Fornecedores que o salão indica no marketplace. */
+  partners?: import("./marketplace").PublicPartner[];
 }
 
 /** Ponto de partida da distância, como a API recebe: coordenadas, CEP ou o endereço do perfil. */
@@ -856,3 +858,4 @@ export interface SalonOriginParams {
   cep?: string;
   origin?: "profile";
 }
+export * from "./marketplace";
