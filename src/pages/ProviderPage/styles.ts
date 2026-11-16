@@ -259,3 +259,112 @@ export const QuotePrimary = styled.button`
     outline-offset: 2px;
   }
 `;
+
+/* ─── Avaliações ─── */
+
+export const ReviewSummary = styled.div`
+  display: grid;
+  grid-template-columns: auto minmax(0, 320px);
+  gap: 32px;
+  align-items: center;
+  margin-bottom: 8px;
+
+  ${media.sm} {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+`;
+
+export const BigAverage = styled.p`
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+  line-height: 1;
+  color: var(--text-primary);
+`;
+
+export const Bars = styled.ul`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    grid-template-columns: 32px 1fr 24px;
+    gap: 8px;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+`;
+
+export const Bar = styled.span`
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-muted);
+  overflow: hidden;
+
+  span {
+    display: block;
+    height: 100%;
+    background: var(--gold);
+  }
+`;
+
+export const ReviewList = styled.ul`
+  display: flex;
+  flex-direction: column;
+  margin: 8px 0 16px;
+  padding: 0;
+  list-style: none;
+
+  > li {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  > li > p {
+    max-width: 68ch;
+    margin-top: 8px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    white-space: pre-line;
+  }
+`;
+
+export const ReviewHead = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+
+  strong {
+    color: var(--text-primary);
+  }
+
+  span:last-child {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+`;
+
+export const Reply = styled.div`
+  margin: 12px 0 0 16px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--brand-border);
+  background: var(--bg-muted);
+
+  strong {
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+  }
+
+  p {
+    margin-top: 4px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    white-space: pre-line;
+  }
+`;

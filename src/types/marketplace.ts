@@ -30,6 +30,33 @@ export interface ProviderCard {
     startingPrice: number | null;
     startingPriceUnit: ProviderPriceUnit | null;
     distanceKm: number | null;
+    /** Média (uma casa) e total das avaliações de quem contratou. Opcional nos cards montados no front. */
+    rating?: RatingSummary;
+}
+
+export interface RatingSummary {
+    average: number | null;
+    count: number;
+}
+
+export interface PublicReview {
+    id: string;
+    rating: number;
+    comment: string | null;
+    reply: string | null;
+    repliedAt: string | null;
+    createdAt: string;
+    /** "Mariana A." */
+    author: string;
+    eventType: string;
+    /** "2026-10" */
+    eventMonth: string;
+}
+
+export interface ReviewList {
+    data: PublicReview[];
+    meta: import("./index").PaginationMeta;
+    summary: RatingSummary & { distribution: { rating: number; count: number }[] };
 }
 
 export interface ProviderPackage {
@@ -49,6 +76,7 @@ export interface ProviderDetail extends Omit<ProviderCard, "cover" | "distanceKm
     recommendedBy: { slug: string; name: string; logoUrl: string | null }[];
     /** O dono vendo o próprio perfil ainda fora da vitrine. */
     preview: boolean;
+    rating: RatingSummary;
     createdAt: string;
 }
 
@@ -110,6 +138,9 @@ interface QuoteBase {
     reservationId: string | null;
     package: { id: string; name: string; price: number; priceUnit: ProviderPriceUnit } | null;
     referredBy: { slug: string; name: string } | null;
+    review: { id: string; rating: number; comment: string | null; reply: string | null; createdAt: string } | null;
+    /** Contratado, a festa já passou e ainda sem avaliação. */
+    canReview: boolean;
 }
 
 export interface CustomerQuote extends QuoteBase {

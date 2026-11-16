@@ -58,8 +58,8 @@ export default function Services() {
     const chips = activeKeys.map((key) => ({ key, label: chipLabel[key as Exclude<Key, "sort">]() }));
 
     const sortOptions = hasOrigin
-        ? [{ value: "", label: "Mais perto" }, { value: "price", label: "Menor preço" }, { value: "name", label: "Nome (A a Z)" }, { value: "relevance", label: "Mais procurados" }]
-        : [{ value: "", label: "Mais procurados" }, { value: "price", label: "Menor preço" }, { value: "name", label: "Nome (A a Z)" }];
+        ? [{ value: "", label: "Mais perto" }, { value: "price", label: "Menor preço" }, { value: "rating", label: "Mais bem avaliados" }, { value: "name", label: "Nome (A a Z)" }, { value: "relevance", label: "Mais procurados" }]
+        : [{ value: "", label: "Mais procurados" }, { value: "rating", label: "Mais bem avaliados" }, { value: "price", label: "Menor preço" }, { value: "name", label: "Nome (A a Z)" }];
     const sortValue = !hasOrigin && values.sort === "distance" ? "" : values.sort;
 
     const total = meta?.total ?? providers.length;

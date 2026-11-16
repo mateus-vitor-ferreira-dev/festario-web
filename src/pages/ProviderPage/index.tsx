@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
 
 import DatePickerInput from "../../components/DatePickerInput";
+import { RatingLine } from "../../components/Marketplace/Stars";
 import VenueGallery from "../../components/VenueGallery";
+import ReviewsSection from "./ReviewsSection";
 import { CATEGORY_LABELS, EVENT_TYPES, PRICE_UNIT_LABELS, SERVICE_MODE_LABELS } from "../../constants/providers";
 import { useAuth } from "../../contexts/AuthContext";
 import { getProvider } from "../../services/provider";
@@ -107,6 +109,11 @@ export default function ProviderPage() {
                             <li>{SERVICE_MODE_LABELS[p.serviceMode]}</li>
                             {price && <li>a partir de <strong>{price}</strong></li>}
                         </S.Facts>
+                        {p.rating.count > 0 && (
+                            <a href="#reviews" style={{ alignSelf: "flex-start", textDecoration: "none" }}>
+                                <RatingLine average={p.rating.average} count={p.rating.count} />
+                            </a>
+                        )}
                         {p.recommendedBy.length > 0 && (
                             <S.Recommended>
                                 Indicado por {p.recommendedBy.map((s, i) => (
@@ -144,6 +151,8 @@ export default function ProviderPage() {
                             </S.Packages>
                         </section>
                     )}
+
+                    <ReviewsSection slug={p.slug} />
 
                     {p.instagram && (
                         <S.Instagram href={instagramUrl(p.instagram)} target="_blank" rel="noopener noreferrer">

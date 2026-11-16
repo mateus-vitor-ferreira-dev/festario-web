@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
+import { StarInput, StarsDisplay } from "../../components/Marketplace/Stars";
 import VenueCover from "../../components/VenueCover";
 import { CATEGORY_LABELS, QUOTE_STATUS_LABELS } from "../../constants/providers";
 import { acceptQuote, cancelQuote, declineQuote, listMyQuotes } from "../../services/quote";
+import { createReview } from "../../services/review";
 import type { CustomerQuote } from "../../types";
 import { isAbortError } from "../../utils/errors";
 import { getErrorMessage, getLoadErrorMessage } from "../../utils/getErrorMessage";
@@ -130,6 +132,16 @@ function CustomerQuoteItem({ quote: q, onChange, itemRef }: { quote: CustomerQuo
                 </M.ContactRow>
             )}
 
+            {q.review && (
+                <S.MyReview>
+                    <strong>Sua avaliação</strong>
+                    <StarsDisplay value={q.review.rating} />
+                    {q.review.comment && <p>{q.review.comment}</p>}
+                    {q.review.reply && <p><em>Resposta de {q.provider.name}:</em> {q.review.reply}</p>}
+                </S.MyReview>
+            )}
+            {q.canReview && <ReviewForm quote={q} onDone={onChange} />}
+
             {(q.status === "ANSWERED" || canCancel) && (
                 <A.InlineGroup>
                     {q.status === "ANSWERED" && (
@@ -146,5 +158,51 @@ function CustomerQuoteItem({ quote: q, onChange, itemRef }: { quote: CustomerQuo
                 </A.InlineGroup>
             )}
         </M.QuoteCard>
+    );
+}
+
+/** A festa passou e o serviço foi contratado: a nota (obrigatória) e o comentário (opcional). */
+function ReviewForm({ quote: q, onDone }: { quote: CustomerQuote; onDone: (q: CustomerQuote) => void }) {
+    const [open, setOpen] = useState(false);
+    const [rating, setRating] = useState(0);
+    const [comment, setComment] = useState("");
+    const [sending, setSending] = useState(false);
+
+    if (!open) {
+        return (
+            <S.ReviewPrompt>
+                <p>Como foi o serviço de {q.provider.name} na festa? A sua avaliação ajuda quem está escolhendo.</p>
+                <A.PrimaryButton type="button" onClick={() => setOpen(true)}>Avaliar</A.PrimaryButton>
+            </S.ReviewPrompt>
+        );
+    }
+
+    async function submit(e: React.FormEvent) {
+        e.preventDefault();
+        if (!rating) return toast.error("Escolha de 1 a 5 estrelas.");
+        try {
+            setSending(true);
+            const review = await createReview(q.id, rating, comment.trim() || null);
+            onDone({ ...q, canReview: false, review: { id: review.id, rating: review.rating, comment: review.comment, reply: null, createdAt: review.createdAt } });
+            toast.success("Avaliação publicada. Obrigado!");
+        } catch (err) {
+            toast.error(getErrorMessage(err, "Não foi possível enviar a avaliação."));
+        } finally {
+            setSending(false);
+        }
+    }
+
+    return (
+        <S.ReviewForm onSubmit={submit} noValidate aria-label={`Avaliar ${q.provider.name}`}>
+            <StarInput value={rating} onChange={setRating} label={`Sua nota para ${q.provider.name}`} />
+            <A.FormGroup>
+                <label htmlFor={`review-${q.id}`}>Comentário (opcional, aparece na página do prestador)</label>
+                <M.TextArea id={`review-${q.id}`} rows={3} maxLength={1500} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="O que deu certo, o que poderia melhorar." />
+            </A.FormGroup>
+            <A.InlineGroup>
+                <A.PrimaryButton type="submit" disabled={sending} aria-busy={sending}>{sending ? "Enviando..." : "Publicar avaliação"}</A.PrimaryButton>
+                <A.SecondaryButton type="button" onClick={() => setOpen(false)} disabled={sending}>Agora não</A.SecondaryButton>
+            </A.InlineGroup>
+        </S.ReviewForm>
     );
 }
