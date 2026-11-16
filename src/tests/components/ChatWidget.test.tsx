@@ -187,4 +187,68 @@ describe("ChatWidget", () => {
             expect(screen.getByText(/não consegui responder agora/i)).toBeInTheDocument()
         );
     });
+
+    async function openAndSend(text: string) {
+        const user = userEvent.setup();
+        await user.click(screen.getByRole("button", { name: /abrir chat/i }));
+        await user.type(screen.getByPlaceholderText(/digite sua dúvida/i), text);
+        await user.click(screen.getByRole("button", { name: /enviar/i }));
+        return user;
+    }
+
+    it("manda só a mensagem nova e continua a conversa com o id que o servidor devolveu", async () => {
+        const fetchMock = vi.spyOn(globalThis, "fetch")
+            .mockImplementationOnce(makeFetchMock(['data: {"conversationId":"c-123"}\n\ndata: {"text":"Oi!"}\n', "data: [DONE]\n"]))
+            .mockImplementationOnce(makeFetchMock(['data: {"conversationId":"c-123"}\n', 'data: {"text":"Sábado tem."}\n', "data: [DONE]\n"]));
+        renderWidget();
+        const user = await openAndSend("Olá");
+        await waitFor(() => expect(screen.getByText("Oi!")).toBeInTheDocument());
+        expect(JSON.parse(fetchMock.mock.calls[0][1]!.body as string)).toEqual({ message: "Olá" });
+
+        await user.type(screen.getByPlaceholderText(/digite sua dúvida/i), "Tem sábado?");
+        await user.click(screen.getByRole("button", { name: /enviar/i }));
+        await waitFor(() => expect(screen.getByText("Sábado tem.")).toBeInTheDocument());
+        expect(JSON.parse(fetchMock.mock.calls[1][1]!.body as string)).toEqual({ message: "Tem sábado?", conversationId: "c-123" });
+    });
+
+    it("junta um evento que chegou partido em duas leituras", async () => {
+        vi.spyOn(globalThis, "fetch").mockImplementation(makeFetchMock(['data: {"te', 'xt":"Inteiro"}\n', "data: [DONE]\n"]));
+        renderWidget();
+        await openAndSend("Oi");
+        await waitFor(() => expect(screen.getByText("Inteiro")).toBeInTheDocument());
+    });
+
+    it.each([
+        [403, { error: { code: "EMAIL_NOT_VERIFIED" } }, /confirme seu e-mail/i],
+        [429, { error: { code: "CHAT_BUDGET_EXCEEDED" } }, /limite de mensagens do assistente por hoje/i],
+        [429, { error: { code: "RATE_LIMIT" } }, /muitas mensagens em pouco tempo/i],
+        [401, {}, /entre na sua conta/i],
+        [500, { error: { code: "INTERNAL_ERROR" } }, /não consegui responder agora/i],
+    ])("resposta %i: mostra a mensagem certa em português", async (status, body, text) => {
+        vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify(body), { status }));
+        renderWidget();
+        await openAndSend("Oi");
+        await waitFor(() => expect(screen.getByText(text)).toBeInTheDocument());
+    });
+
+    it("erro sem corpo JSON cai na mensagem genérica", async () => {
+        vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("Bad Gateway", { status: 502 }));
+        renderWidget();
+        await openAndSend("Oi");
+        await waitFor(() => expect(screen.getByText(/não consegui responder agora/i)).toBeInTheDocument());
+    });
+
+    it("ao sair da tela no meio da resposta, cancela o pedido", async () => {
+        let signal: AbortSignal | undefined;
+        vi.spyOn(globalThis, "fetch").mockImplementation((_url, options) => {
+            signal = (options as RequestInit).signal!;
+            return new Promise(() => undefined);
+        });
+        const { unmount } = renderWidget();
+        await openAndSend("Oi");
+        await waitFor(() => expect(signal).toBeDefined());
+        expect(signal!.aborted).toBe(false);
+        unmount();
+        expect(signal!.aborted).toBe(true);
+    });
 });
