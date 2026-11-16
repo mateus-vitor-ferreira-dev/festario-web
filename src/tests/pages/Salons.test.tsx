@@ -9,6 +9,7 @@ import { AuthProvider } from "../../contexts/AuthContext";
 import { SALON_ORIGIN_KEY } from "../../hooks/useSalonOrigin";
 import Salons from "../../pages/Salons";
 import { server } from "../mocks/server";
+import { seedSession } from "../helpers/session";
 
 const BASE = "http://localhost:3000";
 
@@ -41,7 +42,7 @@ function LocationProbe() {
 }
 
 function renderPage(user: Record<string, unknown> = { id: "u1", name: "Ana", role: "USER" }, path = "/saloes") {
-    localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user }));
+    seedSession({ token: "t", user });
     return render(
         <AuthProvider>
             <MemoryRouter initialEntries={[path]}>

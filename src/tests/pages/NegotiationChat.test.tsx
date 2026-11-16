@@ -6,6 +6,7 @@ import { ToastContainer } from "react-toastify";
 import { afterEach, describe, expect, it } from "vitest";
 import NegotiationChat from "../../pages/NegotiationChat";
 import { server } from "../mocks/server";
+import { seedSession } from "../helpers/session";
 
 const BASE = "http://localhost:3000";
 
@@ -55,10 +56,7 @@ const proposalMessage = {
 };
 
 function setLocalStorage(role = "USER") {
-    localStorage.setItem(
-        "festario:userData",
-        JSON.stringify({ token: "fake-token", user: { id: "user-1", name: "Mateus", role } })
-    );
+    seedSession({ token: "fake-token", user: { id: "user-1", name: "Mateus", role } });
 }
 
 function renderPage(id = "neg-1") {

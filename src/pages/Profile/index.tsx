@@ -23,8 +23,11 @@ interface ProfileUser extends User {
 }
 
 interface UpdatedUserResponse extends ProfileUser {
-    /** Par novo devolvido quando a troca de e-mail ou de senha derruba as sessões abertas. */
-    auth?: { token: string; refreshToken: string };
+    /**
+     * Sessão nova devolvida quando a troca de e-mail ou de senha derruba as sessões abertas. O refresh
+     * token dela vem no cookie HttpOnly; só nas prévias aparece aqui.
+     */
+    auth?: { token: string; refreshToken?: string };
 }
 
 /**

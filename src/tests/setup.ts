@@ -75,5 +75,12 @@ window.matchMedia =
   }));
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
-afterEach(() => server.resetHandlers());
+afterEach(async () => {
+    server.resetHandlers();
+    // A sessão vive em memória no módulo: sem isto um caso herdaria o login do anterior. Import
+    // dinâmico para não carregar o módulo antes dos vi.mock de cada arquivo de teste.
+    const { resetSessionForTests } = await import("../config/authStorage");
+    resetSessionForTests();
+    sessionStorage.clear();
+});
 afterAll(() => server.close());

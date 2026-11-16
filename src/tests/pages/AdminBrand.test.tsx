@@ -9,6 +9,7 @@ import { SalonBrandProvider } from "../../contexts/SalonBrandContext";
 import Admin from "../../pages/Admin";
 import type { VenuePhoto } from "../../types";
 import { server } from "../mocks/server";
+import { seedSession } from "../helpers/session";
 
 const BASE = "http://localhost:3000";
 const VENUE = "recanto-vila-rica-main-venue";
@@ -21,7 +22,7 @@ const photo = (id: string, alt: string, sortOrder: number, isCover = false): Ven
 const BRAND = { name: "Recanto Vila Rica", logoUrl: null, logoVariants: null, primaryColor: null, primaryColorDark: null };
 
 function renderTab() {
-    localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "o1", name: "Dona", email: "d@x.com", role: "OWNER" } }));
+    seedSession({ token: "t", user: { id: "o1", name: "Dona", email: "d@x.com", role: "OWNER" } });
     return render(
         <AuthProvider>
             <SalonBrandProvider>

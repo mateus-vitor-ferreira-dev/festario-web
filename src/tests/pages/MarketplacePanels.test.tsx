@@ -10,6 +10,7 @@ import { PartnersTab } from "../../pages/Admin/tabs/PartnersTab";
 import MyBusiness from "../../pages/MyBusiness";
 import Quotes from "../../pages/Quotes";
 import { server } from "../mocks/server";
+import { seedSession } from "../helpers/session";
 
 const BASE = "http://localhost:3000";
 
@@ -32,7 +33,7 @@ const QUOTE_BASE = {
 };
 
 function renderAt(path: string, el: React.ReactNode, routePath: string) {
-    localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "u1", name: "Ana", role: "USER" } }));
+    seedSession({ token: "t", user: { id: "u1", name: "Ana", role: "USER" } });
     return render(
         <AuthProvider>
             <MemoryRouter initialEntries={[path]}>

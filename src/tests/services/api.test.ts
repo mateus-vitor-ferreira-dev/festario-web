@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import api from "../../services/api";
+import { seedSession } from "../helpers/session";
 
 describe("api interceptor", () => {
     const requestFulfilled = api.interceptors.request.handlers[0].fulfilled;
@@ -16,31 +17,13 @@ describe("api interceptor", () => {
     });
 
     it("attaches Authorization header when token exists", async () => {
-        localStorage.setItem(
-            "festario:userData",
-            JSON.stringify({
-                user: { id: "u1", name: "Test", email: "t@t.com", role: "USER" },
-                token: "abc123",
-                refreshToken: null,
-            })
-        );
+        seedSession({ user: { id: "u1", name: "Test", email: "t@t.com", role: "USER" }, token: "abc123" });
 
         const config = { headers: {} };
         const result = await requestFulfilled(config);
 
         expect(result.headers.Authorization).toBe("Bearer abc123");
-    });
-
-    it("attaches Authorization header from legacy session format", async () => {
-        localStorage.setItem(
-            "festario:userData",
-            JSON.stringify({ id: "u1", name: "Test", email: "t@t.com", role: "USER", token: "legacy-token" })
-        );
-
-        const config = { headers: {} };
-        const result = await requestFulfilled(config);
-
-        expect(result.headers.Authorization).toBe("Bearer legacy-token");
+        expect(result.headers["X-Requested-With"]).toBe("festario");
     });
 
     it("does not attach Authorization header when token does not exist", async () => {
@@ -50,8 +33,8 @@ describe("api interceptor", () => {
         expect(result.headers.Authorization).toBeUndefined();
     });
 
-    it("does not attach Authorization header when stored JSON is unrecognized", async () => {
-        localStorage.setItem("festario:userData", "{}");
+    it("never reads a token from the old localStorage session", async () => {
+        localStorage.setItem("festario:userData", JSON.stringify({ user: { id: "u1" }, token: "legacy-token", refreshToken: "rt" }));
 
         const config = { headers: {} };
         const result = await requestFulfilled(config);

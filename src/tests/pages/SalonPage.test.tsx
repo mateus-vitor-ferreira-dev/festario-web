@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { AuthProvider } from "../../contexts/AuthContext";
 import SalonPage from "../../pages/SalonPage";
 import { server } from "../mocks/server";
+import { seedSession } from "../helpers/session";
 
 const BASE = "http://localhost:3000";
 
@@ -31,7 +32,7 @@ function LocationProbe() {
 }
 
 function renderPage(role: string | null = "USER", state?: unknown, search = "") {
-    if (role) localStorage.setItem("festario:userData", JSON.stringify({ token: "t", user: { id: "u1", name: "Ana", role } }));
+    if (role) seedSession({ token: "t", user: { id: "u1", name: "Ana", role } });
     return render(
         <AuthProvider>
             <MemoryRouter initialEntries={[{ pathname: "/s/salao-jardim-das-flores", search, state }]}>
