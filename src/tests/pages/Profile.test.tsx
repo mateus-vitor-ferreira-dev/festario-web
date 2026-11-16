@@ -401,4 +401,97 @@ describe("Profile page", () => {
         );
     });
 
+
+    describe("troca de e-mail", () => {
+        const session = { token: "tk-antigo", refreshToken: "rt-antigo", user: { id: "user-1", name: "Mateus", email: "mateus@email.com", role: "USER", emailVerified: true } };
+
+        async function changeEmail(user: ReturnType<typeof userEvent.setup>) {
+            await waitFor(() => expect(screen.getByDisplayValue("mateus@email.com")).toBeInTheDocument());
+            const emailInput = screen.getByDisplayValue("mateus@email.com");
+            await user.clear(emailInput);
+            await user.type(emailInput, "novo@email.com");
+        }
+
+        it("pede a senha atual só quando o e-mail muda", async () => {
+            const user = userEvent.setup();
+            renderPage();
+            await waitFor(() => expect(screen.getByDisplayValue("mateus@email.com")).toBeInTheDocument());
+            expect(screen.queryByPlaceholderText(/confirme sua senha para trocar o e-mail/i)).not.toBeInTheDocument();
+
+            await changeEmail(user);
+            expect(screen.getByPlaceholderText(/confirme sua senha para trocar o e-mail/i)).toBeInTheDocument();
+        });
+
+        it("não envia sem a senha atual", async () => {
+            let called = false;
+            server.use(http.patch(`${BASE}/users/user-1`, () => { called = true; return HttpResponse.json({ data: {} }); }));
+            const user = userEvent.setup();
+            renderPage();
+            await changeEmail(user);
+            await user.click(screen.getByRole("button", { name: /salvar alterações/i }));
+
+            await waitFor(() => expect(screen.getByText(/para trocar o e-mail, informe sua senha atual/i)).toBeInTheDocument());
+            expect(called).toBe(false);
+        });
+
+        it("envia a senha atual e guarda a sessão nova devolvida pela API", async () => {
+            localStorage.setItem("festario:userData", JSON.stringify(session));
+            let body: Record<string, unknown> = {};
+            server.use(
+                http.patch(`${BASE}/users/user-1`, async ({ request }) => {
+                    body = (await request.json()) as Record<string, unknown>;
+                    return HttpResponse.json({
+                        success: true,
+                        data: { id: "user-1", name: "Mateus", email: "novo@email.com", role: "USER", emailVerifiedAt: null, auth: { token: "tk-novo", refreshToken: "rt-novo" } },
+                    });
+                })
+            );
+            const user = userEvent.setup();
+            renderPage();
+            await changeEmail(user);
+            await user.type(screen.getByPlaceholderText(/confirme sua senha para trocar o e-mail/i), "Certa@123");
+            await user.click(screen.getByRole("button", { name: /salvar alterações/i }));
+
+            await waitFor(() => expect(screen.getByText(/enviamos um link de confirmação para o novo e-mail/i)).toBeInTheDocument());
+            expect(body).toMatchObject({ email: "novo@email.com", currentPassword: "Certa@123" });
+            const stored = JSON.parse(localStorage.getItem("festario:userData")!);
+            expect(stored).toMatchObject({ token: "tk-novo", refreshToken: "rt-novo", user: { email: "novo@email.com", emailVerified: false } });
+            expect(stored.user.auth).toBeUndefined();
+        });
+
+        it.each([
+            ["REAUTH_REQUIRED", 403, /confirme sua senha atual/i],
+            ["EMAIL_CHANGE_NEEDS_PASSWORD", 409, /crie uma senha primeiro em "esqueci a senha"/i],
+        ])("mostra a orientação para %s", async (code, status, text) => {
+            server.use(http.patch(`${BASE}/users/user-1`, () => HttpResponse.json({ error: { message: "x", code, status } }, { status })));
+            const user = userEvent.setup();
+            renderPage();
+            await changeEmail(user);
+            await user.type(screen.getByPlaceholderText(/confirme sua senha para trocar o e-mail/i), "Qualquer@1");
+            await user.click(screen.getByRole("button", { name: /salvar alterações/i }));
+
+            await waitFor(() => expect(screen.getByText(text)).toBeInTheDocument());
+        });
+    });
+
+    it("guarda a sessão nova depois de trocar a senha", async () => {
+        localStorage.setItem("festario:userData", JSON.stringify({ token: "tk-antigo", refreshToken: "rt-antigo", user: { id: "user-1", name: "Mateus", email: "mateus@email.com", role: "USER" } }));
+        server.use(
+            http.patch(`${BASE}/users/user-1`, () =>
+                HttpResponse.json({ success: true, data: { id: "user-1", name: "Mateus", email: "mateus@email.com", role: "USER", auth: { token: "tk-novo", refreshToken: "rt-novo" } } })
+            )
+        );
+        const user = userEvent.setup();
+        renderPage();
+        await waitFor(() => screen.getByRole("button", { name: /continuar/i }));
+        await user.type(screen.getByPlaceholderText(/sua senha atual/i), "Certa@123");
+        await user.click(screen.getByRole("button", { name: /continuar/i }));
+        await waitFor(() => screen.getByPlaceholderText(/mín. 8 caracteres/i));
+        await user.type(screen.getByPlaceholderText(/mín. 8 caracteres/i), "NovaSenha@123");
+        await user.type(screen.getByPlaceholderText(/repita a nova senha/i), "NovaSenha@123");
+        await user.click(screen.getByRole("button", { name: /alterar senha/i }));
+
+        await waitFor(() => expect(screen.getByText(/senha alterada com sucesso/i)).toBeInTheDocument());
+        expect(JSON.parse(localStorage.getItem("festario:userData")!)).toMatchObject({ token: "tk-novo", refreshToken: "rt-novo" });
+    });
 });

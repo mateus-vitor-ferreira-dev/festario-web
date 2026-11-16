@@ -131,4 +131,21 @@ describe("GoogleButton", () => {
             expect(screen.getByText(/erro ao autenticar com google/i)).toBeInTheDocument()
         );
     });
+
+    it("onSuccess: explains when the Google account is not the one linked to the e-mail", async () => {
+        server.use(
+            http.post(`${BASE}/auth/google`, () =>
+                HttpResponse.json(
+                    { error: { message: "mismatch", code: "GOOGLE_ACCOUNT_MISMATCH", status: 401 } },
+                    { status: 401 }
+                )
+            )
+        );
+        renderButton();
+        await lastLoginConfig.onSuccess({ credential: "token" });
+        await waitFor(() =>
+            expect(screen.getByText(/não é a que está vinculada a este e-mail/i)).toBeInTheDocument()
+        );
+        expect(localStorage.getItem("festario:userData")).toBeNull();
+    });
 });
