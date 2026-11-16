@@ -11,7 +11,8 @@ import {
     SESSION_HINT_KEY,
     STORAGE_KEY,
     subscribeSession,
-    takeLegacyRefreshToken,
+    readLegacyRefreshToken,
+    dropLegacySession,
     updateSessionTokens,
     writeSession,
 } from "../../config/authStorage";
@@ -91,18 +92,22 @@ describe("authStorage", () => {
         expect(listener).toHaveBeenCalledTimes(2);
     });
 
-    describe("takeLegacyRefreshToken", () => {
-        it("returns the refresh token of the nested format once and deletes the old session", () => {
+    describe("readLegacyRefreshToken", () => {
+        it("returns the refresh token of the nested format and keeps the old session until dropped", () => {
             localStorage.setItem(STORAGE_KEY, JSON.stringify({ user, token: "a", refreshToken: "legado" }));
 
-            expect(takeLegacyRefreshToken()).toBe("legado");
+            expect(readLegacyRefreshToken()).toBe("legado");
+            // Fica até a API responder: uma falha de rede não pode perder o único token da sessão.
+            expect(localStorage.getItem(STORAGE_KEY)).not.toBeNull();
+
+            dropLegacySession();
             expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
-            expect(takeLegacyRefreshToken()).toBeNull();
+            expect(readLegacyRefreshToken()).toBeNull();
         });
 
         it("reads the flat format too", () => {
             localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...user, token: "a", refreshToken: "plano" }));
-            expect(takeLegacyRefreshToken()).toBe("plano");
+            expect(readLegacyRefreshToken()).toBe("plano");
         });
 
         it.each([
@@ -112,7 +117,7 @@ describe("authStorage", () => {
             ["empty refresh token", JSON.stringify({ user, token: "a", refreshToken: "" })],
         ])("deletes the old session and returns null on %s", (_case, raw) => {
             localStorage.setItem(STORAGE_KEY, raw);
-            expect(takeLegacyRefreshToken()).toBeNull();
+            expect(readLegacyRefreshToken()).toBeNull();
             expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
         });
     });

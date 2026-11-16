@@ -5,7 +5,7 @@
  * armazenamento da sessão nas páginas consumidoras.
  */
 import { ReactNode, createContext, useContext, useEffect, useState } from "react";
-import { readSession, writeSession, clearSession, subscribeSession } from "../config/authStorage";
+import { readSession, writeSession, clearSession, subscribeSession, SESSION_HINT_KEY, hasSessionHint } from "../config/authStorage";
 import { clearTenant, readTenant, writeTenant } from "../config/tenantStorage";
 import { revokeStoredRefreshToken } from "../services/revokeSession";
 import { canRestoreSession, refreshSession } from "../services/session";
@@ -59,6 +59,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // O interceptor do axios renova o token fora do React: o contexto acompanha o módulo da sessão.
     useEffect(() => subscribeSession(setSession), []);
+
+    // Sair numa aba apaga o marcador de login (e o cookie, na API): as outras abas saem junto em vez de
+    // seguir com um access token em memória até ele vencer.
+    useEffect(() => {
+        function onStorage(event: StorageEvent) {
+            const hintGone = event.key === SESSION_HINT_KEY ? event.newValue === null : event.key === null && !hasSessionHint();
+            if (hintGone && readSession()) clearSession();
+        }
+        window.addEventListener("storage", onStorage);
+        return () => window.removeEventListener("storage", onStorage);
+    }, []);
 
     useEffect(() => {
         if (!isRestoring) return;

@@ -77,22 +77,29 @@ export function hasSessionHint(): boolean {
 }
 
 /**
- * Tira do localStorage a sessão do formato antigo e devolve o refresh token dela, para ser trocado
- * uma única vez pelo cookie. Os dois formatos antigos (usuário na raiz ou em `user`) guardavam o
- * token na raiz.
+ * Refresh token da sessão do formato antigo, para ser trocado uma única vez pelo cookie. Os dois
+ * formatos antigos (usuário na raiz ou em `user`) guardavam o token na raiz. A sessão antiga só é
+ * apagada aqui quando não tem token aproveitável; com token, ela fica até a API responder (ver
+ * `dropLegacySession`), para uma falha de rede não deslogar ninguém.
  */
-export function takeLegacyRefreshToken(): string | null {
+export function readLegacyRefreshToken(): string | null {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw === null) return null;
-    localStorage.removeItem(STORAGE_KEY);
+    let token: unknown = null;
     try {
         const parsed: unknown = JSON.parse(raw);
-        if (!parsed || typeof parsed !== "object") return null;
-        const token = (parsed as Record<string, unknown>).refreshToken;
-        return typeof token === "string" && token ? token : null;
+        if (parsed && typeof parsed === "object") token = (parsed as Record<string, unknown>).refreshToken;
     } catch {
-        return null;
+        // sessão antiga ilegível: não há o que migrar
     }
+    if (typeof token === "string" && token) return token;
+    localStorage.removeItem(STORAGE_KEY);
+    return null;
+}
+
+/** A API já respondeu à migração (trocou o token ou o recusou): a sessão antiga sai de vez. */
+export function dropLegacySession(): void {
+    localStorage.removeItem(STORAGE_KEY);
 }
 
 /** Só para os testes: zera o estado em memória entre um caso e outro. */

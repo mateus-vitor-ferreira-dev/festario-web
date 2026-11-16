@@ -10,11 +10,12 @@
 import { env } from "../config/env";
 import {
     clearSession,
+    dropLegacySession,
     hasSessionHint,
+    readLegacyRefreshToken,
     readPreviewRefreshToken,
     STORAGE_KEY,
     readSession,
-    takeLegacyRefreshToken,
     writeSession,
 } from "../config/authStorage";
 import { isBodyRefreshMode } from "../config/refreshMode";
@@ -40,7 +41,8 @@ interface RefreshPayload {
 async function doRefresh(): Promise<AuthSession | null> {
     // Sessão do formato antigo: o refresh token dela vai no corpo uma vez só; a resposta grava o
     // cookie e daí em diante é ele que vale.
-    const bodyToken = takeLegacyRefreshToken() ?? readPreviewRefreshToken();
+    const legacyToken = readLegacyRefreshToken();
+    const bodyToken = legacyToken ?? readPreviewRefreshToken();
     if (isBodyRefreshMode() && !bodyToken) {
         clearSession();
         return null;
@@ -55,23 +57,31 @@ async function doRefresh(): Promise<AuthSession | null> {
             body: JSON.stringify(bodyToken ? { refreshToken: bodyToken } : {}),
         });
     } catch {
-        // Sem rede a sessão pode muito bem estar valendo: o marcador fica para a próxima tentativa.
+        // Sem rede a sessão pode muito bem estar valendo: marcador e sessão antiga ficam para a
+        // próxima tentativa.
         return null;
     }
 
-    if (!res.ok) {
+    // Só o 401 diz que a sessão acabou. 429, 5xx ou 403 são falhas de agora: deslogar por elas
+    // tiraria do app quem continua com a sessão válida.
+    if (res.status === 401) {
         clearSession();
         return null;
     }
+    if (!res.ok) return null;
+    if (legacyToken) dropLegacySession();
 
     const { data } = (await res.json()) as { data?: RefreshPayload };
-    const user = data?.user ?? readSession()?.user;
-    if (!data?.accessToken || !user) {
-        clearSession();
-        return null;
+    const previous = readSession();
+    const user = data?.user ?? previous?.user;
+    if (!data?.accessToken || !user) return null;
+
+    writeSession({ user, token: data.accessToken, refreshToken: data.refreshToken ?? null });
+    // O cookie é do navegador inteiro: se outra aba entrou com outra conta, esta aba não pode trocar
+    // de usuário em silêncio no meio da tela. Recomeça do início com a conta nova.
+    if (previous && previous.user.id !== user.id) {
+        window.location.assign("/");
     }
-    const session: AuthSession = { user, token: data.accessToken, refreshToken: data.refreshToken ?? null };
-    writeSession(session);
     return readSession();
 }
 

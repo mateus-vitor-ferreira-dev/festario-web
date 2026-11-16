@@ -130,7 +130,73 @@ describe("restaurar a sessão ao abrir a página", () => {
 
         await expect(refreshSession()).resolves.toBeNull();
         expect(readSession()).toBeNull();
-        expect(localStorage.getItem(SESSION_HINT_KEY)).toBeNull();
+    });
+
+    it.each([429, 500, 503, 403])("resposta %i não desloga: o marcador fica para a próxima tentativa", async (status) => {
+        server.use(http.post(`${BASE}/auth/refresh`, () => HttpResponse.json({}, { status })));
+        seedSession({ token: "atual", user: USER });
+
+        await expect(refreshSession()).resolves.toBeNull();
+        expect(localStorage.getItem(SESSION_HINT_KEY)).toBe("1");
+        expect(readSession()?.token).toBe("atual");
+    });
+
+    it("refresh que volta com outro usuário recomeça a página do início", async () => {
+        const assign = vi.fn();
+        const originalLocation = window.location;
+        Object.defineProperty(window, "location", { value: { hostname: "localhost", assign }, writable: true, configurable: true });
+        seedSession({ token: "de-ana", user: { ...USER, id: "ana" } });
+        server.use(http.post(`${BASE}/auth/refresh`, () => HttpResponse.json({ data: { accessToken: "de-bia", user: { ...USER, id: "bia" } } })));
+
+        await refreshSession();
+
+        expect(assign).toHaveBeenCalledWith("/");
+        Object.defineProperty(window, "location", { value: originalLocation, writable: true, configurable: true });
+    });
+
+    it("refresh com o mesmo usuário não recarrega a página", async () => {
+        const assign = vi.fn();
+        const originalLocation = window.location;
+        Object.defineProperty(window, "location", { value: { hostname: "localhost", assign }, writable: true, configurable: true });
+        seedSession({ token: "velho", user: USER });
+        refreshOk([]);
+
+        await refreshSession();
+
+        expect(assign).not.toHaveBeenCalled();
+        expect(readSession()?.token).toBe("access-1");
+        Object.defineProperty(window, "location", { value: originalLocation, writable: true, configurable: true });
+    });
+
+    it("sair em outra aba encerra a sessão desta", async () => {
+        seedSession({ token: "t", user: USER });
+        renderApp();
+        expect(screen.getByText("logado:Mateus:t")).toBeInTheDocument();
+
+        localStorage.removeItem(SESSION_HINT_KEY);
+        window.dispatchEvent(new StorageEvent("storage", { key: SESSION_HINT_KEY, oldValue: "1", newValue: null }));
+
+        expect(await screen.findByText("Login Page")).toBeInTheDocument();
+        expect(readSession()).toBeNull();
+    });
+
+    it("localStorage limpo em outra aba também encerra a sessão", async () => {
+        seedSession({ token: "t", user: USER });
+        renderApp();
+
+        localStorage.clear();
+        window.dispatchEvent(new StorageEvent("storage", { key: null }));
+
+        expect(await screen.findByText("Login Page")).toBeInTheDocument();
+    });
+
+    it("outras chaves do storage não mexem na sessão", () => {
+        seedSession({ token: "t", user: USER });
+        renderApp();
+
+        window.dispatchEvent(new StorageEvent("storage", { key: "festario:tenant", newValue: null }));
+
+        expect(screen.getByText("logado:Mateus:t")).toBeInTheDocument();
     });
 
     it("chamadas simultâneas dividem um único refresh (o segundo seria visto como reuso)", async () => {
@@ -162,6 +228,32 @@ describe("sessão antiga no localStorage", () => {
 
         await refreshSession();
         expect(seen[1].body).toEqual({});
+    });
+
+    it("sem rede mantém a sessão antiga para tentar de novo", async () => {
+        server.use(http.post(`${BASE}/auth/refresh`, () => HttpResponse.error()));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: USER, token: "velho", refreshToken: "rt-legado" }));
+
+        await expect(refreshSession()).resolves.toBeNull();
+
+        expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).refreshToken).toBe("rt-legado");
+    });
+
+    it("erro 5xx também mantém a sessão antiga", async () => {
+        server.use(http.post(`${BASE}/auth/refresh`, () => HttpResponse.json({}, { status: 502 })));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: USER, token: "velho", refreshToken: "rt-legado" }));
+
+        await refreshSession();
+
+        expect(localStorage.getItem(STORAGE_KEY)).not.toBeNull();
+    });
+
+    it("token antigo recusado (401) apaga a sessão antiga", async () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: USER, token: "velho", refreshToken: "rt-legado" }));
+
+        await refreshSession();
+
+        expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
     });
 });
 
